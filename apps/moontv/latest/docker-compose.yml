@@ -1,6 +1,6 @@
 services:
   moontv:
-    image: ghcr.io/moontechlab/lunatv:4.3.0
+    image: ghcr.io/moontechlab/lunatv:latest
     container_name: ${CONTAINER_NAME}
     restart: always
 
@@ -20,9 +20,7 @@ services:
       NEXT_PUBLIC_ENABLE_REGISTER: ${MOONTV_ENABLE_REGISTER}
       NEXT_PUBLIC_SITE_NAME: ${MOONTV_SITE_NAME}
       ANNOUNCEMENT: ${MOONTV_ANNOUNCEMENT}
-
-      AUTH_TOKEN: ${MOONTV_AUTH_TOKEN}
-      
+            
     networks:
       - 1panel-network
 

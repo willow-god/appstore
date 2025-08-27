@@ -168,20 +168,3 @@ additionalProperties:
       dependsOn:
         envKey: MOONTV_STORAGE_TYPE
         value: redis
-
-    # 授权码
-    - default: ""
-      envKey: MOONTV_AUTH_TOKEN
-      labelEn: Auth Token
-      labelZh: 授权码
-      label:
-        en: Auth Token
-        ja: 認証トークン
-        ms: Token Kebenaran
-        pt-br: Token de Autorização
-        ru: Токен авторизации
-        ko: 인증 토큰
-        zh: 授权码
-        zh-Hant: 授權碼
-      required: true
-      type: text
