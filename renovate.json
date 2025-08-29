@@ -1,46 +1,70 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
-  "gitIgnoredAuthors": ["githubaction@githubaction.com"],
+  "extends": [
+    "config:recommended"
+  ],
+  "gitIgnoredAuthors": [
+    "githubaction@githubaction.com"
+  ],
   "rebaseWhen": "never",
   "prCreation": "immediate",
-
   "hostRules": [
     {
       "hostType": "docker",
       "matchHost": "codeberg.org",
-      "registryUrls": ["https://codeberg.org"]
+      "registryUrls": [
+        "https://codeberg.org"
+      ]
     },
     {
       "hostType": "docker",
       "matchHost": "code.forgejo.org",
-      "registryUrls": ["https://code.forgejo.org"]
+      "registryUrls": [
+        "https://code.forgejo.org"
+      ]
     }
   ],
-
   "packageRules": [
     {
-      "matchManagers": ["github-actions"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "enabled": false
     },
     {
-      "matchDatasources": ["docker"],
-      "matchFileNames": ["apps/meting-api/*/docker-compose.yml"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "apps/meting-api/*/docker-compose.yml"
+      ],
       "enabled": false
     },
     {
-      "matchDatasources": ["docker"],
-      "matchFileNames": ["apps/chatnio/*/docker-compose.yml"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "apps/chatnio/*/docker-compose.yml"
+      ],
       "enabled": false
     },
     {
-      "matchDatasources": ["docker"],
-      "matchFileNames": ["apps/*/*/docker-compose.yml"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "apps/*/*/docker-compose.yml"
+      ],
       "versioning": "semver"
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/umami-software/umami"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/umami-software/umami"
+      ],
       "versionCompatibility": "^(?<compatibility>.*)-(?<version>.*)$",
       "versioning": "semver"
     }
