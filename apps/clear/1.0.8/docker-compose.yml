@@ -1,6 +1,6 @@
 services:
   clear:
-    image: eastwind996/clear:v1.0.8
+    image: eastwind996/clear:v1.0.9
     container_name: ${CONTAINER_NAME}
     ports:
       - "${PANEL_APP_PORT_HTTP}:6633"
