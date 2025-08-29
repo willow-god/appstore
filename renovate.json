@@ -1,11 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
-  "gitIgnoredAuthors": [
-    "githubaction@githubaction.com"
-  ],
+  "extends": ["config:recommended"],
+  "gitIgnoredAuthors": ["githubaction@githubaction.com"],
   "rebaseWhen": "never",
   "prCreation": "immediate",
   "hostRules": [
@@ -26,42 +22,32 @@
   ],
   "packageRules": [
     {
-      "matchManagers": [
-        "github-actions"
-      ],
+      "matchManagers": ["github-actions"],
       "enabled": false
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
+      "matchDatasources": ["docker"],
       "matchFileNames": [
         "apps/meting-api/*/docker-compose.yml"
       ],
       "enabled": false
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
+      "matchDatasources": ["docker"],
       "matchFileNames": [
         "apps/chatnio/*/docker-compose.yml"
       ],
       "enabled": false
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
+      "matchDatasources": ["docker"],
       "matchFileNames": [
         "apps/*/*/docker-compose.yml"
       ],
       "versioning": "semver"
     },
     {
-      "matchDatasources": [
-        "docker"
-      ],
+      "matchDatasources": ["docker"],
       "matchPackageNames": [
         "ghcr.io/umami-software/umami"
       ],
