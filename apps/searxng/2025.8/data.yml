@@ -1,0 +1,67 @@
+additionalProperties:
+  formFields:
+    # HTTP 端口
+    - default: 49238
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      label:
+        en: HTTP Port
+        ja: HTTPポート
+        ms: Port HTTP
+        pt-br: Porta HTTP
+        ru: HTTP порт
+        ko: HTTP 포트
+        zh: HTTP 端口
+        zh-Hant: HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    # 站点地址
+    - default: https://search.example.com/
+      envKey: SEARXNG_BASE_URL
+      labelEn: Site URL
+      labelZh: 站点域名
+      label:
+        en: Site Domain
+        ja: サイトドメイン
+        ms: Domain Laman
+        pt-br: Domínio do Site
+        ru: Домен сайта
+        ko: 사이트 도메인
+        zh: 站点域名
+        zh-Hant: 網站域名
+      required: true
+      type: text
+
+    - default: ""
+      envKey: PANEL_REDIS_HOST
+      key: redis
+      labelEn: Redis Service
+      labelZh: redis 服务
+      required: true
+      type: service
+      label:
+        en: Redis Service
+        ja: Redisサービス
+        ms: Perkhidmatan Redis
+        pt-br: Serviço Redis
+        ru: Сервис Redis
+        ko: Redis 서비스
+        zh: redis 服务
+        zh-Hant: redis 服务
+
+    - default: ""
+      envKey: PANEL_REDIS_ROOT_PASSWORD
+      labelEn: Redis Service Password
+      labelZh: 缓存服务服务密码
+      required: false
+      type: password
+
+    - default: "0"
+      envKey: REDIS_DB
+      labelEn: Redis Database
+      labelZh: Redis 数据库
+      required: true
+      type: number

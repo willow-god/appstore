@@ -53,6 +53,11 @@
       ],
       "versionCompatibility": "^(?<compatibility>.*)-(?<version>.*)$",
       "versioning": "semver"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["searxng/searxng"],
+      "versioning": "regex:^(?<year>\\d{4})\\.(?<month>\\d{1,2})(?:\\.\\d{1,2})?(?:-[0-9a-f]+)?$"
     }
   ]
 }

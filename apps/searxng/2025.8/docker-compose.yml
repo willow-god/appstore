@@ -1,0 +1,36 @@
+services:
+  searxng:
+    image: searxng/searxng:2025.8.29-146cefe
+    container_name: ${CONTAINER_NAME}
+    restart: always
+
+    labels:
+      createdBy: "Apps"
+    
+    ports:
+      - ${PANEL_APP_PORT_HTTP}:3000
+
+    volumes:
+      - ./data/searxng:/etc/searxng:rw
+
+    environment:
+      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL}
+    
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+            
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true
