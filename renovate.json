@@ -48,16 +48,15 @@
     },
     {
       "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "ghcr.io/umami-software/umami"
-      ],
+      "matchPackageNames": ["ghcr.io/umami-software/umami"],
       "versionCompatibility": "^(?<compatibility>.*)-(?<version>.*)$",
       "versioning": "semver"
     },
     {
       "matchDatasources": ["docker"],
       "matchPackageNames": ["searxng/searxng"],
-      "versioning": "regex:^(?<year>\\d{4})\\.(?<month>\\d{1,2})(?:\\.\\d{1,2})?(?:-[0-9a-f]+)?$"
+      "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})(?:\\.(?<patch>\\d{1,2}))?(?:-[0-9a-f]+)?$",
+      "versionCompatibility": "^(?<major>\\d{4})\\.(?<minor>\\d{1,2})"
     }
   ]
 }
