@@ -1,6 +1,6 @@
 services:
   searxng:
-    image: searxng/searxng:2025.8.29-146cefe
+    image: searxng/searxng:latest
     container_name: ${CONTAINER_NAME}
     restart: always
 
