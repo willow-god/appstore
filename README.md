@@ -23,7 +23,7 @@
 
 ### 添加第三方应用仓库
 
-参考官方文档：[📚 如何添加第三方应用仓库](https://github.com/1Panel-dev/1Panel/wiki)
+参考官方文档：[📚 如何添加第三方应用仓库](https://github.com/1Panel-dev/appstore/wiki/%E5%A6%82%E4%BD%95%E6%8F%90%E4%BA%A4%E8%87%AA%E5%B7%B1%E6%83%B3%E8%A6%81%E7%9A%84%E5%BA%94%E7%94%A8)
 
 ---
 
@@ -84,6 +84,63 @@ GIT_REPO="https://github.com/willow-god/appstore"
 ```
 
 ------
+
+## 😎 单应用同步
+
+如果你想同步部分应用，可以采用以下脚本：
+
+```bash
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# ========= 配置：要安装的应用列表 =========
+APPS_TO_INSTALL=(
+    "whoami"
+    "ech0"
+    "moments"
+)
+
+# ========= 常量 =========
+GIT_REPO="https://cnb.cool/Liiiu/appstore"
+TMP_DIR="/opt/1panel/resource/apps/local/appstore-localApps"
+LOCAL_APPS_DIR="/opt/1panel/resource/apps/local"
+
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+echo "📥 Cloning appstore repo..."
+[ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+git clone "$GIT_REPO" "$TMP_DIR"
+
+echo "🔄 Running mirror.sh (if exists)..."
+cd "$TMP_DIR"
+if [[ -f ./mirror.sh ]]; then
+    chmod +x ./mirror.sh
+    ./mirror.sh || echo "⚠️ mirror.sh 执行失败，继续..."
+else
+    echo "⚠️ mirror.sh not found, skipping mirroring"
+fi
+cd - >/dev/null
+
+mkdir -p "$LOCAL_APPS_DIR"
+
+# ========= 遍历安装列表 =========
+for app_name in "${APPS_TO_INSTALL[@]}"; do
+    app_path="$TMP_DIR/apps/$app_name"
+    local_app_path="$LOCAL_APPS_DIR/$app_name"
+
+    if [[ ! -d "$app_path" ]]; then
+        echo "❌ 应用 $app_name 不存在于仓库，跳过"
+        continue
+    fi
+
+    echo "🔁 Updating app: $app_name"
+    [ -d "$local_app_path" ] && rm -rf "$local_app_path"
+    cp -r "$app_path" "$local_app_path"
+done
+
+echo "✅ Selected apps sync completed."
+```
 
 ## 🎡 镜像加速配置
 
