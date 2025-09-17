@@ -6,7 +6,7 @@ set -euo pipefail
 # 并将 anheyu/anheyu-backend: 替换为 harbor.anheyu.com/anheyu/pro:v
 # ============================================================
 
-TARGET_DIR="./app/anheyu-blog-pro"
+TARGET_DIR="./apps/anheyu-blog-pro"
 SEARCH_PATTERN="docker-compose.yml"
 SRC="anheyu/anheyu-backend:"
 DST="harbor.anheyu.com/anheyu/pro:v"
