@@ -3,13 +3,13 @@ set -euo pipefail
 
 # ============================================================
 # 查找 ./app/anheyu-blog-pro/**/docker-compose.yml
-# 并将 anheyu/anheyu-backend: 替换为 harbor.anheyu.com/anheyu/pro:v
+# 并将 anheyu/anheyu-backend 替换为 harbor.anheyu.com/anheyu/pro
 # ============================================================
 
 TARGET_DIR="./apps/anheyu-blog-pro"
 SEARCH_PATTERN="docker-compose.yml"
-SRC="anheyu/anheyu-backend:"
-DST="harbor.anheyu.com/anheyu/pro:v"
+SRC="anheyu/anheyu-backend"
+DST="harbor.anheyu.com/anheyu/pro"
 
 # 查找目标文件
 files=$(find "$TARGET_DIR" -type f -name "$SEARCH_PATTERN")
