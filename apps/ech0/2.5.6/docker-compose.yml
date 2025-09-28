@@ -1,6 +1,6 @@
 services:
   ech0:
-    image: sn0wl1n/ech0:v2.5.4
+    image: sn0wl1n/ech0:v2.5.6
     container_name: ${CONTAINER_NAME}
     environment:
       - JWT_SECRET=${PANEL_ECH0_JWT_SECRET}
