@@ -1,6 +1,6 @@
 services:
   umami:
-    image: ghcr.io/umami-software/umami:postgresql-v2.19.0
+    image: ghcr.io/umami-software/umami:postgresql-3.0.0
     container_name: ${CONTAINER_NAME}
     restart: always
     labels:
