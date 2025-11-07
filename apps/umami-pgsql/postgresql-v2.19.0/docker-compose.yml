@@ -1,0 +1,20 @@
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-v2.19.0
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    labels:
+      createdBy: "Apps"
+    ports:
+      - ${PANEL_APP_PORT_HTTP}:3000
+    environment:
+      DATABASE_TYPE: postgresql
+      REDIS_URL: redis://:${PANEL_REDIS_ROOT_PASSWORD}@${PANEL_REDIS_HOST}:6379
+      DATABASE_URL: postgresql://${PANEL_DB_USER}:${PANEL_DB_USER_PASSWORD}@${PANEL_DB_HOST}:${PANEL_DB_PORT}/${PANEL_DB_NAME}
+      APP_SECRET: ${HASH_SALT}
+    networks:
+      - 1panel-network
+      
+networks:
+  1panel-network:
+    external: true
