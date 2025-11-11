@@ -1,6 +1,6 @@
 services:
   moontv-kvrocks:
-    image: apache/kvrocks:2.13.0
+    image: apache/kvrocks:2.14.0
     restart: always
     container_name: ${CONTAINER_NAME}
     networks:
