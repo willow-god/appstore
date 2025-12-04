@@ -1,0 +1,33 @@
+name: AxonHub-mysql
+tags:
+  - AI 平台
+  - 自托管
+  - 开发工具
+title: 一体化 AI 开发与管理平台
+description: AxonHub 是一个集成统一 API 网关、项目管理与全栈 AI 开发能力的自托管平台，本版本为 MySQL 支持版。
+additionalProperties:
+  key: axonhub-mysql
+  name: AxonHub-mysql
+  tags:
+    - Tool
+    - AI
+  shortDescZh: 一体化 AI 开发平台
+  shortDescEn: All-in-one AI development platform
+  type: Tool
+  crossVersionUpdate: true
+  limit: 0
+  website: https://github.com/looplj/axonhub
+  github: https://github.com/looplj/axonhub
+  document: https://github.com/looplj/axonhub
+  description:
+    en: An all-in-one AI development platform providing a unified API gateway, project management, tracing, and complete development tools. Supports OpenAI and Anthropic compatible APIs with intelligent load balancing and fine-grained permissions.
+    zh: 一体化 AI 开发平台，提供统一 API 网关、项目管理、全链路追踪与全套开发工具。兼容 OpenAI、Anthropic API，并具备智能负载均衡与细粒度权限控制。
+    zh-Hant: 一體化 AI 開發平台，整合統一 API 網關、項目管理、追蹤與完整開發工具。支援 OpenAI、Anthropic API，並提供智能負載均衡與細緻權限控管。
+    ja: 統合 API ゲートウェイ、プロジェクト管理、トレース機能を備えたオールインワン AI 開発プラットフォーム。OpenAI / Anthropic 互換 API に対応。
+    ms: Platform pembangunan AI serba-dalam-satu dengan gerbang API bersepadu, pengurusan projek, penjejakan dan set alat pembangunan lengkap, serasi dengan API OpenAI dan Anthropic.
+    pt-br: Plataforma completa de desenvolvimento de IA com gateway API unificado, gerenciamento de projetos, rastreamento e ferramentas de desenvolvimento, compatível com APIs OpenAI e Anthropic.
+    ru: Универсальная платформа для разработки ИИ с единым API-шлюзом, управлением проектами, трассировкой и полным набором инструментов. Поддерживает совместимые API OpenAI и Anthropic.
+    ko: 통합 API 게이트웨이, 프로젝트 관리, 추적 및 개발 도구를 제공하는 올인원 AI 개발 플랫폼. OpenAI·Anthropic 호환 API 지원.
+  architectures:
+    - amd64
+    - arm64

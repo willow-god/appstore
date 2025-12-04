@@ -1,0 +1,21 @@
+services:
+  axonhub_mysql:
+    image: ooplj/axonhub:v0.5.6
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    environment:
+      AXONHUB_DB_DIALECT: mysql
+      AXONHUB_DB_DSN: ${PANEL_AH_DB_USER}:${PANEL_AH_DB_PASSWORD}@tcp({PANEL_AH_DB_HOST}:${PANEL_AH_DB_PORT})/${PANEL_AH_DB_NAME}?charset=utf8mb4&parseTime=True&loc=Local
+    volumes:
+      - ./data/data:/data
+      - ./data/config.yml:/app/config.yml:ro
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:8090"
+    labels:
+      createdBy: "Apps"
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true
