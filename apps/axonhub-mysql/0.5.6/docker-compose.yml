@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       AXONHUB_DB_DIALECT: mysql
-      AXONHUB_DB_DSN: ${PANEL_DB_USER}:${PANEL_DB_PASSWORD}@tcp({PANEL_DB_HOST}:${PANEL_DB_PORT})/${PANEL_DB_NAME}?charset=utf8mb4&parseTime=True&loc=Local
+      AXONHUB_DB_DSN: ${PANEL_DB_USER}:${PANEL_DB_PASSWORD}@tcp(${PANEL_DB_HOST}:${PANEL_DB_PORT})/${PANEL_DB_NAME}?charset=utf8mb4&parseTime=True&loc=Local
     volumes:
       - ./data/data:/data
       - ./data/config.yml:/app/config.yml:ro
