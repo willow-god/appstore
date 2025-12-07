@@ -48,12 +48,6 @@
     },
     {
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/umami-software/umami"],
-      "versionCompatibility": "^(?<compatibility>.*)-(?<version>.*)$",
-      "versioning": "semver"
-    },
-    {
-      "matchDatasources": ["docker"],
       "matchPackageNames": ["ghcr.io/lukegus/termix"],
       "versionCompatibility": "^release-(?<version>.*)$",
       "versioning": "semver"

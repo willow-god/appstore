@@ -1,6 +1,6 @@
 services:
   umami:
-    image: ghcr.io/umami-software/umami:mysql-v2.20.1
+    image: ghcr.io/umami-software/umami:mysql-latest
     container_name: ${CONTAINER_NAME}
     restart: always
     labels:

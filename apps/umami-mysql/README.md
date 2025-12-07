@@ -2,6 +2,8 @@
 - 支持的数据库版本：MySQL >= 5.7，PostgreSQL >= 12.14.
 - 首次登录默认用户名为：admin，密码为：umami。
 
+> 该版本已经停止更新，请使用PostgreSQL
+
 # Umami
 
 *Umami* 是 Google Analytics 的简单、快速、注重隐私的替代方案。
