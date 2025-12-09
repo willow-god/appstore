@@ -1,6 +1,6 @@
 services:
   axonhub_mysql:
-    image: looplj/axonhub:v0.5.8
+    image: looplj/axonhub:v0.5.9
     container_name: ${CONTAINER_NAME}
     restart: always
     environment:
