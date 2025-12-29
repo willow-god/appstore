@@ -98,8 +98,16 @@ if [[ -f "$MIRROR_CONFIG" ]]; then
         IFS=',' read -r -a APPS <<< "$APP_LIST"
 
         for app in "${APPS[@]}"; do
+            app_dir="./apps/$app"
+            
+            # 【修改处】检查应用目录是否存在，不存在则跳过
+            if [ ! -d "$app_dir" ]; then
+                echo "应用目录不存在，跳过: $app_dir"
+                continue
+            fi
+            
             # 查找 docker-compose 文件
-            files=$(find "./apps/$app" -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" \))
+            files=$(find "$app_dir" -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" \))
             for file in $files; do
                 replace_image "$file" "$SRC_REG" "$MIRROR"
             done
