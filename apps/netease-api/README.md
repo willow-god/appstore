@@ -1,10 +1,6 @@
 - # 网易云音乐无损解析
 
   <div align="center">
-  ![GitHub stars](https://img.shields.io/github/stars/Suxiaoqinx/Netease_url?style=flat-square)
-  ![GitHub forks](https://img.shields.io/github/forks/Suxiaoqinx/Netease_url?style=flat-square)
-  ![GitHub issues](https://img.shields.io/github/issues/Suxiaoqinx/Netease_url?style=flat-square)
-  ![GitHub license](https://img.shields.io/github/license/Suxiaoqinx/Netease_url?style=flat-square)
   
   **功能强大的网易云音乐解析工具**
   
