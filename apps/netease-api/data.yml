@@ -1,0 +1,19 @@
+name: Netease-API
+tags:
+  - 实用工具
+title: 开源的网易云音乐无损解析服务
+description: 开源的网易云音乐无损解析服务
+additionalProperties:
+  key: netease-api
+  name: Netease-API
+  tags:
+    - Tool
+  shortDescZh: 开源的网易云音乐无损解析服务
+  shortDescEn: Open-source music API service
+  type: tool
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://github.com/Suxiaoqinx/Netease_url
+  github: https://github.com/Suxiaoqinx/Netease_url
+  document: https://github.com/Suxiaoqinx/Netease_url
