@@ -1,0 +1,30 @@
+name: PicImpact
+tags:
+  - 实用工具
+title: 一个支持自部署的摄影作品展示网站
+description: 一个支持自部署的摄影作品展示网站
+additionalProperties:
+  key: picimpact
+  name: PicImpact
+  tags:
+    - Tool
+  shortDescZh: 一个支持自部署的摄影作品展示网站
+  shortDescEn: A self-hosted photography portfolio website
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  website: https://pic-docs.ziyume.com/
+  github: https://github.com/besscroft/PicImpact
+  document: https://pic-docs.ziyume.com/
+  description:
+    en: A self-hosted photography portfolio website
+    zh: 一个支持自部署的摄影作品展示网站
+    zh-Hant: 一個支持自部署的攝影作品展示網站
+    ja: 自己ホスト型の写真ポートフォリオウェブサイト
+    ms: Laman web portfolio fotografi yang boleh dihoskan sendiri
+    pt-br: Um site de portfólio de fotografia auto-hospedado
+    ru: Самостоятельно размещаемый веб-сайт портфолио фотографий
+    ko: 자체 호스팅 가능한 사진 포트폴리오 웹사이트
+  architectures:
+    - amd64
+    - arm64
