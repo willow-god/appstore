@@ -90,6 +90,7 @@ additionalProperties:
       random: true
       required: true
       type: password
+    
     - default: picimpact
       edit: true
       envKey: HASH_SALT
@@ -105,5 +106,38 @@ additionalProperties:
         zh: 哈希盐 (随机字符串)
         zh-Hant: 哈希鹽（隨機字符串）
       random: true
+      required: true
+      type: text
+    
+    - default: album.example.com
+      envKey: PANEL_APP_DOMAIN
+      edit: true
+      labelEn: Application Domain
+      labelZh: 应用域名
+      label:
+        en: Application Domain
+        ja: アプリケーションドメイン
+        ms: Domain Aplikasi
+        pt-br: Domínio da Aplicação
+        ru: Домен приложения
+        ko: 애플리케이션 도메인
+        zh: 应用域名
+        zh-Hant: 應用域名
+      random: false
+      required: true
+      type: text
+    
+    - default: picimpact
+      edit: true
+      envKey: PASSKEY_NAME
+      labelEn: Passkey Name
+      labelZh: 密钥名称
+      label:
+        en: Passkey Name
+        ja: パスキー名
+        ms: Nama Kunci
+        pt-br: Nome da Chave de Acesso
+        ru: Название ключа доступа
+      random: false
       required: true
       type: text
