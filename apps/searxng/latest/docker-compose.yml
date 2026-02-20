@@ -8,7 +8,7 @@ services:
       createdBy: "Apps"
     
     ports:
-      - ${PANEL_APP_PORT_HTTP}:3000
+      - ${PANEL_APP_PORT_HTTP}:8080
 
     volumes:
       - ./data/searxng:/etc/searxng:rw

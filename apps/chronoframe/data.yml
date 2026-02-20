@@ -1,0 +1,33 @@
+name: ChronoFrame
+tags:
+  - 相册
+  - 发布平台
+  - 自托管
+title: 美观自托管的相册程序
+description: 一款专注于思想流动的极简相册程序，支持 自托管
+additionalProperties:
+  key: chronoframe
+  name: ChronoFrame
+  tags:
+    - WebSite
+    - Tool
+  shortDescZh: 极简、开源的轻量自托管相册程序
+  shortDescEn: A minimalist, self-hosted photo album program that is open-source and lightweight.
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  website: https://github.com/HoshinoSuzumi/chronoframe
+  github: https://github.com/HoshinoSuzumi/chronoframe
+  document: https://github.com/HoshinoSuzumi/chronoframe
+  description:
+    en: A minimalist, lightweight, self-hosted photo album program with Markdown, RSS, and full data control.
+    zh: 一款极简、轻量的自托管相册程序，支持 Markdown、RSS 订阅和数据本地存储。
+    zh-Hant: 一個極簡、輕量的自託管相冊程序，支援 Markdown、RSS 訂閱與本地儲存。
+    ja: Markdown と RSS に対応した、シンプルで軽量なセルフホスティング写真アルバムプログラムです。
+    ms: Program album foto kendiri yang ringkas dan ringan, menyokong Markdown dan RSS.
+    pt-br: Um programa de álbum de fotos auto-hospedado, minimalista e leve com suporte a Markdown e RSS.
+    ru: Минималистичная, лёгкая программа для самостоятельного ведения фотоальбома с поддержкой Markdown и RSS.
+    ko: Markdown, RSS를 지원하는 가볍고 미니멀한 셀프 호스팅 사진 앨범 프로그램입니다.
+  architectures:
+    - amd64
+    - arm64

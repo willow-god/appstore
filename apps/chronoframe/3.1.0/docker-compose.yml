@@ -1,0 +1,17 @@
+services:
+  chronoframe:
+    image: ghcr.io/hoshinosuzumi/chronoframe:v3.1.0
+    container_name: ${CONTAINER_NAME}
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:6277"
+    volumes:
+      - ./data:/app/data
+    labels:
+      createdBy: "Apps"
+    networks:
+      - 1panel-network
+    restart: always
+
+networks:
+  1panel-network:
+    external: true
