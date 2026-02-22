@@ -16,3 +16,399 @@ additionalProperties:
       required: true
       rule: paramPort
       type: number
+    - default: admin@chronoframe.com
+      envKey: PANEL_APP_ADMIN_EMAIL
+      labelEn: Admin Email
+      labelZh: 管理员邮箱
+      label:
+        en: Admin Email
+        ja: 管理者のメールアドレス
+        ms: Email Admin
+        pt-br: Email do Admin
+        ru: Электронная почта администратора
+        ko: 관리자 이메일
+        zh: 管理员邮箱
+        zh-Hant: 管理員電子郵件
+      required: true
+      rule: paramCommon
+      type: text
+    - default: 清羽相册
+      envKey: PANEL_APP_SITE_NAME
+      labelEn: Site Name
+      labelZh: 站点名称
+      label:
+        en: Site Name
+        ja: サイト名
+        ms: Nama Situs
+        pt-br: Nome do Site
+        ru: Название сайта
+        ko: 사이트 이름
+        zh: 站点名称
+        zh-Hant: 網站名稱
+      required: true
+      rule: paramCommon
+      type: text
+    - default: 清羽飞扬の相册系统
+      envKey: PANEL_APP_SITE_SLOGAN
+      labelEn: Site Slogan
+      labelZh: 站点标语
+      label:
+        en: Site Slogan
+        ja: サイトのスローガン
+        ms: Slogan Situs
+        pt-br: Slogan do Site
+        ru: Слоган сайта
+        ko: 사이트 슬로건
+        zh: 站点标语
+        zh-Hant: 網站標語
+      required: true
+      rule: paramCommon
+      type: text
+    - default: LiuShen
+      envKey: PANEL_APP_SITE_AUTHOR
+      labelEn: Site Author
+      labelZh: 站点作者
+      label:
+        en: Site Author
+        ja: サイトの作者
+        ms: Penulis Situs
+        pt-br: Autor do Site
+        ru: Автор сайта
+        ko: 사이트 저자
+        zh: 站点作者
+        zh-Hant: 網站作者
+      required: true
+      rule: paramCommon
+      type: text
+    - default: https://www.liushen.fun/favicon.ico
+      envKey: PANEL_APP_SITE_AVATAR_URL
+      labelEn: Site Avatar URL
+      labelZh: 站点头像 URL
+      label:
+        en: Site Avatar URL
+        ja: サイトのアバター URL
+        ms: URL Avatar Situs
+        pt-br: URL do Avatar do Site
+        ru: URL Аватара сайта
+        ko: 사이트 아바타 URL
+        zh: 站点头像 URL
+        zh-Hant: 網站頭像 URL
+      required: true
+      rule: paramCommon
+      type: text
+    - default: s3
+      envKey: PANEL_APP_STORAGE_PROVIDER
+      labelEn: Storage Provider
+      labelZh: 存储提供商
+      label:
+        en: Storage Provider
+        ja: ストレージプロバイダー
+        ms: Penyedia Penyimpanan
+        pt-br: Provedor de Armazenamento
+        ru: Поставщик хранилища
+        ko: 스토리지 공급자
+        zh: 存储提供商
+        zh-Hant: 儲存提供者
+      required: true
+      type: select
+      values:
+        - label: s3
+          value: s3
+        - label: local
+          value: local
+        - label: openlist
+          value: openlist
+    - default: s3.endpoint.com
+      envKey: PANEL_APP_S3_ENDPOINT
+      labelEn: S3 Endpoint
+      labelZh: S3 端点
+      label:
+        en: S3 Endpoint
+        ja: S3 エンドポイント
+        ms: Endpoint S3
+        pt-br: Endpoint do S3
+        ru: Конечная точка S3
+        ko: S3 엔드포인트
+        zh: S3 端点
+        zh-Hant: S3 端點
+      required: false
+      rule: paramCommon
+      type: text
+    - default: chronoframe
+      envKey: PANEL_APP_S3_BUCKET
+      labelEn: S3 Bucket
+      labelZh: S3 存储桶
+      label:
+        en: S3 Bucket
+        ja: S3 バケット
+        ms: Bucket S3
+        pt-br: Bucket do S3
+        ru: Корзина S3
+        ko: S3 버킷
+        zh: S3 存储桶
+        zh-Hant: S3 儲存桶
+      required: false
+      rule: paramCommon
+      type: text
+    - default: asia-east1
+      envKey: PANEL_APP_S3_REGION
+      labelEn: S3 Region
+      labelZh: S3 区域
+      label:
+        en: S3 Region
+        ja: S3 リージョン
+        ms: Wilayah S3
+        pt-br: Região do S3
+        ru: Регион S3
+        ko: S3 지역
+        zh: S3 区域
+        zh-Hant: S3 區域
+      required: false
+      rule: paramCommon
+      type: text
+    - default: chronoframe
+      envKey: PANEL_APP_S3_ACCESS_KEY_ID
+      labelEn: S3 Key ID
+      labelZh: S3 Key ID
+      label:
+        en: S3 Key ID
+        ja: S3 キーID
+        ms: ID Kunci S3
+        pt-br: ID da Chave do S3
+        ru: Идентификатор ключа S3
+        ko: S3 키 ID
+        zh: S3 Key ID
+        zh-Hant: S3 Key ID
+      required: false
+      rule: paramCommon
+      type: text
+      random: true
+    - default: chronoframe
+      envKey: PANEL_APP_S3_SECRET_ACCESS_KEY
+      labelEn: S3 Access Key
+      labelZh: S3 Access Key
+      label:
+        en: S3 Access Key
+        ja: S3 アクセスキー
+        ms: Kunci Akses S3
+        pt-br: Chave de Acesso do S3
+        ru: Ключ доступа S3
+        ko: S3 액세스 키
+        zh: S3 Access Key
+        zh-Hant: S3 Access Key
+      required: false
+      rule: paramCommon
+      type: text
+      random: true
+    - default: "photos/"
+      envKey: PANEL_APP_S3_PREFIX
+      labelEn: S3 Prefix
+      labelZh: S3 前缀
+      label:
+        en: S3 Prefix
+        ja: S3 プレフィックス
+        ms: Awalan S3
+        pt-br: Prefixo do S3
+        ru: Префикс S3
+        ko: S3 접두사
+        zh: S3 前缀
+        zh-Hant: S3 前綴
+      required: false
+      rule: paramCommon
+      type: text
+    - default: https://cdn.s3.endpoint.com
+      envKey: PANEL_APP_S3_CDN_URL
+      labelEn: S3 CDN URL
+      labelZh: S3 CDN URL
+      label:
+        en: S3 CDN URL
+        ja: S3 CDN URL
+        ms: URL CDN S3
+        pt-br: URL do CDN do S3
+        ru: URL CDN S3
+        ko: S3 CDN URL
+        zh: S3 CDN URL
+        zh-Hant: S3 CDN URL
+      required: false
+      rule: paramCommon
+      type: text
+
+    - default: https://openlist.link
+      envKey: PANEL_APP_OPENLIST_BASE_URL
+      labelEn: OpenList URL
+      labelZh: OpenList URL
+      label:
+        en: OpenList URL
+        ja: OpenList URL
+        ms: URL OpenList
+        pt-br: URL do OpenList
+        ru: URL OpenList
+        ko: OpenList URL
+        zh: OpenList URL
+        zh-Hant: OpenList URL
+      required: false
+      rule: paramCommon
+      type: text
+    - default: "/photos"
+      envKey: PANEL_APP_OPENLIST_ROOT_PATH
+      labelEn: OpenList Root Path
+      labelZh: OpenList 根路径
+      label:
+        en: OpenList Root Path
+        ja: OpenList ルートパス
+        ms: Jalur Akar OpenList
+        pt-br: Caminho Raiz do OpenList
+        ru: Корневой путь OpenList
+        ko: OpenList 루트 경로
+        zh: OpenList 根路径
+        zh-Hant: OpenList 根路徑
+      required: false
+      rule: paramCommon
+      type: text
+    - default: OpenList-Token
+      envKey: PANEL_APP_OPENLIST_TOKEN
+      labelEn: OpenList Token
+      labelZh: OpenList 令牌
+      label:
+        en: OpenList Token
+        ja: OpenList トークン
+        ms: Token OpenList
+        pt-br: Token do OpenList
+        ru: Токен OpenList
+        ko: OpenList 토큰
+        zh: OpenList 令牌
+        zh-Hant: OpenList 令牌
+      required: false
+      rule: paramCommon
+      type: text
+    - default: "/api/fs/put"
+      envKey: PANEL_APP_OPENLIST_ENDPOINT_UPLOAD
+      labelEn: OpenList Upload Endpoint
+      labelZh: OpenList 上传端点
+      label:
+        en: OpenList Upload Endpoint
+        ja: OpenList アップロードエンド
+        ms: Titik Akhir Unggah OpenList
+        pt-br: Endpoint de Upload do OpenList
+        ru: Конечная точка загрузки OpenList
+        ko: OpenList 업로드 엔드포인트
+        zh: OpenList 上传端点
+        zh-Hant: OpenList 上傳端點
+      required: false
+      rule: paramCommon
+      type: text
+    - default: ""
+      envKey: PANEL_APP_OPENLIST_ENDPOINT_DOWNLOAD
+      labelEn: OpenList Download Endpoint
+      labelZh: OpenList 下载端点
+      label:
+        en: OpenList Download Endpoint
+        ja: OpenList ダウンロードエンド
+        ms: Titik Akhir Unduh OpenList
+        pt-br: Endpoint de Download do OpenList
+        ru: Конечная точка загрузки OpenList
+        ko: OpenList 다운로드 엔드포인트
+        zh: OpenList 下载端点
+        zh-Hant: OpenList 下載端點
+      required: false
+      rule: paramCommon
+      type: text
+    - default: ""
+      envKey: PANEL_APP_OPENLIST_ENDPOINT_LIST
+      labelEn: OpenList List Endpoint
+      labelZh: OpenList 列表端点
+      label:
+        en: OpenList List Endpoint
+        ja: OpenList リストエンド
+        ms: Titik Akhir Daftar OpenList
+        pt-br: Endpoint de Lista do OpenList
+        ru: Конечная точка списка OpenList
+        ko: OpenList 리스트 엔드포인트
+        zh: OpenList 列表端点
+        zh-Hant: OpenList 列表端點
+      required: false
+      rule: paramCommon
+      type: text
+    - default: "/api/fs/remove"
+      envKey: PANEL_APP_OPENLIST_ENDPOINT_DELETE
+      labelEn: OpenList Delete Endpoint
+      labelZh: OpenList 删除端点
+      label:
+        en: OpenList Delete Endpoint
+        ja: OpenList 削除エンド
+        ms: Titik Akhir Hapus OpenList
+        pt-br: Endpoint de Exclusão do OpenList
+        ru: Конечная точка удаления OpenList
+        ko: OpenList 삭제 엔드포인트
+        zh: OpenList 删除端点
+        zh-Hant: OpenList 刪除端點
+      required: false
+      rule: paramCommon
+      type: text
+    - default: "/api/fs/get"
+      envKey: PANEL_APP_OPENLIST_ENDPOINT_META
+      labelEn: OpenList Meta Endpoint
+      labelZh: OpenList 元信息端点
+      label:
+        en: OpenList Meta Endpoint
+        ja: OpenList メタエンド
+        ms: Titik Akhir Meta OpenList
+        pt-br: Endpoint Meta do OpenList
+        ru: Конечная точка метаинформации OpenList
+        ko: OpenList 메타 엔드포인트
+        zh: OpenList 元信息端点
+        zh-Hant: OpenList 元信息端點
+      required: false
+      rule: paramCommon
+      type: text
+    - default: path
+      envKey: PANEL_APP_OPENLIST_PATH_FIELD
+      labelEn: OpenList Path Field
+      labelZh: OpenList 路径字段
+      label:
+        en: OpenList Path Field
+        ja: OpenList パスフィールド
+        ms: Bidang Jalur OpenList
+        pt-br: Campo de Caminho do OpenList
+        ru: Поле пути OpenList
+        ko: OpenList 경로 필드
+        zh: OpenList 路径字段
+        zh-Hant: OpenList 路徑字段
+      required: false
+      rule: paramCommon
+      type: text
+    - default: https://cdn.openlist.link
+      envKey: PANEL_APP_OPENLIST_CDN_URL
+      labelEn: OpenList CDN URL
+      labelZh: OpenList CDN URL
+      label:
+        en: OpenList CDN URL
+        ja: OpenList CDN URL
+        ms: URL CDN OpenList
+        pt-br: URL do CDN do OpenList
+        ru: URL CDN OpenList
+        ko: OpenList CDN URL
+        zh: OpenList CDN URL
+        zh-Hant: OpenList CDN URL
+      required: false
+      rule: paramCommon
+      type: text
+    
+    - default: chronoframe
+      envKey: PANEL_APP_SESSION_PASSWORD
+      labelEn: Session Password
+      labelZh: 会话密码
+      label:
+        en: Session Password
+        ja: セッションパスワード
+        ms: Kata Sandi Sesi
+        pt-br: Senha da Sessão
+        ru: Пароль сессии
+        ko: 세션 비밀번호
+        zh: 会话密码
+        zh-Hant: 會話密碼
+      required: true
+      rule: paramCommon
+      type: text
+      random: true
+      
