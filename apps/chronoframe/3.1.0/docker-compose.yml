@@ -1,6 +1,6 @@
 services:
   chronoframe:
-    image: ghcr.io/hoshinosuzumi/chronoframe:0.14.0
+    image: ghcr.io/hoshinosuzumi/chronoframe:0.14.1
     container_name: ${CONTAINER_NAME}
     ports:
       - "${PANEL_APP_PORT_HTTP}:3000"
