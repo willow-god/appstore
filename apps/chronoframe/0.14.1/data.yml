@@ -38,12 +38,15 @@ additionalProperties:
       labelZh: 管理员用户名
       required: true
       type: text
-    - default: admin@chronoframe.com
+    - default: chronoframe
       envKey: PANEL_APP_ADMIN_PASSWORD
       labelEn: Admin Password
       labelZh: 管理员密码
       required: true
+      type: password
+      random: true
       type: text
+
     - default: 清羽相册
       envKey: PANEL_APP_SITE_NAME
       labelEn: Site Name
