@@ -106,7 +106,24 @@ additionalProperties:
         zh-Hant: 網站頭像 URL
       required: true
       type: text
-    - default: s3
+    
+    - default: maptiler_key
+      envKey: PANEL_APP_MAP_MAPLIBRE_TOKEN
+      labelEn: MapTiler Token
+      labelZh: MapTiler 令牌
+      label:
+        en: MapTiler Token
+        ja: MapTiler トークン
+        ms: Token MapTiler
+        pt-br: Token do MapTiler
+        ru: Токен MapTiler
+        ko: MapTiler 토큰
+        zh: MapTiler 令牌
+        zh-Hant: MapTiler 令牌
+      required: true
+      type: password
+
+    - default: local
       envKey: PANEL_APP_STORAGE_PROVIDER
       labelEn: Storage Provider
       labelZh: 存储提供商
@@ -128,6 +145,38 @@ additionalProperties:
           value: local
         - label: openlist
           value: openlist
+    - default: /app/data/storage
+      envKey: PANEL_APP_LOCAL_PATH
+      labelEn: Storage Path
+      labelZh: 存储路径
+      label:
+        en: Storage Path
+        ja: ストレージパス
+        ms: Jalur Penyimpanan
+        pt-br: Caminho de Armazenamento
+        ru: Путь хранения
+        ko: 스토리지 경로
+        zh: 存储路径
+        zh-Hant: 儲存路徑
+      required: false
+      type: text
+    
+    - default: /storage
+      envKey: PANEL_APP_LOCAL_BASE_URL
+      labelEn: Storage Base URL
+      labelZh: 存储基础 URL
+      label:
+        en: Storage Base URL
+        ja: ストレージベースURL
+        ms: URL Dasar Penyimpanan
+        pt-br: URL Base de Armazenamento
+        ru: Базовый URL хранилища
+        ko: 스토리지 기본 URL
+        zh: 存储基础 URL
+        zh-Hant: 儲存基礎 URL
+      required: false
+      type: text
+
     - default: s3.endpoint.com
       envKey: PANEL_APP_S3_ENDPOINT
       labelEn: S3 Endpoint
