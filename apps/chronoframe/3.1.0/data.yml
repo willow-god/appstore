@@ -30,7 +30,6 @@ additionalProperties:
         zh: 管理员邮箱
         zh-Hant: 管理員電子郵件
       required: true
-      rule: paramCommon
       type: text
     - default: 清羽相册
       envKey: PANEL_APP_SITE_NAME
@@ -46,7 +45,6 @@ additionalProperties:
         zh: 站点名称
         zh-Hant: 網站名稱
       required: true
-      rule: paramCommon
       type: text
     - default: 清羽飞扬の相册系统
       envKey: PANEL_APP_SITE_SLOGAN
@@ -62,7 +60,6 @@ additionalProperties:
         zh: 站点标语
         zh-Hant: 網站標語
       required: true
-      rule: paramCommon
       type: text
     - default: LiuShen
       envKey: PANEL_APP_SITE_AUTHOR
@@ -78,7 +75,6 @@ additionalProperties:
         zh: 站点作者
         zh-Hant: 網站作者
       required: true
-      rule: paramCommon
       type: text
     - default: https://www.liushen.fun/favicon.ico
       envKey: PANEL_APP_SITE_AVATAR_URL
@@ -94,7 +90,6 @@ additionalProperties:
         zh: 站点头像 URL
         zh-Hant: 網站頭像 URL
       required: true
-      rule: paramCommon
       type: text
     - default: s3
       envKey: PANEL_APP_STORAGE_PROVIDER
@@ -132,7 +127,6 @@ additionalProperties:
         zh: S3 端点
         zh-Hant: S3 端點
       required: false
-      rule: paramCommon
       type: text
     - default: chronoframe
       envKey: PANEL_APP_S3_BUCKET
@@ -148,7 +142,6 @@ additionalProperties:
         zh: S3 存储桶
         zh-Hant: S3 儲存桶
       required: false
-      rule: paramCommon
       type: text
     - default: asia-east1
       envKey: PANEL_APP_S3_REGION
@@ -164,7 +157,6 @@ additionalProperties:
         zh: S3 区域
         zh-Hant: S3 區域
       required: false
-      rule: paramCommon
       type: text
     - default: chronoframe
       envKey: PANEL_APP_S3_ACCESS_KEY_ID
@@ -180,7 +172,6 @@ additionalProperties:
         zh: S3 Key ID
         zh-Hant: S3 Key ID
       required: false
-      rule: paramCommon
       type: text
       random: true
     - default: chronoframe
@@ -197,7 +188,6 @@ additionalProperties:
         zh: S3 Access Key
         zh-Hant: S3 Access Key
       required: false
-      rule: paramCommon
       type: text
       random: true
     - default: "photos/"
@@ -214,7 +204,6 @@ additionalProperties:
         zh: S3 前缀
         zh-Hant: S3 前綴
       required: false
-      rule: paramCommon
       type: text
     - default: https://cdn.s3.endpoint.com
       envKey: PANEL_APP_S3_CDN_URL
@@ -230,7 +219,6 @@ additionalProperties:
         zh: S3 CDN URL
         zh-Hant: S3 CDN URL
       required: false
-      rule: paramCommon
       type: text
 
     - default: https://openlist.link
@@ -247,7 +235,6 @@ additionalProperties:
         zh: OpenList URL
         zh-Hant: OpenList URL
       required: false
-      rule: paramCommon
       type: text
     - default: "/photos"
       envKey: PANEL_APP_OPENLIST_ROOT_PATH
@@ -263,7 +250,6 @@ additionalProperties:
         zh: OpenList 根路径
         zh-Hant: OpenList 根路徑
       required: false
-      rule: paramCommon
       type: text
     - default: OpenList-Token
       envKey: PANEL_APP_OPENLIST_TOKEN
@@ -279,7 +265,6 @@ additionalProperties:
         zh: OpenList 令牌
         zh-Hant: OpenList 令牌
       required: false
-      rule: paramCommon
       type: text
     - default: "/api/fs/put"
       envKey: PANEL_APP_OPENLIST_ENDPOINT_UPLOAD
@@ -295,7 +280,6 @@ additionalProperties:
         zh: OpenList 上传端点
         zh-Hant: OpenList 上傳端點
       required: false
-      rule: paramCommon
       type: text
     - default: ""
       envKey: PANEL_APP_OPENLIST_ENDPOINT_DOWNLOAD
@@ -311,7 +295,6 @@ additionalProperties:
         zh: OpenList 下载端点
         zh-Hant: OpenList 下載端點
       required: false
-      rule: paramCommon
       type: text
     - default: ""
       envKey: PANEL_APP_OPENLIST_ENDPOINT_LIST
@@ -327,7 +310,6 @@ additionalProperties:
         zh: OpenList 列表端点
         zh-Hant: OpenList 列表端點
       required: false
-      rule: paramCommon
       type: text
     - default: "/api/fs/remove"
       envKey: PANEL_APP_OPENLIST_ENDPOINT_DELETE
@@ -343,7 +325,6 @@ additionalProperties:
         zh: OpenList 删除端点
         zh-Hant: OpenList 刪除端點
       required: false
-      rule: paramCommon
       type: text
     - default: "/api/fs/get"
       envKey: PANEL_APP_OPENLIST_ENDPOINT_META
@@ -359,7 +340,6 @@ additionalProperties:
         zh: OpenList 元信息端点
         zh-Hant: OpenList 元信息端點
       required: false
-      rule: paramCommon
       type: text
     - default: path
       envKey: PANEL_APP_OPENLIST_PATH_FIELD
@@ -375,7 +355,6 @@ additionalProperties:
         zh: OpenList 路径字段
         zh-Hant: OpenList 路徑字段
       required: false
-      rule: paramCommon
       type: text
     - default: https://cdn.openlist.link
       envKey: PANEL_APP_OPENLIST_CDN_URL
@@ -391,7 +370,6 @@ additionalProperties:
         zh: OpenList CDN URL
         zh-Hant: OpenList CDN URL
       required: false
-      rule: paramCommon
       type: text
     
     - default: chronoframe
@@ -408,7 +386,6 @@ additionalProperties:
         zh: 会话密码
         zh-Hant: 會話密碼
       required: true
-      rule: paramCommon
       type: text
       random: true
       
