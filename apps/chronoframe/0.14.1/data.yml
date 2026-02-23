@@ -45,7 +45,6 @@ additionalProperties:
       required: true
       type: password
       random: true
-      type: text
 
     - default: 清羽相册
       envKey: PANEL_APP_SITE_NAME
