@@ -47,7 +47,7 @@ additionalProperties:
       random: true
 
     - default: 清羽相册
-      envKey: PANEL_APP_SITE_NAME
+      envKey: PANEL_APP_SITE_TITLE
       labelEn: Site Name
       labelZh: 站点名称
       label:
