@@ -1,15 +1,19 @@
 services:
   chronoframe:
-    image: ghcr.io/hoshinosuzumi/chronoframe:3.1.0
+    image: ghcr.io/hoshinosuzumi/chronoframe:0.14.0
     container_name: ${CONTAINER_NAME}
     ports:
-      - "${PANEL_APP_PORT_HTTP}:6277"
+      - "${PANEL_APP_PORT_HTTP}:3000"
     environment:
+      - CFRAME_ADMIN_NAME=${PANEL_APP_ADMIN_NAME}
       - CFRAME_ADMIN_EMAIL=${PANEL_APP_ADMIN_EMAIL}
+      - CFRAME_ADMIN_PASSWORD=${PANEL_APP_ADMIN_PASSWORD}
+
       - NUXT_PUBLIC_APP_TITLE=${PANEL_APP_SITE_TITLE}
       - NUXT_PUBLIC_APP_SLOGAN=${PANEL_APP_SITE_SLOGAN}
       - NUXT_PUBLIC_APP_AUTHOR=${PANEL_APP_SITE_AUTHOR}
       - NUXT_PUBLIC_APP_AVATAR_URL=${PANEL_APP_SITE_AVATAR_URL}
+
       - NUXT_STORAGE_PROVIDER=${PANEL_APP_STORAGE_PROVIDER}
 
       - NUXT_PROVIDER_LOCAL_PATH=${PANEL_APP_LOCAL_PATH}
