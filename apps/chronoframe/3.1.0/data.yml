@@ -16,6 +16,7 @@ additionalProperties:
       required: true
       rule: paramPort
       type: number
+    
     - default: admin@chronoframe.com
       envKey: PANEL_APP_ADMIN_EMAIL
       labelEn: Admin Email
@@ -29,6 +30,18 @@ additionalProperties:
         ko: 관리자 이메일
         zh: 管理员邮箱
         zh-Hant: 管理員電子郵件
+      required: true
+      type: text
+    - default: ChronoFrame
+      envKey: PANEL_APP_ADMIN_NAME
+      labelEn: Admin Name
+      labelZh: 管理员用户名
+      required: true
+      type: text
+    - default: admin@chronoframe.com
+      envKey: PANEL_APP_ADMIN_PASSWORD
+      labelEn: Admin Password
+      labelZh: 管理员密码
       required: true
       type: text
     - default: 清羽相册
