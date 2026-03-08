@@ -41,6 +41,7 @@ services:
       - NUXT_PROVIDER_OPENLIST_CDN_URL=${PANEL_APP_OPENLIST_CDN_URL}
 
       - NUXT_SESSION_PASSWORD=${PANEL_APP_SESSION_PASSWORD}
+      - NUXT_UPLOAD_MIME_WHITELIST_ENABLED=false
     volumes:
       - ./data:/app/data
     labels:
