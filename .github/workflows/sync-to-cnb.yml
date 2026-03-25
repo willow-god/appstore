@@ -2,20 +2,28 @@ name: Sync commits to CNB (force)
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # 每 6 小时执行一次
+    - cron: "0 0 * * *"     # 每天凌晨 0 点强制同步（兜底）
+    - cron: "0 */6 * * *"   # 每 6 小时检查一次
   push:
     branches:
       - main
+  workflow_call:            # 允许被其他工作流调用
   workflow_dispatch:
     inputs:
       reason:
         description: 'Manual trigger reason'
         required: false
         default: 'Manual run'
+      force_sync:
+        description: 'Force sync without checking for new commits'
+        required: false
+        default: 'false'
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    outputs:
+      synced: ${{ steps.sync.outputs.synced }}
 
     steps:
       - name: Checkout GitHub repository
@@ -24,7 +32,34 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Check if there are commits in the last 6 hours
+      - name: Determine sync mode
+        id: mode
+        run: |
+          # 每天凌晨的定时任务强制同步
+          if [[ "${{ github.event.schedule }}" == "0 0 * * *" ]]; then
+            echo "Daily scheduled sync - forcing sync"
+            echo "force=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # 手动触发且指定强制同步
+          if [[ "${{ github.event.inputs.force_sync }}" == "true" ]]; then
+            echo "Manual force sync requested"
+            echo "force=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # 被 workflow_call 调用时强制同步
+          if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+            echo "Called by another workflow - forcing sync"
+            echo "force=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "force=false" >> $GITHUB_OUTPUT
+
+      - name: Check if there are new commits
+        if: steps.mode.outputs.force != 'true'
         id: check
         run: |
           NEW_COMMITS=$(git log --since="6 hours ago" --oneline)
@@ -37,12 +72,14 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Add CNB remote and force push
-        if: steps.check.outputs.skip == 'false'
+      - name: Sync to CNB
+        id: sync
+        if: steps.mode.outputs.force == 'true' || steps.check.outputs.skip == 'false'
         env:
           CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
           CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
         run: |
+          echo "Syncing to CNB mirror..."
           rm -rf .git
           git init
           git config --global user.name 'GitHub Action'
@@ -52,3 +89,12 @@ jobs:
           git branch -M main
           git remote add origin "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/liiiu/appstore.git"
           git push --force --quiet origin main
+          echo "synced=true" >> $GITHUB_OUTPUT
+
+      - name: Report result
+        run: |
+          if [[ "${{ steps.sync.outputs.synced }}" == "true" ]]; then
+            echo "✅ Successfully synced to CNB mirror"
+          else
+            echo "⏭️ Skipped sync (no new commits)"
+          fi
