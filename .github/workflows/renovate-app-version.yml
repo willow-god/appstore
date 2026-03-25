@@ -9,6 +9,11 @@ on:
         description: 'Manually trigger Renovate'
         default: ''
 
+# 并发控制：确保同一时间只有一个 PR 合并操作在进行，避免竞争条件
+concurrency:
+  group: merge-renovate-pr
+  cancel-in-progress: false
+
 jobs:
   update-app-version:
     runs-on: ubuntu-latest
@@ -18,17 +23,41 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check if triggered by self (prevent circular trigger)
+        id: check-circular
+        run: |
+          # 检查最后一个 commit 的 author，如果是自己则跳过
+          last_author=$(git log -1 --format='%an')
+          last_message=$(git log -1 --format='%s')
+          
+          echo "Last commit author: $last_author"
+          echo "Last commit message: $last_message"
+          
+          # 如果是 github-action 自己 commit 的，说明是工作流触发的，跳过避免循环
+          if [[ "$last_author" == "github-action update-app-version" ]] || \
+             [[ "$last_author" == "github-action[bot]" ]] || \
+             [[ "$last_message" == *"[auto-version-bump]"* ]]; then
+            echo "⚠️ Skipping: triggered by own commit (preventing circular trigger)"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Proceeding: triggered by external commit"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Configure git
+        if: steps.check-circular.outputs.skip != 'true'
         run: |
           git config --local user.email "githubaction@githubaction.com"
           git config --local user.name "github-action update-app-version"
 
       - name: Get list of updated files by the last commit
+        if: steps.check-circular.outputs.skip != 'true'
         id: updated-files
         run: |
           echo "files=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
       - name: Run renovate-app-version.sh on updated files
+        if: steps.check-circular.outputs.skip != 'true'
         id: rename
         run: |
           set -e
@@ -93,6 +122,7 @@ jobs:
           echo "apps=$(IFS=, ; echo "${changed_apps[*]}")" >> $GITHUB_OUTPUT
 
       - name: Commit & Push Changes
+        if: steps.check-circular.outputs.skip != 'true'
         run: |
           set -e
           IFS=',' read -r -a apps <<< "${{ steps.rename.outputs.apps }}"
@@ -103,14 +133,14 @@ jobs:
 
             if [[ -n "$app_name" && -n "$new_version" ]]; then
               git add "apps/$app_name/*"
-              git commit -m "📈将应用 $app_name 的版本从 $old_version 升级到 $new_version [skip ci]" --no-verify || echo "无内容可提交"
+              git commit -m "📈将应用 $app_name 的版本从 $old_version 升级到 $new_version" --no-verify || echo "无内容可提交"
             fi
           done
 
           git push || echo "无内容可推送"
 
-      - name: Force merge PR after version bump
-        if: github.ref_name != 'main'
+      - name: Rebase to latest main and merge PR
+        if: steps.check-circular.outputs.skip != 'true' && github.ref_name != 'main'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -125,10 +155,58 @@ jobs:
             exit 0
           fi
 
-          echo "Found PR #$pr_number, force merging..."
+          echo "Found PR #$pr_number, preparing to merge..."
 
-          # 强制合并，不管 mergeable 状态
+          # Fetch 最新的 main 分支
+          echo "Fetching latest main branch..."
+          git fetch origin main
+
+          # Rebase 当前分支到最新的 main
+          # 由于 renovate PR 修改的是不同的应用文件夹，不会有真正的冲突
+          echo "Rebasing $branch_name onto origin/main..."
+          git rebase origin/main
+
+          # Force push 更新后的分支
+          echo "Force pushing rebased branch..."
+          git push --force-with-lease
+
+          # 等待 GitHub 重新计算 mergeable 状态
+          echo "Waiting for GitHub to recalculate mergeable status..."
+          sleep 15
+
+          # 检查 mergeable 状态，最多等待 2 分钟
+          max_attempts=12
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            mergeable=$(gh pr view "$pr_number" --json mergeable -q '.mergeable' 2>/dev/null || echo "UNKNOWN")
+            echo "Mergeable status: $mergeable (attempt $((attempt+1))/$max_attempts)"
+            
+            if [ "$mergeable" = "MERGEABLE" ]; then
+              echo "PR is mergeable!"
+              break
+            fi
+            
+            # 如果是 CONFLICTING，说明有真正的冲突（不应该发生）
+            if [ "$mergeable" = "CONFLICTING" ]; then
+              echo "Warning: PR has conflicts, but proceeding with admin merge..."
+              break
+            fi
+            
+            sleep 10
+            attempt=$((attempt+1))
+          done
+
+          # 合并 PR
+          echo "Merging PR #$pr_number..."
           gh pr merge "$pr_number" --merge --delete-branch --admin
 
+          echo "Successfully merged PR #$pr_number!"
 
-                
+      - name: Trigger sync to CNB mirror
+        if: steps.check-circular.outputs.skip != 'true' && github.ref_name != 'main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Triggering sync-to-cnb workflow..."
+          gh workflow run sync-to-cnb.yml --ref main
+          echo "Sync workflow triggered successfully!"
