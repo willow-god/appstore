@@ -19,6 +19,14 @@ on:
         required: false
         default: 'false'
 
+concurrency:
+  group: sync-to-cnb
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -72,9 +80,26 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check for other open PRs
+        id: pr-check
+        env:
+          GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || github.token }}
+        run: |
+          open_pr_count=$(gh pr list --repo "${{ github.repository }}" --state open --json number,title,headRefName --jq 'length')
+          echo "open_pr_count=$open_pr_count" >> "$GITHUB_OUTPUT"
+
+          if [[ "$open_pr_count" -gt 0 ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "There are still $open_pr_count open PR(s); skipping CNB sync for now."
+            gh pr list --repo "${{ github.repository }}" --state open --json number,title,headRefName --jq '.[] | "#\(.number) \(.headRefName) \(.title)"'
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "No other open PRs found. Proceeding with CNB sync."
+          fi
+
       - name: Sync to CNB
         id: sync
-        if: steps.mode.outputs.force == 'true' || steps.check.outputs.skip == 'false'
+        if: (steps.mode.outputs.force == 'true' || steps.check.outputs.skip == 'false') && steps.pr-check.outputs.skip != 'true'
         env:
           CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
           CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
@@ -88,13 +113,31 @@ jobs:
           git commit -m "Sync commit ==> [$(date +"%Y-%m-%d %H:%M:%S")]"
           git branch -M main
           git remote add origin "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/liiiu/appstore.git"
-          git push --force --quiet origin main
+
+          pushed=false
+          for attempt in 1 2 3; do
+            if git push --force --quiet origin main; then
+              pushed=true
+              break
+            fi
+
+            echo "Push failed on attempt $attempt/3, retrying in 5 seconds..."
+            sleep 5
+          done
+
+          if [[ "$pushed" != "true" ]]; then
+            echo "Failed to sync to CNB after retries."
+            exit 1
+          fi
+
           echo "synced=true" >> $GITHUB_OUTPUT
 
       - name: Report result
         run: |
           if [[ "${{ steps.sync.outputs.synced }}" == "true" ]]; then
             echo "✅ Successfully synced to CNB mirror"
+          elif [[ "${{ steps.pr-check.outputs.skip }}" == "true" ]]; then
+            echo "⏭️ Skipped sync because other PRs are still open"
           else
             echo "⏭️ Skipped sync (no new commits)"
           fi

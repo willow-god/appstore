@@ -278,6 +278,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
+          if [[ -n "${{ secrets.MERGE_ADMIN_TOKEN }}" ]]; then
+            echo "MERGE_ADMIN_TOKEN is configured. The merge to main will trigger sync-to-cnb via push, so manual dispatch is skipped."
+            exit 0
+          fi
+
           echo "Triggering sync-to-cnb workflow..."
           gh workflow run sync-to-cnb.yml --ref main
           echo "Sync workflow triggered successfully!"
