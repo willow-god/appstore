@@ -14,6 +14,11 @@ concurrency:
   group: merge-renovate-pr
   cancel-in-progress: false
 
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
 jobs:
   update-app-version:
     runs-on: ubuntu-latest
@@ -22,6 +27,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          token: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Check if triggered by self (prevent circular trigger)
         id: check-circular
@@ -157,7 +163,8 @@ jobs:
       - name: Rebase to latest main and merge PR
         if: steps.check-circular.outputs.skip != 'true' && github.ref_name != 'main'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ADMIN_MERGE_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN }}
+          GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -e
           branch_name="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}"
@@ -209,10 +216,11 @@ jobs:
           attempt=0
           while [ $attempt -lt $max_attempts ]; do
             mergeable=$(gh pr view "$pr_number" --json mergeable -q '.mergeable' 2>/dev/null || echo "UNKNOWN")
-            echo "Mergeable status: $mergeable (attempt $((attempt+1))/$max_attempts)"
+            merge_state_status=$(gh pr view "$pr_number" --json mergeStateStatus -q '.mergeStateStatus' 2>/dev/null || echo "UNKNOWN")
+            echo "Mergeable status: $mergeable, mergeStateStatus: $merge_state_status (attempt $((attempt+1))/$max_attempts)"
             
-            if [ "$mergeable" = "MERGEABLE" ]; then
-              echo "PR is mergeable!"
+            if [ "$mergeable" = "MERGEABLE" ] && [ "$merge_state_status" != "UNKNOWN" ]; then
+              echo "PR is ready to merge."
               break
             fi
             
@@ -228,14 +236,47 @@ jobs:
 
           # 合并 PR
           echo "Merging PR #$pr_number..."
-          gh pr merge "$pr_number" --merge --delete-branch --admin
+          head_sha=$(git rev-parse HEAD)
+          merge_flags=(--merge --delete-branch --match-head-commit "$head_sha")
+
+          if [[ -n "${ADMIN_MERGE_TOKEN:-}" ]]; then
+            echo "Using MERGE_ADMIN_TOKEN for administrator merge."
+            merge_flags+=(--admin)
+          else
+            echo "MERGE_ADMIN_TOKEN is not configured; using standard repository token."
+          fi
+
+          merged="false"
+          for merge_attempt in 1 2 3; do
+            if gh pr merge "$pr_number" "${merge_flags[@]}"; then
+              merged="true"
+              break
+            fi
+
+            echo "Merge command failed on attempt $merge_attempt/3. Checking current PR state..."
+            pr_state=$(gh pr view "$pr_number" --json state,mergedAt -q 'if .mergedAt then "MERGED" else .state end' 2>/dev/null || echo "UNKNOWN")
+            echo "Current PR state after failure: $pr_state"
+
+            if [[ "$pr_state" == "MERGED" ]]; then
+              merged="true"
+              break
+            fi
+
+            sleep 10
+          done
+
+          if [[ "$merged" != "true" ]]; then
+            echo "Merge failed after retries."
+            gh pr view "$pr_number" --json url,state,mergeable,mergeStateStatus,statusCheckRollup
+            exit 1
+          fi
 
           echo "Successfully merged PR #$pr_number!"
 
       - name: Trigger sync to CNB mirror
         if: steps.check-circular.outputs.skip != 'true' && github.ref_name != 'main'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           echo "Triggering sync-to-cnb workflow..."
           gh workflow run sync-to-cnb.yml --ref main
