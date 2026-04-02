@@ -4,6 +4,8 @@
   "gitIgnoredAuthors": ["githubaction@githubaction.com"],
   "rebaseWhen": "never",
   "prCreation": "immediate",
+  "prConcurrentLimit": 1,
+  "branchConcurrentLimit": 1,
   "hostRules": [
     {
       "hostType": "docker",

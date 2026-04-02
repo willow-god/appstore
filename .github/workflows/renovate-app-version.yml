@@ -8,14 +8,10 @@ on:
       manual-trigger:
         description: 'Manually trigger Renovate'
         default: ''
-      target_branch:
-        description: 'Specific renovate branch to process'
-        required: false
-        default: ''
 
-# 并发控制：确保同一时间只有一个 PR 合并操作在进行，避免竞争条件
+# 并发控制：不同 renovate 分支允许并发；同一分支的重复触发串行执行
 concurrency:
-  group: merge-renovate-pr
+  group: merge-renovate-pr-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -26,60 +22,15 @@ permissions:
 jobs:
   update-app-version:
     runs-on: ubuntu-latest
-    env:
-      TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          ref: ${{ env.TARGET_BRANCH }}
           token: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
-
-      - name: Validate target branch
-        id: target-branch
-        run: |
-          current_branch="${TARGET_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
-          echo "current_branch=$current_branch" >> "$GITHUB_OUTPUT"
-
-          if [[ "$current_branch" == renovate/* ]]; then
-            echo "processable=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "processable=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping because target branch is not a renovate branch: $current_branch"
-          fi
-
-      - name: Check queue order
-        if: steps.target-branch.outputs.processable == 'true'
-        id: queue-order
-        env:
-          GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          current_branch="${{ steps.target-branch.outputs.current_branch }}"
-          oldest_branch=$(gh pr list --repo "${{ github.repository }}" --state open --json headRefName,createdAt --jq 'map(select(.headRefName | startswith("renovate/"))) | sort_by(.createdAt) | .[0].headRefName // ""')
-
-          echo "oldest_branch=$oldest_branch" >> "$GITHUB_OUTPUT"
-
-          if [[ -n "$oldest_branch" && "$current_branch" != "$oldest_branch" ]]; then
-            echo "Current branch $current_branch is not the oldest open Renovate PR ($oldest_branch)."
-            echo "should_defer=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Current branch $current_branch is at the head of the queue."
-            echo "should_defer=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Requeue oldest renovate PR
-        if: steps.queue-order.outputs.should_defer == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          oldest_branch="${{ steps.queue-order.outputs.oldest_branch }}"
-          echo "Re-queueing oldest branch: $oldest_branch"
-          gh workflow run renovate-app-version.yml --ref main -f target_branch="$oldest_branch" -f manual-trigger="queue:$oldest_branch"
 
       - name: Check if triggered by self (prevent circular trigger)
         id: check-circular
-        if: steps.target-branch.outputs.processable == 'true' && steps.queue-order.outputs.should_defer != 'true'
         run: |
           # 检查最后一个 commit 的 author，如果是自己则跳过
           last_author=$(git log -1 --format='%an')
@@ -92,29 +43,27 @@ jobs:
           if [[ "$last_author" == "github-action update-app-version" ]] || \
              [[ "$last_author" == "github-action[bot]" ]] || \
              [[ "$last_message" == *"[auto-version-bump]"* ]]; then
-            echo "Skipping version bump: branch head was created by automation"
-            echo "skip_bump=true" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Skipping: triggered by own commit (preventing circular trigger)"
+            echo "skip=true" >> $GITHUB_OUTPUT
           else
-            echo "Proceeding with version bump"
-            echo "skip_bump=false" >> "$GITHUB_OUTPUT"
+            echo "✅ Proceeding: triggered by external commit"
+            echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Configure git
-        if: steps.target-branch.outputs.processable == 'true' && steps.queue-order.outputs.should_defer != 'true'
+        if: steps.check-circular.outputs.skip != 'true'
         run: |
           git config --local user.email "githubaction@githubaction.com"
           git config --local user.name "github-action update-app-version"
 
       - name: Get list of updated files by the last commit
-        if: steps.target-branch.outputs.processable == 'true' && steps.queue-order.outputs.should_defer != 'true' && steps.check-circular.outputs.skip_bump != 'true'
+        if: steps.check-circular.outputs.skip != 'true'
         id: updated-files
         run: |
-          target_sha=$(git rev-parse HEAD)
-          echo "Using commit $target_sha"
-          echo "files=$(git diff-tree --no-commit-id --name-only -r "$target_sha" | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+          echo "files=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
       - name: Run renovate-app-version.sh on updated files
-        if: steps.target-branch.outputs.processable == 'true' && steps.queue-order.outputs.should_defer != 'true' && steps.check-circular.outputs.skip_bump != 'true'
+        if: steps.check-circular.outputs.skip != 'true'
         id: rename
         run: |
           set -e
@@ -179,10 +128,10 @@ jobs:
           echo "apps=$(IFS=, ; echo "${changed_apps[*]}")" >> $GITHUB_OUTPUT
 
       - name: Commit & Push Changes
-        if: steps.target-branch.outputs.processable == 'true' && steps.queue-order.outputs.should_defer != 'true' && steps.check-circular.outputs.skip_bump != 'true'
+        if: steps.check-circular.outputs.skip != 'true'
         run: |
           set -e
-          branch_name="${TARGET_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
+          branch_name="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}"
           IFS=',' read -r -a apps <<< "${{ steps.rename.outputs.apps }}"
           for item in "${apps[@]}"; do
             app_name=$(cut -d':' -f1 <<< "$item")
@@ -212,13 +161,13 @@ jobs:
           git push origin "HEAD:$branch_name" || echo "无内容可推送"
 
       - name: Rebase to latest main and merge PR
-        if: steps.target-branch.outputs.processable == 'true' && steps.queue-order.outputs.should_defer != 'true'
+        if: steps.check-circular.outputs.skip != 'true' && github.ref_name != 'main'
         env:
           ADMIN_MERGE_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN }}
           GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          branch_name="${TARGET_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
+          branch_name="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}"
           echo "Current branch: $branch_name"
 
           # 获取 PR 编号
@@ -245,7 +194,6 @@ jobs:
           git fetch origin main
 
           # Rebase 当前分支到最新的 main
-          # 由于 renovate PR 修改的是不同的应用文件夹，不会有真正的冲突
           echo "Rebasing $branch_name onto origin/main..."
           if ! git rebase origin/main; then
             echo "Rebase failed, printing status for diagnosis..."
@@ -275,7 +223,6 @@ jobs:
               break
             fi
             
-            # 如果是 CONFLICTING，说明有真正的冲突（不应该发生）
             if [ "$mergeable" = "CONFLICTING" ]; then
               echo "Warning: PR has conflicts, but proceeding with admin merge..."
               break
@@ -325,7 +272,7 @@ jobs:
           echo "Successfully merged PR #$pr_number!"
 
       - name: Trigger sync to CNB mirror
-        if: steps.target-branch.outputs.processable == 'true' && steps.queue-order.outputs.should_defer != 'true'
+        if: steps.check-circular.outputs.skip != 'true' && github.ref_name != 'main'
         env:
           GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
@@ -337,19 +284,3 @@ jobs:
           echo "Triggering sync-to-cnb workflow..."
           gh workflow run sync-to-cnb.yml --ref main
           echo "Sync workflow triggered successfully!"
-
-      - name: Queue next renovate PR
-        if: success() && steps.target-branch.outputs.processable == 'true' && steps.queue-order.outputs.should_defer != 'true'
-        env:
-          GH_TOKEN: ${{ secrets.MERGE_ADMIN_TOKEN != '' && secrets.MERGE_ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          current_branch="${{ steps.target-branch.outputs.current_branch }}"
-          next_branch=$(gh pr list --repo "${{ github.repository }}" --state open --json headRefName,createdAt --jq 'map(select(.headRefName | startswith("renovate/"))) | sort_by(.createdAt) | .[0].headRefName // ""')
-
-          if [[ -z "$next_branch" ]]; then
-            echo "No more open Renovate PRs in queue."
-            exit 0
-          fi
-
-          echo "Queueing next Renovate branch after $current_branch: $next_branch"
-          gh workflow run renovate-app-version.yml --ref main -f target_branch="$next_branch" -f manual-trigger="queue:$current_branch->$next_branch"
