@@ -1,0 +1,53 @@
+additionalProperties:
+  formFields:
+    - default: 3000
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: OneBot HTTP API Port
+      labelZh: OneBot HTTP API 端口
+      label:
+        en: OneBot HTTP API Port
+        ja: OneBot HTTP API ポート
+        ms: Port OneBot HTTP API
+        pt-br: Porta OneBot HTTP API
+        ru: OneBot HTTP API Порт
+        ko: OneBot HTTP API 포트
+        zh: OneBot HTTP API 端口
+        zh-Hant: OneBot HTTP API 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    - default: 3001
+      envKey: PANEL_APP_PORT_HTTP_EVENT
+      labelEn: OneBot HTTP Event Port
+      labelZh: OneBot HTTP Event 端口
+      label:
+        en: OneBot HTTP Event Port
+        ja: OneBot HTTP Event ポート
+        ms: Port OneBot HTTP Event
+        pt-br: Porta OneBot HTTP Event
+        ru: OneBot HTTP Event Порт
+        ko: OneBot HTTP Event 포트
+        zh: OneBot HTTP Event 端口
+        zh-Hant: OneBot HTTP Event 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    - default: 6099
+      envKey: PANEL_APP_PORT_WEBUI
+      labelEn: WebUI Port
+      labelZh: WebUI 端口
+      label:
+        en: WebUI Port
+        ja: WebUI ポート
+        ms: Port WebUI
+        pt-br: Porta WebUI
+        ru: WebUI Порт
+        ko: WebUI 포트
+        zh: WebUI 端口
+        zh-Hant: WebUI 連接埠
+      required: true
+      rule: paramPort
+      type: number
+

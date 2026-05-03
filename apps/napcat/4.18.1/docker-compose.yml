@@ -1,0 +1,25 @@
+services:
+  napcat:
+    image: mlikiowa/napcat-docker:v4.18.1
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:3000"
+      - "${PANEL_APP_PORT_HTTP_EVENT}:3001"
+      - "${PANEL_APP_PORT_WEBUI}:6099"
+    environment:
+      - NAPCAT_UID=1000
+      - NAPCAT_GID=1000
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./data/qq:/app/.config/QQ
+      - ./data/config:/app/napcat/config
+      - ./data/plugins:/app/napcat/plugins
+    networks:
+      - 1panel-network
+    labels:
+      createdBy: "Apps"
+
+networks:
+  1panel-network:
+    external: true

@@ -1,0 +1,33 @@
+name: NapCat
+tags:
+  - QQ机器人
+  - OneBot
+  - 聊天机器人
+  - Bot
+title: 基于 NTQQ 的 QQ Bot 框架，支持 OneBot 11 / OneBot 12 协议
+description: NapCat 是基于 NTQQ 本地客户端实现的高性能 QQ Bot 框架，支持 OneBot 11 / OneBot 12 协议，提供 WebUI 管理界面。
+additionalProperties:
+  key: napcat
+  name: NapCat
+  tags:
+    - Tool
+  shortDescZh: 基于 NTQQ 的 QQ Bot 框架，支持 OneBot 11 / OneBot 12 协议
+  shortDescEn: A QQ Bot framework based on NTQQ, supporting OneBot 11 / OneBot 12 protocols
+  type: tool
+  crossVersionUpdate: true
+  limit: 0
+  website: https://napneko.github.io/
+  github: https://github.com/NapNeko/NapCatQQ
+  document: https://napneko.github.io/
+  description:
+    en: A high-performance QQ Bot framework based on NTQQ local client, supporting OneBot 11 / OneBot 12 protocols with WebUI management.
+    zh: 基于 NTQQ 本地客户端实现的高性能 QQ Bot 框架，支持 OneBot 11 / OneBot 12 协议，提供 WebUI 管理界面。
+    zh-Hant: 基於 NTQQ 本地客戶端實現的高性能 QQ Bot 框架，支援 OneBot 11 / OneBot 12 協議，提供 WebUI 管理介面。
+    ja: NTQQ ローカルクライアントに基づく高性能 QQ Bot フレームワーク。OneBot 11 / OneBot 12 プロトコルをサポートし、WebUI 管理インターフェースを提供します。
+    ms: Rangka kerja QQ Bot berprestasi tinggi berasaskan klien tempatan NTQQ, menyokong protokol OneBot 11 / OneBot 12 dengan pengurusan WebUI.
+    pt-br: Um framework de Bot QQ de alto desempenho baseado no cliente local NTQQ, suportando protocolos OneBot 11 / OneBot 12 com gerenciamento via WebUI.
+    ru: Высокопроизводительный фреймворк QQ Bot на основе локального клиента NTQQ с поддержкой протоколов OneBot 11 / OneBot 12 и управлением через WebUI.
+    ko: NTQQ 로컬 클라이언트 기반의 고성능 QQ Bot 프레임워크로, OneBot 11 / OneBot 12 프로토콜을 지원하며 WebUI 관리 인터페이스를 제공합니다.
+  architectures:
+    - amd64
+    - arm64
