@@ -1,9 +1,5 @@
 # Metapi
 
-<p align="center">
-  <img src="./logo.png" alt="Metapi logo" width="200" height="200" />
-</p>
-
 中转站的中转站 —— 将分散的 AI 中转站聚合为一个统一网关。
 
 Metapi 适合把 New API / One API / OneHub / DoneHub / Veloera / AnyRouter / Sub2API 等上游统一到一个入口，提供自动模型发现、智能路由、成本优先选路和本地数据目录部署。
