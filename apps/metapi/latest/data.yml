@@ -1,0 +1,65 @@
+additionalProperties:
+  formFields:
+    - default: 8934
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      label:
+        en: HTTP Port
+        ja: HTTPポート
+        ms: Port HTTP
+        pt-br: Porta HTTP
+        ru: HTTP порт
+        ko: HTTP 포트
+        zh: HTTP 端口
+        zh-Hant: HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    - default: ""
+      envKey: AUTH_TOKEN
+      labelEn: Admin Token
+      labelZh: 管理员令牌
+      label:
+        en: Admin Token
+        ja: 管理者トークン
+        ms: Token Pentadbir
+        pt-br: Token de Admin
+        ru: Токен администратора
+        ko: 관리자 토큰
+        zh: 管理员令牌
+        zh-Hant: 管理員權杖
+      required: true
+      type: password
+
+    - default: ""
+      envKey: PROXY_TOKEN
+      labelEn: Proxy Token
+      labelZh: 代理令牌
+      label:
+        en: Proxy Token
+        ja: プロキシトークン
+        ms: Token Proksi
+        pt-br: Token de Proxy
+        ru: Прокси-токен
+        ko: 프록시 토큰
+        zh: 代理令牌
+        zh-Hant: 代理權杖
+      required: true
+      type: password
+
+    - default: "0 8 * * *"
+      envKey: CHECKIN_CRON
+      labelEn: Check-in Cron
+      labelZh: 自动签到 Cron
+      required: true
+      type: text
+
+    - default: "0 * * * *"
+      envKey: BALANCE_REFRESH_CRON
+      labelEn: Balance Refresh Cron
+      labelZh: 余额刷新 Cron
+      required: true
+      type: text

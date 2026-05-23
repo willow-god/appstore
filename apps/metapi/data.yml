@@ -1,0 +1,34 @@
+name: Metapi
+tags:
+  - AI / 大模型
+title: 中转站的中转站 — 统一聚合多个 AI 网关
+description: Metapi 是一个面向 AI 聚合中转站的元聚合层，将分散的 New API / One API / OneHub / DoneHub / Veloera / AnyRouter / Sub2API 等上游统一汇聚到一个入口，自动发现模型、智能路由并以成本最优方式分发请求。
+additionalProperties:
+  key: metapi
+  name: Metapi
+  tags:
+    - AI
+    - Tool
+    - Gateway
+  shortDescZh: 将分散的 AI 中转站聚合为一个统一网关
+  shortDescEn: Federated AI gateway that aggregates multiple upstream proxy platforms
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://github.com/cita-777/metapi
+  github: https://github.com/cita-777/metapi
+  document: https://github.com/cita-777/metapi
+  description:
+    en: Metapi is a federated AI model aggregation gateway that unifies multiple upstream proxy platforms into a single entry point. It supports automatic model discovery, smart routing, cost-aware path selection, failover, account and token management, and a local-data-first deployment model.
+    zh: Metapi 是一个面向 AI 中转站的元聚合网关，将多个上游平台统一到一个入口，自动发现模型并进行智能路由。它支持成本优先选路、故障转移、账号与令牌管理，以及默认本地数据目录部署。
+    zh-Hant: Metapi 是一個面向 AI 中轉站的元聚合閘道，將多個上游平台統一到單一入口，自動發現模型並進行智慧路由。它支援成本優先選路、故障轉移、帳號與權杖管理，以及預設本地資料目錄部署。
+    ja: Metapi は、分散した AI 中継基盤を 1 つの入口に統合するメタ集約ゲートウェイです。モデルの自動検出、スマートルーティング、コスト優先の経路選択、フェイルオーバー、アカウントとトークンの管理、ローカルデータ中心の導入をサポートします。
+    ms: Metapi ialah gerbang pengagregatan AI federated yang menyatukan pelbagai platform proksi huluan ke satu titik akses. Ia menyokong pengesanan model automatik, penghalaan pintar, pemilihan laluan berasaskan kos, failover, pengurusan akaun dan token, serta penggunaan berasaskan data tempatan.
+    pt-br: Metapi é um gateway federado de agregação de modelos de IA que unifica múltiplas plataformas proxy de upstream em um único ponto de entrada. Ele suporta descoberta automática de modelos, roteamento inteligente, seleção de caminho baseada em custo, failover, gerenciamento de contas e tokens, além de implantação com dados locais.
+    ru: Metapi — это федеративный шлюз агрегации AI-моделей, который объединяет несколько upstream-прокси-платформ в одну точку входа. Поддерживаются автоматическое обнаружение моделей, интеллектуальная маршрутизация, выбор пути по стоимости, отказоустойчивость, управление аккаунтами и токенами, а также развертывание с локальным хранилищем данных.
+    ko: Metapi는 여러 상위 프록시 플랫폼을 하나의 진입점으로 통합하는 연합형 AI 모델 집계 게이트웨이입니다. 자동 모델 발견, 스마트 라우팅, 비용 우선 경로 선택, 장애 조치, 계정 및 토큰 관리, 로컬 데이터 중심 배포를 지원합니다.
+  architectures:
+    - amd64
+    - arm64
+    - armv7
