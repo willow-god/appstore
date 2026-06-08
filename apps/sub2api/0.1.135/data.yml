@@ -1,6 +1,6 @@
 additionalProperties:
   formFields:
-    - default: 18080
+    - default: 31807
       edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
@@ -14,7 +14,6 @@ additionalProperties:
         ko: HTTP 포트
         zh: HTTP 端口
         zh-Hant: HTTP 連接埠
-      random: true
       required: true
       rule: paramPort
       type: number
