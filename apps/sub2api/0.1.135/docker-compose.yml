@@ -1,0 +1,59 @@
+services:
+  sub2api:
+    image: weishaw/sub2api:0.1.135
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    ulimits:
+      nofile:
+        soft: 100000
+        hard: 100000
+    labels:
+      createdBy: "Apps"
+    ports:
+      - ${PANEL_APP_PORT_HTTP}:8080
+    volumes:
+      - ./data:/app/data
+    environment:
+      AUTO_SETUP: "true"
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: "8080"
+      SERVER_MODE: release
+      RUN_MODE: standard
+      DATABASE_HOST: ${PANEL_DB_HOST}
+      DATABASE_PORT: ${PANEL_DB_PORT}
+      DATABASE_USER: ${PANEL_DB_USER}
+      DATABASE_PASSWORD: ${PANEL_DB_USER_PASSWORD}
+      DATABASE_DBNAME: ${PANEL_DB_NAME}
+      DATABASE_SSLMODE: disable
+      DATABASE_MAX_OPEN_CONNS: "50"
+      DATABASE_MAX_IDLE_CONNS: "10"
+      DATABASE_CONN_MAX_LIFETIME_MINUTES: "30"
+      DATABASE_CONN_MAX_IDLE_TIME_MINUTES: "5"
+      REDIS_HOST: ${PANEL_REDIS_HOST}
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${PANEL_REDIS_ROOT_PASSWORD}
+      REDIS_DB: ${REDIS_DB}
+      REDIS_POOL_SIZE: "1024"
+      REDIS_MIN_IDLE_CONNS: "10"
+      REDIS_ENABLE_TLS: "false"
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE_HOUR: "24"
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY}
+      TZ: Asia/Shanghai
+      SECURITY_URL_ALLOWLIST_ENABLED: "false"
+      SECURITY_URL_ALLOWLIST_ALLOW_INSECURE_HTTP: "false"
+      SECURITY_URL_ALLOWLIST_ALLOW_PRIVATE_HOSTS: "false"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-T", "5", "-O", "/dev/null", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

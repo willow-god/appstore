@@ -1,0 +1,31 @@
+name: Sub2API
+tags:
+  - 实用工具
+title: AI 订阅额度分发与 API 网关平台
+description: Sub2API 是一个用于分发和管理 AI 产品订阅 API 额度的网关平台，支持多账号管理、API Key 分发、计费、调度、并发控制和限流。
+additionalProperties:
+  key: sub2api
+  name: Sub2API
+  tags:
+    - Tool
+  shortDescZh: AI 订阅额度分发与 API 网关平台
+  shortDescEn: AI subscription quota distribution and API gateway platform
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://github.com/Wei-Shaw/sub2api
+  github: https://github.com/Wei-Shaw/sub2api
+  document: https://github.com/Wei-Shaw/sub2api#readme
+  description:
+    en: Sub2API is an AI API gateway platform for distributing and managing API quotas from AI product subscriptions. It supports multi-account management, API key distribution, token-level billing, intelligent scheduling, concurrency control, rate limiting, built-in payments, and an admin dashboard.
+    zh: Sub2API 是一个用于分发和管理 AI 产品订阅 API 额度的网关平台，支持多账号管理、API Key 分发、Token 级计费、智能调度、并发控制、限流、内置支付和管理后台。使用前请确认符合上游服务条款和当地法律法规。
+    zh-Hant: Sub2API 是一個用於分發和管理 AI 產品訂閱 API 額度的網關平台，支援多帳號管理、API Key 分發、Token 級計費、智慧調度、併發控制、限流、內建支付和管理後台。使用前請確認符合上游服務條款和當地法律法規。
+    ja: Sub2API は、AI 製品サブスクリプションの API クォータを配布・管理するための AI API ゲートウェイです。利用前に上流サービスの規約および地域の法令を確認してください。
+    ms: Sub2API ialah platform gerbang API AI untuk mengagih dan mengurus kuota API daripada langganan produk AI. Semak syarat penyedia huluan dan undang-undang tempatan sebelum digunakan.
+    pt-br: Sub2API é uma plataforma de gateway de API de IA para distribuir e gerenciar cotas de API de assinaturas de produtos de IA. Verifique os termos dos provedores upstream e as leis locais antes de usar.
+    ru: Sub2API — платформа API-шлюза ИИ для распределения и управления квотами API из подписок на ИИ-продукты. Перед использованием проверьте правила upstream-провайдеров и местное законодательство.
+    ko: Sub2API는 AI 제품 구독의 API 할당량을 배포하고 관리하는 AI API 게이트웨이 플랫폼입니다. 사용 전 업스트림 서비스 약관과 현지 법규를 확인하세요.
+  architectures:
+    - amd64
+    - arm64

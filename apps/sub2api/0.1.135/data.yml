@@ -1,0 +1,211 @@
+additionalProperties:
+  formFields:
+    - default: 18080
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      label:
+        en: HTTP Port
+        ja: HTTPポート
+        ms: Port HTTP
+        pt-br: Porta HTTP
+        ru: HTTP порт
+        ko: HTTP 포트
+        zh: HTTP 端口
+        zh-Hant: HTTP 連接埠
+      random: true
+      required: true
+      rule: paramPort
+      type: number
+
+    - child:
+        default: ""
+        envKey: PANEL_DB_HOST
+        required: true
+        type: service
+      default: postgresql
+      envKey: PANEL_DB_TYPE
+      labelEn: Database Service
+      labelZh: 数据库服务
+      label:
+        en: Database Service
+        ja: データベースサービス
+        ms: Perkhidmatan Pangkalan Data
+        pt-br: Serviço de Banco de Dados
+        ru: Сервис базы данных
+        ko: 데이터베이스 서비스
+        zh: 数据库服务
+        zh-Hant: 數據庫服務
+      required: true
+      type: apps
+      values:
+        - label: PostgreSQL
+          value: postgresql
+    - default: sub2api
+      envKey: PANEL_DB_NAME
+      labelEn: Database
+      labelZh: 数据库名
+      label:
+        en: Database
+        ja: データベース
+        ms: Pangkalan Data
+        pt-br: Banco de Dados
+        ru: База данных
+        ko: 데이터베이스
+        zh: 数据库名
+        zh-Hant: 數據庫名
+      random: true
+      required: true
+      rule: paramCommon
+      type: text
+    - default: sub2api
+      envKey: PANEL_DB_USER
+      labelEn: User
+      labelZh: 数据库用户
+      label:
+        en: User
+        ja: ユーザー
+        ms: Pengguna
+        pt-br: Usuário
+        ru: Пользователь
+        ko: 사용자
+        zh: 数据库用户
+        zh-Hant: 數據庫用戶
+      random: true
+      required: true
+      rule: paramCommon
+      type: text
+    - default: sub2api
+      envKey: PANEL_DB_USER_PASSWORD
+      labelEn: Password
+      labelZh: 数据库用户密码
+      label:
+        en: Password
+        ja: パスワード
+        ms: Kata Laluan
+        pt-br: Senha
+        ru: Пароль
+        ko: 비밀번호
+        zh: 数据库用户密码
+        zh-Hant: 數據庫用戶密碼
+      random: true
+      required: true
+      type: password
+
+    - default: ""
+      envKey: PANEL_REDIS_HOST
+      key: redis
+      labelEn: Redis Service
+      labelZh: Redis 服务
+      label:
+        en: Redis Service
+        ja: Redisサービス
+        ms: Perkhidmatan Redis
+        pt-br: Serviço Redis
+        ru: Сервис Redis
+        ko: Redis 서비스
+        zh: Redis 服务
+        zh-Hant: Redis 服務
+      required: true
+      type: service
+    - default: ""
+      envKey: PANEL_REDIS_ROOT_PASSWORD
+      labelEn: Redis Service Password
+      labelZh: Redis 服务密码
+      label:
+        en: Redis Service Password
+        ja: Redisサービスパスワード
+        ms: Kata laluan perkhidmatan Redis
+        pt-br: Senha do serviço Redis
+        ru: Пароль сервиса Redis
+        ko: Redis 서비스 비밀번호
+        zh: Redis 服务密码
+        zh-Hant: Redis 服務密碼
+      required: false
+      type: password
+    - default: 0
+      edit: true
+      envKey: REDIS_DB
+      labelEn: Redis Database
+      labelZh: Redis 数据库
+      label:
+        en: Redis Database
+        ja: Redisデータベース
+        ms: Pangkalan data Redis
+        pt-br: Banco de dados Redis
+        ru: База данных Redis
+        ko: Redis 데이터베이스
+        zh: Redis 数据库
+        zh-Hant: Redis 資料庫
+      required: true
+      type: number
+
+    - default: admin@sub2api.local
+      edit: true
+      envKey: ADMIN_EMAIL
+      labelEn: Admin Email
+      labelZh: 管理员邮箱
+      label:
+        en: Admin Email
+        ja: 管理者メール
+        ms: E-mel pentadbir
+        pt-br: E-mail do administrador
+        ru: Email администратора
+        ko: 관리자 이메일
+        zh: 管理员邮箱
+        zh-Hant: 管理員信箱
+      required: true
+      type: text
+    - default: sub2api
+      edit: true
+      envKey: ADMIN_PASSWORD
+      labelEn: Admin Password
+      labelZh: 管理员密码
+      label:
+        en: Admin Password
+        ja: 管理者パスワード
+        ms: Kata laluan pentadbir
+        pt-br: Senha do administrador
+        ru: Пароль администратора
+        ko: 관리자 비밀번호
+        zh: 管理员密码
+        zh-Hant: 管理員密碼
+      random: true
+      required: true
+      type: password
+
+    - default: sub2api
+      edit: true
+      envKey: JWT_SECRET
+      labelEn: JWT Secret
+      labelZh: JWT 密钥
+      label:
+        en: JWT Secret
+        ja: JWTシークレット
+        ms: Rahsia JWT
+        pt-br: Segredo JWT
+        ru: Секрет JWT
+        ko: JWT 시크릿
+        zh: JWT 密钥
+        zh-Hant: JWT 密鑰
+      random: true
+      required: true
+      type: password
+    - default: sub2api
+      edit: true
+      envKey: TOTP_ENCRYPTION_KEY
+      labelEn: TOTP Encryption Key
+      labelZh: TOTP 加密密钥
+      label:
+        en: TOTP Encryption Key
+        ja: TOTP暗号化キー
+        ms: Kunci penyulitan TOTP
+        pt-br: Chave de criptografia TOTP
+        ru: Ключ шифрования TOTP
+        ko: TOTP 암호화 키
+        zh: TOTP 加密密钥
+        zh-Hant: TOTP 加密密鑰
+      random: true
+      required: true
+      type: password
