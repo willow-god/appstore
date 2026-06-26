@@ -1,0 +1,33 @@
+name: TiyGate
+tags:
+  - AI / 大模型
+title: 轻量级高可用 LLM 服务网关
+description: TiyGate 是一款用 Rust 编写的开源 AI 网关，通过统一控制面接入 OpenAI-Compatible、Responses、Messages、Gemini 等协议，并支持虚拟模型路由、请求日志、统计分析和密钥加密存储。
+additionalProperties:
+  key: tiygate
+  name: TiyGate
+  tags:
+    - AI
+    - Tool
+    - Gateway
+  shortDescZh: 支持多协议与虚拟模型路由的轻量级 AI 网关
+  shortDescEn: Lightweight LLM gateway with multi-protocol access and virtual model routing
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://github.com/tiylabs/tiygate
+  github: https://github.com/tiylabs/tiygate
+  document: https://github.com/tiylabs/tiygate/blob/master/README_zh.md
+  description:
+    en: TiyGate is an open-source AI gateway written in Rust. It provides one control plane for OpenAI-Compatible, Responses, Messages, Gemini, and other LLM protocols, with virtual model routing, request logs, usage analytics, and encrypted secret storage.
+    zh: TiyGate 是一款用 Rust 编写的开源 AI 网关，通过统一控制面接入 OpenAI-Compatible、Responses、Messages、Gemini 等协议，并支持虚拟模型路由、请求日志、统计分析和密钥加密存储。
+    zh-Hant: TiyGate 是一款以 Rust 編寫的開源 AI 閘道，透過統一控制面接入 OpenAI-Compatible、Responses、Messages、Gemini 等協議，並支援虛擬模型路由、請求日誌、統計分析與密鑰加密儲存。
+    ja: TiyGate は Rust で書かれたオープンソースの AI ゲートウェイです。OpenAI-Compatible、Responses、Messages、Gemini などのプロトコルを 1 つの制御プレーンで扱い、仮想モデルルーティング、リクエストログ、利用統計、シークレットの暗号化保存をサポートします。
+    ms: TiyGate ialah gerbang AI sumber terbuka yang ditulis dalam Rust. Ia menyatukan protokol LLM seperti OpenAI-Compatible, Responses, Messages dan Gemini dengan penghalaan model maya, log permintaan, analitik penggunaan dan storan rahsia yang disulitkan.
+    pt-br: TiyGate é um gateway de IA open source escrito em Rust. Ele unifica protocolos como OpenAI-Compatible, Responses, Messages e Gemini, com roteamento por modelos virtuais, logs de requisição, análises de uso e armazenamento criptografado de segredos.
+    ru: TiyGate — это открытый AI-шлюз на Rust. Он объединяет протоколы OpenAI-Compatible, Responses, Messages, Gemini и другие, поддерживает маршрутизацию виртуальных моделей, журналы запросов, аналитику использования и шифрование секретов.
+    ko: TiyGate는 Rust로 작성된 오픈소스 AI 게이트웨이입니다. OpenAI-Compatible, Responses, Messages, Gemini 등 여러 LLM 프로토콜을 하나의 제어면에서 다루며 가상 모델 라우팅, 요청 로그, 사용량 분석, 비밀 값 암호화 저장을 지원합니다.
+  architectures:
+    - amd64
+    - arm64

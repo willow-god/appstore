@@ -1,0 +1,71 @@
+additionalProperties:
+  formFields:
+    - default: 31290
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      label:
+        en: HTTP Port
+        ja: HTTPポート
+        ms: Port HTTP
+        pt-br: Porta HTTP
+        ru: HTTP порт
+        ko: HTTP 포트
+        zh: HTTP 端口
+        zh-Hant: HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    - default: ""
+      edit: true
+      envKey: TIYGATE_ADMIN_TOKEN
+      labelEn: Admin Token
+      labelZh: 管理员令牌
+      label:
+        en: Admin Token
+        ja: 管理者トークン
+        ms: Token Pentadbir
+        pt-br: Token de administrador
+        ru: Токен администратора
+        ko: 관리자 토큰
+        zh: 管理员令牌
+        zh-Hant: 管理員權杖
+      random: true
+      required: true
+      type: password
+
+    - default: ""
+      edit: true
+      envKey: TIYGATE_MASTER_KEY
+      labelEn: Master Key
+      labelZh: 主密钥
+      label:
+        en: Master Key
+        ja: マスターキー
+        ms: Kunci Induk
+        pt-br: Chave mestra
+        ru: Мастер-ключ
+        ko: 마스터 키
+        zh: 主密钥
+        zh-Hant: 主密鑰
+      required: false
+      type: password
+
+    - default: ""
+      edit: true
+      envKey: TIYGATE_REDIS_URL
+      labelEn: Redis URL
+      labelZh: Redis 连接地址
+      label:
+        en: Redis URL
+        ja: Redis URL
+        ms: URL Redis
+        pt-br: URL do Redis
+        ru: URL Redis
+        ko: Redis URL
+        zh: Redis 连接地址
+        zh-Hant: Redis 連線地址
+      required: false
+      type: text
