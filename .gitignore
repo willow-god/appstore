@@ -10,3 +10,7 @@
 .codebuddy
 
 .claude/
+
+# Tests
+tests/
+__pycache__/

@@ -1,0 +1,33 @@
+name: AxonHub-lite-mysql
+tags:
+  - AI 平台
+  - 自托管
+  - 开发工具
+title: 个人轻量版 AI Gateway
+description: AxonHub Lite 是面向个人自托管场景的轻量版 AI Gateway，保留统一模型接入、请求记录和基础成本控制能力，并使用 MySQL 持久化。
+additionalProperties:
+  key: axonhub-lite-mysql
+  name: AxonHub-lite-mysql
+  tags:
+    - Tool
+    - AI
+  shortDescZh: 个人轻量版 AI Gateway
+  shortDescEn: Personal lightweight AI Gateway
+  type: Tool
+  crossVersionUpdate: true
+  limit: 0
+  website: https://github.com/Akuma-real/axonhub-lite
+  github: https://github.com/Akuma-real/axonhub-lite
+  document: https://github.com/Akuma-real/axonhub-lite#readme
+  description:
+    en: A personal lightweight edition of AxonHub for self-hosted AI gateway use. It keeps unified model access, request records, basic cost control, and MySQL persistence while avoiding the heavier enterprise-oriented organization features.
+    zh: 面向个人自托管场景的 AxonHub 轻量版，保留统一模型接入、请求记录、基础成本控制和 MySQL 持久化，弱化企业版中的组织协作等重型能力。
+    zh-Hant: 面向個人自託管場景的 AxonHub 輕量版，保留統一模型接入、請求記錄、基礎成本控制和 MySQL 持久化，弱化企業版中的組織協作等重型能力。
+    ja: 個人のセルフホスト向け AxonHub Lite。統一モデルアクセス、リクエスト記録、基本的なコスト管理、MySQL 永続化を備え、企業向けの組織機能は抑えています。
+    ms: Edisi ringan AxonHub untuk kegunaan peribadi dan hos kendiri, dengan akses model bersepadu, rekod permintaan, kawalan kos asas dan storan MySQL.
+    pt-br: Edição leve do AxonHub para uso pessoal auto-hospedado, com acesso unificado a modelos, registros de requisições, controle básico de custos e persistência em MySQL.
+    ru: Облегченная версия AxonHub для личного self-hosted использования с единым доступом к моделям, журналом запросов, базовым контролем затрат и хранением в MySQL.
+    ko: 개인 셀프호스팅에 맞춘 AxonHub 경량판으로, 통합 모델 접근, 요청 기록, 기본 비용 관리, MySQL 영속화를 제공하고 기업용 조직 기능은 줄였습니다.
+  architectures:
+    - amd64
+    - arm64
