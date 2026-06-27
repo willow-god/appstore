@@ -1,6 +1,6 @@
 services:
   axonhub_lite_mysql:
-    image: ghcr.io/akuma-real/axonhub-lite:v0.9.38-lite.7-arm64
+    image: ghcr.io/akumareallabs/axonhub-lite:v0.9.38-lite.7
     container_name: ${CONTAINER_NAME}
     restart: always
     environment:
