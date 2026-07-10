@@ -1,6 +1,6 @@
 services:
   sub2api:
-    image: weishaw/sub2api:0.1.149
+    image: weishaw/sub2api:0.1.150
     container_name: ${CONTAINER_NAME}
     restart: always
     ulimits:
