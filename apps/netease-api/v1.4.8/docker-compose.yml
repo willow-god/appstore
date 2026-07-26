@@ -6,7 +6,7 @@ services:
       - 1panel-network
     ports:
       - "${PANEL_APP_PORT_HTTP}:5000"
-    image: willowgod/netease-api:latest
+    image: willowgod/netease-api:v1.4.8
     volumes:
       - ./data/cookie.txt:/app/cookie.txt:ro
     labels:  
