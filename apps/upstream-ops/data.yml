@@ -1,0 +1,28 @@
+name: UpstreamOps
+tags:
+  - AI
+  - 运维工具
+title: NewAPI/Sub2API 上游监控与运维面板
+description: 集中监控 NewAPI 和 Sub2API 上游账号，管理余额、倍率、API Key、通知与请求转发网关。
+additionalProperties:
+  key: upstream-ops
+  name: UpstreamOps
+  tags:
+    - AI
+    - Tool
+  shortDescZh: NewAPI/Sub2API 上游监控、运维与请求转发网关
+  shortDescEn: Upstream monitoring and API gateway for NewAPI and Sub2API
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://github.com/bejix/upstream-ops
+  github: https://github.com/bejix/upstream-ops
+  document: https://github.com/bejix/upstream-ops/blob/main/README.zh.md
+  description:
+    en: A monitoring and operations dashboard for NewAPI and Sub2API upstream accounts, with an OpenAI, Claude, and Responses compatible forwarding gateway.
+    zh: 面向 NewAPI 与 Sub2API 上游账号的集中监控和运维面板，支持余额、倍率、API Key、通知以及兼容 OpenAI、Claude 和 Responses 的请求转发网关。
+    zh-Hant: 面向 NewAPI 與 Sub2API 上游帳號的集中監控與維運面板，支援餘額、倍率、API Key、通知以及相容 OpenAI、Claude 與 Responses 的請求轉發閘道。
+  architectures:
+    - amd64
+    - arm64

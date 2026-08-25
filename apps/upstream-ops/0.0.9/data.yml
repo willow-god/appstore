@@ -1,0 +1,56 @@
+additionalProperties:
+  formFields:
+    - default: 23389
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      required: true
+      rule: paramPort
+      type: number
+
+    - default: change-this-to-a-long-random-secret
+      edit: true
+      envKey: APP_SECRET
+      labelEn: Application Secret
+      labelZh: 应用主密钥
+      label:
+        en: Application Secret
+        zh: 应用主密钥
+        zh-Hant: 應用主密鑰
+      random: true
+      required: true
+      type: password
+
+    - default: "false"
+      edit: true
+      envKey: AUTH_ENABLED
+      labelEn: Enable Authentication
+      labelZh: 启用后台鉴权
+      label:
+        en: Enable Authentication
+        zh: 启用后台鉴权
+        zh-Hant: 啟用後台驗證
+      required: true
+      type: select
+      values:
+        - label: "false"
+          value: "false"
+        - label: "true"
+          value: "true"
+
+    - default: admin
+      edit: true
+      envKey: ADMIN_USERNAME
+      labelEn: Admin Username
+      labelZh: 管理员用户名
+      required: false
+      type: text
+
+    - default: ""
+      edit: true
+      envKey: ADMIN_PASSWORD
+      labelEn: Admin Password
+      labelZh: 管理员密码
+      required: false
+      type: password

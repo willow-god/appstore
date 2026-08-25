@@ -1,0 +1,35 @@
+services:
+  upstream-ops:
+    image: ghcr.io/bejix/upstream-ops:v0.0.9
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    command: ["-config", "/app/data/config.yaml"]
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:8418"
+    volumes:
+      - ./data:/app/data
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: "8418"
+      DATABASE_DRIVER: sqlite
+      DATABASE_PATH: /app/data/upstream-ops.db
+      SERVER_MODE: release
+      LOG_LEVEL: info
+      APP_SECRET: ${APP_SECRET}
+      AUTH_ENABLED: ${AUTH_ENABLED}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8418/healthz >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true
