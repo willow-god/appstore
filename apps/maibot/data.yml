@@ -1,0 +1,29 @@
+name: MaiBot
+tags:
+  - QQ机器人
+  - 人工智能
+  - 工具
+title: 可通过 WebUI 配置的 QQ 机器人核心
+description: MaiBot 是一个支持模型和多平台适配器配置的 QQ 机器人核心。本应用采用官方精简 Docker Compose 配置，仅部署 MaiBot 核心，不包含 NapCat 和数据库工具。
+additionalProperties:
+  key: maibot
+  name: MaiBot
+  tags:
+    - Tool
+    - AI
+  shortDescZh: 可通过 WebUI 配置的 QQ 机器人核心
+  shortDescEn: A QQ bot core with WebUI-based model and adapter configuration
+  type: tool
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://docs.mai-mai.org/
+  github: https://github.com/MaiM-with-u/MaiBot
+  document: https://docs.mai-mai.org/manual/deployment/docker
+  description:
+    en: A QQ bot core with WebUI-based model and adapter configuration. This package uses the official lightweight Docker Compose deployment without NapCat or database tools.
+    zh: 支持通过 WebUI 配置模型和平台适配器的 QQ 机器人核心，采用官方精简 Docker Compose 配置，不包含 NapCat 和数据库工具。
+    zh-Hant: 支援透過 WebUI 設定模型與平台適配器的 QQ 機器人核心，採用官方精簡 Docker Compose 設定，不包含 NapCat 與資料庫工具。
+  architectures:
+    - amd64
+    - arm64

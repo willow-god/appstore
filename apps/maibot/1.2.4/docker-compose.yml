@@ -1,0 +1,25 @@
+services:
+  core:
+    container_name: ${CONTAINER_NAME}
+    image: sengokucola/maibot:1.2.4
+    environment:
+      - TZ=Asia/Shanghai
+      - EULA_AGREE=8e6e7d647f7f82d6ea98456b73908656
+      - PRIVACY_AGREE=91e5db7659c560bc3545e63859b6ebc0
+      - WEBUI_HOST=${HOST_IP}
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:8001"
+    volumes:
+      - ./data/config/mmc:/MaiMBot/config
+      - ./data/MaiMBot:/MaiMBot/data
+      - ./data/MaiMBot/plugins:/MaiMBot/plugins
+      - ./data/MaiMBot/logs:/MaiMBot/logs
+    labels:
+      createdBy: "Apps"
+    networks:
+      - 1panel-network
+    restart: always
+
+networks:
+  1panel-network:
+    external: true
