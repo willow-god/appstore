@@ -11,7 +11,7 @@ services:
       - "${PANEL_APP_PORT_HTTP}:8001"
     volumes:
       - ./data/config/mmc:/MaiMBot/config
-      - ./data/MaiMBot:/MaiMBot/data
+      - ./data/MaiMBot/data:/MaiMBot/data
       - ./data/MaiMBot/plugins:/MaiMBot/plugins
       - ./data/MaiMBot/logs:/MaiMBot/logs
     labels:
