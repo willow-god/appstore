@@ -13,6 +13,10 @@ OpenViking 是面向 AI Agent 的开源上下文数据库，用统一的文件�
 - 数据保存在应用目录下的 `data` 文件夹中。
 - 官方 compose 中的 Caddy 仅用于可选的公网 HTTPS 入口，本应用商店版本直接暴露 OpenViking 服务端口，建议通过 1Panel 反向代理配置域名和 HTTPS。
 
+## 配置说明
+
+- `OPENVIKING_PUBLIC_BASE_URL`：公网访问地址，仅在需要公网 HTTPS（OAuth、外部 MCP 客户端等）时填写，例如 `https://ov.example.com`。纯内网或仅通过 IP 访问时可以留空。
+
 ## GHCR 镜像配置
 
 Compose 中固定使用带版本号的官方镜像：

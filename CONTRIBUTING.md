@@ -217,7 +217,34 @@ ports:
 - `paramCommon`：普通文本校验。
 - `paramComplexity`：复杂密码校验。
 
+> 重要：`rule` 只在 `required: true` 时生效。1Panel 前端的处理逻辑是「字段 `required` 为真时挂载 `Rules.requiredInput` 并追加 `rule`，为假时直接删除该字段的校验规则」。因此给 `required: false` 的字段写 `rule` 不会生效，属于无效配置；可选字段不要加 `rule`。
+>
+> 另外要注意 `paramExtUrl` 等内置规则对象本身带有 `required: true`，它只适合必填字段。可选 URL 字段应使用普通 `type: text`，并在 README 中说明格式要求。
+
 建议为公开 HTTP 服务使用 `PANEL_APP_PORT_HTTP`，因为 1Panel 会把 `PANEL_APP_PORT` 前缀识别为端口字段并在安装前检查端口冲突。这里填写的是宿主机端口，不是容器端口。
+
+### 已声明字段与 Compose 的对应关系
+
+版本 `data.yml` 中声明的每个 `envKey` 都应在 Compose 中被引用；反过来，Compose 中出现的每个 `${...}` 业务变量也都要在版本 `data.yml` 中声明。
+
+例如 OpenViking 的公网地址字段：
+
+```yaml
+# 版本 data.yml
+- default: ""
+  envKey: OPENVIKING_PUBLIC_BASE_URL
+  labelZh: 公网访问地址
+  required: false
+  type: text
+```
+
+```yaml
+# docker-compose.yml
+environment:
+  OPENVIKING_PUBLIC_BASE_URL: ${OPENVIKING_PUBLIC_BASE_URL}
+```
+
+不要写成 `${OPENVIKING_PUBLIC_BASE_URL:-}` 这类默认值形式：变量已在 `data.yml` 中声明，1Panel 安装时会始终写入 `.env`，`:-` 属于冗余写法。仓库中仅 `CONTAINER_NAME` 在个别应用里使用 `:-` 作为兜底。
 
 ### 字段最小化原则
 
@@ -508,7 +535,7 @@ git push
 - [ ] 根目录存在 `data.yml`、`README.md` 和 `logo.png`。
 - [ ] 版本目录名不带 `v` 前缀；使用 `latest` 时已确认上游确实没有版本号，并在 README 中说明。
 - [ ] 版本目录存在 `data.yml`，并包含 `additionalProperties.formFields`。
-- [ ] Compose 中所有 `${...}` 变量都在版本 `data.yml` 中声明。
+- [ ] Compose 中所有 `${...}` 变量都在版本 `data.yml` 中声明（反之亦然）。
 - [ ] Compose 中的镜像包含真实版本号（上游只有 `latest` 时除外）。
 - [ ] 不使用 `${IMAGE:-default}` 形式隐藏镜像地址。
 - [ ] 使用 `latest` 时已确认上游无版本号，且已在 README 中说明需自行更新。

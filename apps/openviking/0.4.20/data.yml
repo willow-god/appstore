@@ -12,3 +12,14 @@ additionalProperties:
       rule: paramPort
       type: number
 
+    - default: ""
+      envKey: OPENVIKING_PUBLIC_BASE_URL
+      labelEn: Public Base URL
+      labelZh: 公网访问地址
+      label:
+        en: Public Base URL
+        zh: 公网访问地址
+        zh-Hant: 公開存取位址
+      required: true
+      type: text
+

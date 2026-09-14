@@ -10,7 +10,7 @@ services:
     volumes:
       - ./data:/app/.openviking
     environment:
-      OPENVIKING_PUBLIC_BASE_URL: ${OPENVIKING_PUBLIC_BASE_URL:-}
+      OPENVIKING_PUBLIC_BASE_URL: ${OPENVIKING_PUBLIC_BASE_URL}
       OPENVIKING_SERVER_PORT: "1933"
     healthcheck:
       test: ["CMD", "openviking-entrypoint", "--healthcheck"]
