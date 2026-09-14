@@ -194,6 +194,7 @@ K8S_REG_MIRROR=registry.k8s.io.mirror
 > - `*_ENABLE` 为 `true` 时才会进行替换。
 > - `*_MIRROR` 填写你可用的镜像源地址。
 > - 不存在该配置文件时，脚本会跳过替换步骤，不会影响后续流程。
+> - 哪些应用会被替换由仓库根目录的 `.env` 决定，维护者请参考 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ### 3️⃣ 自动替换逻辑
 
@@ -204,6 +205,51 @@ K8S_REG_MIRROR=registry.k8s.io.mirror
 这样即使镜像源被墙，也能快速替换为你配置的加速地址。
 
 > **目前还在测试中**：由于目前还在测试中，所以可能会出现一些问题。如果出现问题，请及时反馈。
+
+---
+
+## ⚡ 全量同步并刷新应用商店（API）
+
+如果你希望**同步应用后自动让 1Panel 重新扫描本地应用**，而不必到面板手动点击「更新应用列表」，可以使用仓库中的 [scripts/sync-and-refresh.sh](scripts/sync-and-refresh.sh)。
+
+该脚本与上面的「同步更新脚本」「单应用同步」是**相互独立的**，区别如下：
+
+| 脚本 | 复制应用文件 | 执行 mirror.sh | 调用 1Panel API 刷新 |
+| --- | --- | --- | --- |
+| 同步更新脚本 | ✅ 全部 | ✅ | ❌ 需手动点击 |
+| 单应用同步 | ✅ 部分应用 | ✅ | ❌ 需手动点击 |
+| `scripts/sync-and-refresh.sh` | ✅ 全部 | ✅ | ✅ 自动刷新 |
+
+### 使用方法
+
+```bash
+ONEPANEL_URL=https://panel.example.com \
+ONEPANEL_APIKEY=你的APIKey \
+bash scripts/sync-and-refresh.sh
+```
+
+`ONEPANEL_NODE` 可留空，默认操作主节点；多节点环境才需填写从节点名称。也可直接编辑脚本开头同名变量的默认值。
+
+### 可用变量
+
+| 变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
+| `TMP_DIR` | 临时克隆目录 | `/opt/1panel/resource/apps/local/appstore-localApps` |
+| `LOCAL_APPS_DIR` | 1Panel 本地应用目录 | `/opt/1panel/resource/apps/local` |
+| `ONEPANEL_URL` | 面板地址，可省略协议 | 必填 |
+| `ONEPANEL_APIKEY` | 面板 API Key | 必填 |
+| `ONEPANEL_NODE` | 节点名称，留空为主节点 | 空（主节点） |
+
+### 鉴权方式
+
+1Panel v2 API 使用时间戳加 MD5 鉴权：
+
+```text
+Token = md5("1panel" + APIKey + Timestamp)
+```
+
+请求会携带 `1Panel-Timestamp`、`1Panel-Token` 请求头，调用 `POST /api/v2/apps/sync/local`。`CurrentNode` 留空时不发送，1Panel 默认视为主节点。请确保服务器时间准确，并在脚本以非零状态码退出时接入告警。
 
 ---
 
@@ -227,6 +273,6 @@ K8S_REG_MIRROR=registry.k8s.io.mirror
 
 ## 🧩 想添加自己的应用？
 
-欢迎参考官方教程，构建你自己的 App Store 仓库：
+如果你希望向本仓库提交新应用或修改现有应用，请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，其中说明了目录结构、`data.yml`、镜像版本、`.env` 应用清单和提交前检查清单。若想构建自己的 App Store 仓库，可参考官方教程：
 
 👉 [📘 官方指南：如何提交自己想要的应用](https://github.com/1Panel-dev/appstore/wiki/如何提交自己想要的应用)

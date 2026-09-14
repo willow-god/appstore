@@ -1,0 +1,30 @@
+name: OpenViking
+tags:
+  - AI
+  - 知识库
+  - 多模态
+title: 面向 AI 时代的上下文数据库
+description: OpenViking 是一个面向 AI Agent 的开源上下文数据库，统一管理记忆、资源和技能，并支持语义检索与层级式上下文加载。
+additionalProperties:
+  key: openviking
+  name: OpenViking
+  tags:
+    - AI
+    - Tool
+    - Database
+  shortDescZh: 面向 AI Agent 的上下文数据库
+  shortDescEn: Context database for AI agents
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://www.openviking.ai
+  github: https://github.com/volcengine/OpenViking
+  document: https://volcengine.github.io/OpenViking/
+  description:
+    en: An open-source context database designed for AI agents, unifying memory, resources, and skills with semantic retrieval and hierarchical context loading.
+    zh: 面向 AI Agent 的开源上下文数据库，统一管理记忆、资源和技能，支持语义检索与层级式上下文加载。
+    zh-Hant: 面向 AI Agent 的開源上下文資料庫，統一管理記憶、資源與技能，支援語意檢索與階層式上下文載入。
+  architectures:
+    - amd64
+    - arm64

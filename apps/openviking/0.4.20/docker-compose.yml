@@ -1,0 +1,26 @@
+services:
+  openviking:
+    image: ghcr.io/volcengine/openviking:v0.4.20
+    container_name: ${CONTAINER_NAME}
+    restart: unless-stopped
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:1933"
+    volumes:
+      - ./data:/app/.openviking
+    environment:
+      OPENVIKING_PUBLIC_BASE_URL: ${OPENVIKING_PUBLIC_BASE_URL:-}
+      OPENVIKING_SERVER_PORT: "1933"
+    healthcheck:
+      test: ["CMD", "openviking-entrypoint", "--healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true
