@@ -1,0 +1,465 @@
+additionalProperties:
+  formFields:
+    # ============================================================
+    # PostgreSQL（1Panel 现有数据库，需已安装 pgvector 扩展）
+    # ============================================================
+    - child:
+        default: ""
+        envKey: PANEL_DB_HOST
+        required: true
+        type: service
+      default: postgresql
+      envKey: PANEL_DB_TYPE
+      labelEn: Database Service
+      labelZh: 数据库服务
+      label:
+        en: Database Service
+        zh: 数据库服务
+        zh-Hant: 資料庫服務
+      required: true
+      type: apps
+      values:
+        - label: PostgreSQL
+          value: postgresql
+
+    - default: hindsight
+      envKey: PANEL_DB_NAME
+      labelEn: Database Name
+      labelZh: 数据库名
+      label:
+        en: Database Name
+        zh: 数据库名
+        zh-Hant: 資料庫名
+      random: true
+      required: true
+      rule: paramCommon
+      type: text
+
+    - default: hindsight
+      envKey: PANEL_DB_USER
+      labelEn: Database User
+      labelZh: 数据库用户
+      label:
+        en: Database User
+        zh: 数据库用户
+        zh-Hant: 資料庫使用者
+      random: true
+      required: true
+      rule: paramCommon
+      type: text
+
+    - default: hindsight
+      envKey: PANEL_DB_USER_PASSWORD
+      labelEn: Database User Password
+      labelZh: 数据库用户密码
+      label:
+        en: Database User Password
+        zh: 数据库用户密码
+        zh-Hant: 資料庫使用者密碼
+      random: true
+      required: true
+      type: password
+
+    # ============================================================
+    # 端口：Control Plane (GUI) / Dataplane API
+    # ============================================================
+    - default: 9999
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: Control Plane (GUI) Port
+      labelZh: 控制台（GUI）端口
+      label:
+        en: Control Plane (GUI) Port
+        zh: 控制台（GUI）端口
+        zh-Hant: 控制台（GUI）連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    - default: 8888
+      envKey: PANEL_APP_PORT_API
+      labelEn: Dataplane API Port
+      labelZh: 数据面 API 端口
+      label:
+        en: Dataplane API Port
+        zh: 数据面 API 端口
+        zh-Hant: 資料面 API 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    # ============================================================
+    # 全局 LLM（所有操作的默认模型，可选被下面各操作覆盖）
+    # ============================================================
+    - default: openai
+      envKey: HINDSIGHT_API_LLM_PROVIDER
+      labelEn: LLM Provider
+      labelZh: LLM 提供商
+      label:
+        en: "LLM Provider (e.g. openai, anthropic, gemini, deepseek, zai, groq, ollama)"
+        zh: LLM 提供商（如 openai、anthropic、gemini、deepseek、zai、groq、ollama）
+        zh-Hant: LLM 供應商（如 openai、anthropic、gemini、deepseek、zai、groq、ollama）
+      required: true
+      rule: paramCommon
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_LLM_API_KEY
+      labelEn: LLM API Key
+      labelZh: LLM API Key
+      label:
+        en: LLM API Key
+        zh: LLM API Key
+        zh-Hant: LLM API Key
+      required: true
+      type: password
+
+    - default: ""
+      envKey: HINDSIGHT_API_LLM_MODEL
+      labelEn: LLM Model
+      labelZh: LLM 模型
+      label:
+        en: LLM Model (leave blank to use the provider default)
+        zh: LLM 模型（留空则使用该提供商的默认模型）
+        zh-Hant: LLM 模型（留空則使用該供應商的預設模型）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_LLM_BASE_URL
+      labelEn: LLM Base URL
+      labelZh: LLM 接口地址
+      label:
+        en: LLM Base URL (for OpenAI-compatible endpoints, ending in /v1)
+        zh: LLM 接口地址（OpenAI 兼容端点，以 /v1 结尾）
+        zh-Hant: LLM 介面位址（OpenAI 相容端點，以 /v1 結尾）
+      required: false
+      type: text
+
+    - default: 64000
+      envKey: HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS
+      labelEn: Retain Max Completion Tokens
+      labelZh: Retain 最大输出 Token
+      label:
+        en: Retain Max Completion Tokens (must exceed 3000; models need 65k output by default)
+        zh: Retain 最大输出 Token（必须大于 3000；默认要求模型支持 65k 输出，输出上限小的模型请调低）
+        zh-Hant: Retain 最大輸出 Token（必須大於 3000；預設要求模型支援 65k 輸出，輸出上限小的模型請調低）
+      required: true
+      type: number
+
+    # ============================================================
+    # Retain 子模型（事实提取：建议结构化输出能力较好、成本中等的模型）
+    # ============================================================
+    - default: ""
+      envKey: HINDSIGHT_API_RETAIN_LLM_PROVIDER
+      labelEn: Retain Provider
+      labelZh: Retain 提供商
+      label:
+        en: Retain LLM Provider (blank = inherit the global provider)
+        zh: Retain 提供商（留空则继承全局 LLM）
+        zh-Hant: Retain 供應商（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_RETAIN_LLM_API_KEY
+      labelEn: Retain API Key
+      labelZh: Retain API Key
+      label:
+        en: Retain API Key (blank = inherit the global key)
+        zh: Retain API Key（留空则继承全局 LLM）
+        zh-Hant: Retain API Key（留空則繼承全域 LLM）
+      required: false
+      type: password
+
+    - default: ""
+      envKey: HINDSIGHT_API_RETAIN_LLM_MODEL
+      labelEn: Retain Model
+      labelZh: Retain 模型
+      label:
+        en: Retain LLM Model (blank = inherit the global model)
+        zh: Retain 模型（留空则继承全局 LLM）
+        zh-Hant: Retain 模型（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_RETAIN_LLM_BASE_URL
+      labelEn: Retain Base URL
+      labelZh: Retain 接口地址
+      label:
+        en: Retain LLM Base URL (blank = inherit the global base URL)
+        zh: Retain 接口地址（留空则继承全局 LLM）
+        zh-Hant: Retain 介面位址（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    # ============================================================
+    # Reflect 子模型（检索后的推理与作答）
+    # ============================================================
+    - default: ""
+      envKey: HINDSIGHT_API_REFLECT_LLM_PROVIDER
+      labelEn: Reflect Provider
+      labelZh: Reflect 提供商
+      label:
+        en: Reflect LLM Provider (blank = inherit the global provider)
+        zh: Reflect 提供商（留空则继承全局 LLM）
+        zh-Hant: Reflect 供應商（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_REFLECT_LLM_API_KEY
+      labelEn: Reflect API Key
+      labelZh: Reflect API Key
+      label:
+        en: Reflect API Key (blank = inherit the global key)
+        zh: Reflect API Key（留空则继承全局 LLM）
+        zh-Hant: Reflect API Key（留空則繼承全域 LLM）
+      required: false
+      type: password
+
+    - default: ""
+      envKey: HINDSIGHT_API_REFLECT_LLM_MODEL
+      labelEn: Reflect Model
+      labelZh: Reflect 模型
+      label:
+        en: Reflect LLM Model (blank = inherit the global model)
+        zh: Reflect 模型（留空则继承全局 LLM）
+        zh-Hant: Reflect 模型（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_REFLECT_LLM_BASE_URL
+      labelEn: Reflect Base URL
+      labelZh: Reflect 接口地址
+      label:
+        en: Reflect LLM Base URL (blank = inherit the global base URL)
+        zh: Reflect 接口地址（留空则继承全局 LLM）
+        zh-Hant: Reflect 介面位址（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    # ============================================================
+    # Consolidation 子模型（记忆合并去重：建议用便宜模型）
+    # ============================================================
+    - default: ""
+      envKey: HINDSIGHT_API_CONSOLIDATION_LLM_PROVIDER
+      labelEn: Consolidation Provider
+      labelZh: Consolidation 提供商
+      label:
+        en: Consolidation LLM Provider (blank = inherit the global provider)
+        zh: Consolidation 提供商（留空则继承全局 LLM）
+        zh-Hant: Consolidation 供應商（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_CONSOLIDATION_LLM_API_KEY
+      labelEn: Consolidation API Key
+      labelZh: Consolidation API Key
+      label:
+        en: Consolidation API Key (blank = inherit the global key)
+        zh: Consolidation API Key（留空则继承全局 LLM）
+        zh-Hant: Consolidation API Key（留空則繼承全域 LLM）
+      required: false
+      type: password
+
+    - default: ""
+      envKey: HINDSIGHT_API_CONSOLIDATION_LLM_MODEL
+      labelEn: Consolidation Model
+      labelZh: Consolidation 模型
+      label:
+        en: Consolidation LLM Model (blank = inherit the global model)
+        zh: Consolidation 模型（留空则继承全局 LLM）
+        zh-Hant: Consolidation 模型（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_CONSOLIDATION_LLM_BASE_URL
+      labelEn: Consolidation Base URL
+      labelZh: Consolidation 接口地址
+      label:
+        en: Consolidation LLM Base URL (blank = inherit the global base URL)
+        zh: Consolidation 接口地址（留空则继承全局 LLM）
+        zh-Hant: Consolidation 介面位址（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    # ============================================================
+    # Mental Model Refresh 子模型（后台刷新：建议用快速、不思考的模型）
+    # ============================================================
+    - default: ""
+      envKey: HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_PROVIDER
+      labelEn: Mental Model Refresh Provider
+      labelZh: 心智模型刷新提供商
+      label:
+        en: Mental Model Refresh Provider (blank = inherit Reflect, then the global LLM)
+        zh: 心智模型刷新提供商（留空则继承 Reflect，再回落到全局 LLM）
+        zh-Hant: 心智模型刷新供應商（留空則繼承 Reflect，再回落到全域 LLM）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_API_KEY
+      labelEn: Mental Model Refresh API Key
+      labelZh: 心智模型刷新 API Key
+      label:
+        en: Mental Model Refresh API Key (blank = inherit the global key)
+        zh: 心智模型刷新 API Key（留空则继承全局 LLM）
+        zh-Hant: 心智模型刷新 API Key（留空則繼承全域 LLM）
+      required: false
+      type: password
+
+    - default: ""
+      envKey: HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MODEL
+      labelEn: Mental Model Refresh Model
+      labelZh: 心智模型刷新模型
+      label:
+        en: Mental Model Refresh Model (blank = inherit Reflect, then the global LLM)
+        zh: 心智模型刷新模型（留空则继承 Reflect，再回落到全局 LLM）
+        zh-Hant: 心智模型刷新模型（留空則繼承 Reflect，再回落到全域 LLM）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_BASE_URL
+      labelEn: Mental Model Refresh Base URL
+      labelZh: 心智模型刷新接口地址
+      label:
+        en: Mental Model Refresh Base URL (blank = inherit the global base URL)
+        zh: 心智模型刷新接口地址（留空则继承全局 LLM）
+        zh-Hant: 心智模型刷新介面位址（留空則繼承全域 LLM）
+      required: false
+      type: text
+
+    # ============================================================
+    # 视觉模型（仅处理带图片附件的 retain 内容；留空则走 Retain LLM）
+    # ============================================================
+    - default: ""
+      envKey: HINDSIGHT_API_VLM_PROVIDER
+      labelEn: Vision Provider
+      labelZh: 视觉模型提供商
+      label:
+        en: Vision Provider (blank = attachments go to the Retain LLM)
+        zh: 视觉模型提供商（留空则图片附件交给 Retain LLM 处理）
+        zh-Hant: 視覺模型供應商（留空則圖片附件交給 Retain LLM 處理）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_VLM_API_KEY
+      labelEn: Vision API Key
+      labelZh: 视觉模型 API Key
+      label:
+        en: Vision API Key
+        zh: 视觉模型 API Key
+        zh-Hant: 視覺模型 API Key
+      required: false
+      type: password
+
+    - default: ""
+      envKey: HINDSIGHT_API_VLM_MODEL
+      labelEn: Vision Model
+      labelZh: 视觉模型
+      label:
+        en: "Vision Model (e.g. gemini-2.5-flash, qwen-vl-max)"
+        zh: 视觉模型（如 gemini-2.5-flash、qwen-vl-max）
+        zh-Hant: 視覺模型（如 gemini-2.5-flash、qwen-vl-max）
+      required: false
+      type: text
+
+    - default: ""
+      envKey: HINDSIGHT_API_VLM_BASE_URL
+      labelEn: Vision Base URL
+      labelZh: 视觉模型接口地址
+      label:
+        en: Vision Base URL
+        zh: 视觉模型接口地址
+        zh-Hant: 視覺模型介面位址
+      required: false
+      type: text
+
+    # ============================================================
+    # 嵌入模型（slim 镜像不含本地模型，必须使用外部嵌入服务）
+    # ============================================================
+    - default: ""
+      envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY
+      labelEn: Embeddings API Key
+      labelZh: 嵌入模型 API Key
+      label:
+        en: Embeddings API Key (blank = reuse the LLM API key)
+        zh: 嵌入模型 API Key（留空则复用全局 LLM 的 API Key）
+        zh-Hant: 嵌入模型 API Key（留空則複用全域 LLM 的 API Key）
+      required: false
+      type: password
+
+    - default: ""
+      envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL
+      labelEn: Embeddings Base URL
+      labelZh: 嵌入模型接口地址
+      label:
+        en: Embeddings Base URL (OpenAI-compatible, ending in /v1)
+        zh: 嵌入模型接口地址（OpenAI 兼容，以 /v1 结尾）
+        zh-Hant: 嵌入模型介面位址（OpenAI 相容，以 /v1 結尾）
+      required: false
+      type: text
+
+    - default: text-embedding-3-small
+      envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL
+      labelEn: Embeddings Model
+      labelZh: 嵌入模型
+      label:
+        en: Embeddings Model (changing it later requires re-embedding existing memories)
+        zh: 嵌入模型（安装后更换会导致已有记忆需要重新向量化）
+        zh-Hant: 嵌入模型（安裝後更換會導致已有記憶需要重新向量化）
+      required: true
+      rule: paramCommon
+      type: text
+
+    # ============================================================
+    # 重排模型（slim 镜像无法使用本地 cross-encoder）
+    # ============================================================
+    - default: rrf
+      envKey: HINDSIGHT_API_RERANKER_PROVIDER
+      labelEn: Reranker Provider
+      labelZh: 重排方式
+      label:
+        en: Reranker Provider (rrf = fusion order only, no external service needed)
+        zh: 重排方式（rrf = 仅用融合排序，无需外部服务）
+        zh-Hant: 重排方式（rrf = 僅用融合排序，無需外部服務）
+      required: true
+      type: select
+      values:
+        - label: RRF 融合排序（无需外部服务）
+          value: rrf
+        - label: 关闭重排
+          value: none
+
+    # ============================================================
+    # 认证：API / MCP 使用 API Key，GUI 使用独立访问密钥
+    # ============================================================
+    - default: ""
+      envKey: HINDSIGHT_API_TENANT_API_KEY
+      labelEn: API / MCP Access Key
+      labelZh: API / MCP 访问密钥
+      label:
+        en: API / MCP Access Key (clients send it as Authorization Bearer)
+        zh: API / MCP 访问密钥（客户端以 Bearer 形式携带）
+        zh-Hant: API / MCP 存取金鑰（客戶端以 Bearer 形式攜帶）
+      random: true
+      required: true
+      type: password
+
+    - default: ""
+      envKey: HINDSIGHT_CP_ACCESS_KEY
+      labelEn: GUI Access Key
+      labelZh: GUI 访问密钥
+      label:
+        en: GUI Access Key (must differ from the API access key)
+        zh: GUI 访问密钥（必须与 API 访问密钥不同）
+        zh-Hant: GUI 存取金鑰（必須與 API 存取金鑰不同）
+      random: true
+      required: true
+      type: password

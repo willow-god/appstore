@@ -1,0 +1,29 @@
+name: Hindsight
+tags:
+  - AI
+  - 记忆
+  - 知识库
+title: 面向 AI Agent 的长期记忆服务
+description: Hindsight 是一个可自托管的 AI Agent 记忆系统，从对话与文档中提取事实、实体和关系并写入 PostgreSQL，支持语义、关键词、时间与图检索，提供反思式问答与内置管理面板。
+additionalProperties:
+  key: hindsight
+  name: Hindsight
+  tags:
+    - AI
+    - Tool
+  shortDescZh: 面向 AI Agent 的长期记忆服务
+  shortDescEn: Self-hosted long-term memory service for AI agents
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://hindsight.vectorize.io
+  github: https://github.com/vectorize-io/hindsight
+  document: https://hindsight.vectorize.io/developer/installation
+  description:
+    en: Hindsight is a self-hosted memory system for AI agents. It extracts facts, entities and relationships from conversations and documents into PostgreSQL, retrieves them with semantic, keyword, temporal and graph search, and answers questions over them through a reflect pipeline. A built-in control plane provides the management UI.
+    zh: Hindsight 是一个面向 AI Agent 的可自托管记忆系统，把对话与文档中的事实、实体和关系抽取到 PostgreSQL，并通过语义、关键词、时间与图检索召回，再经由反思流程作答；内置控制台提供可视化管理界面。
+    zh-Hant: Hindsight 是一個面向 AI Agent 的可自架記憶系統，將對話與文件中的事實、實體和關係抽取到 PostgreSQL，並透過語意、關鍵詞、時間與圖檢索召回，再經由反思流程作答；內建控制台提供視覺化管理介面。
+  architectures:
+    - amd64
+    - arm64

@@ -1,0 +1,100 @@
+services:
+  hindsight:
+    image: ghcr.io/vectorize-io/hindsight:0.10.1-slim
+    container_name: ${CONTAINER_NAME}
+    restart: unless-stopped
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:9999"
+      - "${PANEL_APP_PORT_API}:8888"
+    environment:
+      TZ: Asia/Shanghai
+
+      # ============================================================
+      # PostgreSQL（1Panel 现有数据库，需已安装 pgvector 扩展）
+      # ============================================================
+      HINDSIGHT_API_DATABASE_URL: postgresql://${PANEL_DB_USER}:${PANEL_DB_USER_PASSWORD}@${PANEL_DB_HOST}:${PANEL_DB_PORT}/${PANEL_DB_NAME}
+
+      # ============================================================
+      # 全局 LLM（各操作未单独配置时使用这一组）
+      # ============================================================
+      HINDSIGHT_API_LLM_PROVIDER: ${HINDSIGHT_API_LLM_PROVIDER}
+      HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
+      HINDSIGHT_API_LLM_MODEL: ${HINDSIGHT_API_LLM_MODEL}
+      HINDSIGHT_API_LLM_BASE_URL: ${HINDSIGHT_API_LLM_BASE_URL}
+      HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS: ${HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS}
+
+      # ============================================================
+      # Retain：事实提取（留空则继承全局 LLM）
+      # ============================================================
+      HINDSIGHT_API_RETAIN_LLM_PROVIDER: ${HINDSIGHT_API_RETAIN_LLM_PROVIDER}
+      HINDSIGHT_API_RETAIN_LLM_API_KEY: ${HINDSIGHT_API_RETAIN_LLM_API_KEY}
+      HINDSIGHT_API_RETAIN_LLM_MODEL: ${HINDSIGHT_API_RETAIN_LLM_MODEL}
+      HINDSIGHT_API_RETAIN_LLM_BASE_URL: ${HINDSIGHT_API_RETAIN_LLM_BASE_URL}
+
+      # ============================================================
+      # Reflect：检索后的推理与作答（留空则继承全局 LLM）
+      # ============================================================
+      HINDSIGHT_API_REFLECT_LLM_PROVIDER: ${HINDSIGHT_API_REFLECT_LLM_PROVIDER}
+      HINDSIGHT_API_REFLECT_LLM_API_KEY: ${HINDSIGHT_API_REFLECT_LLM_API_KEY}
+      HINDSIGHT_API_REFLECT_LLM_MODEL: ${HINDSIGHT_API_REFLECT_LLM_MODEL}
+      HINDSIGHT_API_REFLECT_LLM_BASE_URL: ${HINDSIGHT_API_REFLECT_LLM_BASE_URL}
+
+      # ============================================================
+      # Consolidation：记忆合并去重（留空则继承全局 LLM）
+      # ============================================================
+      HINDSIGHT_API_CONSOLIDATION_LLM_PROVIDER: ${HINDSIGHT_API_CONSOLIDATION_LLM_PROVIDER}
+      HINDSIGHT_API_CONSOLIDATION_LLM_API_KEY: ${HINDSIGHT_API_CONSOLIDATION_LLM_API_KEY}
+      HINDSIGHT_API_CONSOLIDATION_LLM_MODEL: ${HINDSIGHT_API_CONSOLIDATION_LLM_MODEL}
+      HINDSIGHT_API_CONSOLIDATION_LLM_BASE_URL: ${HINDSIGHT_API_CONSOLIDATION_LLM_BASE_URL}
+
+      # ============================================================
+      # Mental Model Refresh：后台刷新（留空则继承 Reflect，再回落全局 LLM）
+      # ============================================================
+      HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_PROVIDER: ${HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_PROVIDER}
+      HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_API_KEY: ${HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_API_KEY}
+      HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MODEL: ${HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MODEL}
+      HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_BASE_URL: ${HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_BASE_URL}
+
+      # ============================================================
+      # 视觉模型：仅处理带图片附件的 retain 内容（留空则交给 Retain LLM）
+      # ============================================================
+      HINDSIGHT_API_VLM_PROVIDER: ${HINDSIGHT_API_VLM_PROVIDER}
+      HINDSIGHT_API_VLM_API_KEY: ${HINDSIGHT_API_VLM_API_KEY}
+      HINDSIGHT_API_VLM_MODEL: ${HINDSIGHT_API_VLM_MODEL}
+      HINDSIGHT_API_VLM_BASE_URL: ${HINDSIGHT_API_VLM_BASE_URL}
+
+      # ============================================================
+      # 嵌入与重排（slim 镜像不含本地模型，嵌入固定走 OpenAI 兼容接口）
+      # ============================================================
+      HINDSIGHT_API_EMBEDDINGS_PROVIDER: openai
+      HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY}
+      HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL}
+      HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL}
+      HINDSIGHT_API_RERANKER_PROVIDER: ${HINDSIGHT_API_RERANKER_PROVIDER}
+
+      # ============================================================
+      # 认证：API / MCP 使用 API Key，GUI 使用独立访问密钥
+      # ============================================================
+      HINDSIGHT_API_TENANT_EXTENSION: hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension
+      HINDSIGHT_API_TENANT_API_KEY: ${HINDSIGHT_API_TENANT_API_KEY}
+      HINDSIGHT_CP_ACCESS_KEY: ${HINDSIGHT_CP_ACCESS_KEY}
+      # GUI 通过服务端代理访问数据面 API，这里必须复用上面那把 API Key
+      HINDSIGHT_CP_DATAPLANE_API_KEY: ${HINDSIGHT_API_TENANT_API_KEY}
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8888/health', timeout=5).status == 200 else 1)"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

@@ -53,6 +53,12 @@
       "matchPackageNames": ["ghcr.io/lukegus/termix"],
       "versionCompatibility": "^release-(?<version>.*)$",
       "versioning": "semver"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/vectorize-io/hindsight"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+-slim$/",
+      "versioning": "semver"
     }
   ]
 }
