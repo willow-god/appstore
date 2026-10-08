@@ -12,12 +12,12 @@ services:
       TZ: Asia/Shanghai
 
       # ============================================================
-      # PostgreSQL（1Panel 现有数据库，需已安装 pgvector 扩展）
+      # PostgreSQL（需已安装 pgvector 扩展）
       # ============================================================
       HINDSIGHT_API_DATABASE_URL: postgresql://${PANEL_DB_USER}:${PANEL_DB_USER_PASSWORD}@${PANEL_DB_HOST}:${PANEL_DB_PORT}/${PANEL_DB_NAME}
 
       # ============================================================
-      # 全局 LLM（各操作未单独配置时使用这一组）
+      # 主 LLM：所有操作默认使用
       # ============================================================
       HINDSIGHT_API_LLM_PROVIDER: ${HINDSIGHT_API_LLM_PROVIDER}
       HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
@@ -26,56 +26,32 @@ services:
       HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS: ${HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS}
 
       # ============================================================
-      # Retain：事实提取（留空则继承全局 LLM）
+      # 备用 LLM：主模型报错时按顺序故障转移
+      # 整组留空即为不启用；上游在成员为空时直接走单模型，此时 LLM_STRATEGY 不生效
       # ============================================================
-      HINDSIGHT_API_RETAIN_LLM_PROVIDER: ${HINDSIGHT_API_RETAIN_LLM_PROVIDER}
-      HINDSIGHT_API_RETAIN_LLM_API_KEY: ${HINDSIGHT_API_RETAIN_LLM_API_KEY}
-      HINDSIGHT_API_RETAIN_LLM_MODEL: ${HINDSIGHT_API_RETAIN_LLM_MODEL}
-      HINDSIGHT_API_RETAIN_LLM_BASE_URL: ${HINDSIGHT_API_RETAIN_LLM_BASE_URL}
+      HINDSIGHT_API_LLM_1_PROVIDER: ${HINDSIGHT_API_LLM_1_PROVIDER}
+      HINDSIGHT_API_LLM_1_API_KEY: ${HINDSIGHT_API_LLM_1_API_KEY}
+      HINDSIGHT_API_LLM_1_MODEL: ${HINDSIGHT_API_LLM_1_MODEL}
+      HINDSIGHT_API_LLM_1_BASE_URL: ${HINDSIGHT_API_LLM_1_BASE_URL}
+      HINDSIGHT_API_LLM_STRATEGY: '{"mode": "failover"}'
 
       # ============================================================
-      # Reflect：检索后的推理与作答（留空则继承全局 LLM）
-      # ============================================================
-      HINDSIGHT_API_REFLECT_LLM_PROVIDER: ${HINDSIGHT_API_REFLECT_LLM_PROVIDER}
-      HINDSIGHT_API_REFLECT_LLM_API_KEY: ${HINDSIGHT_API_REFLECT_LLM_API_KEY}
-      HINDSIGHT_API_REFLECT_LLM_MODEL: ${HINDSIGHT_API_REFLECT_LLM_MODEL}
-      HINDSIGHT_API_REFLECT_LLM_BASE_URL: ${HINDSIGHT_API_REFLECT_LLM_BASE_URL}
-
-      # ============================================================
-      # Consolidation：记忆合并去重（留空则继承全局 LLM）
-      # ============================================================
-      HINDSIGHT_API_CONSOLIDATION_LLM_PROVIDER: ${HINDSIGHT_API_CONSOLIDATION_LLM_PROVIDER}
-      HINDSIGHT_API_CONSOLIDATION_LLM_API_KEY: ${HINDSIGHT_API_CONSOLIDATION_LLM_API_KEY}
-      HINDSIGHT_API_CONSOLIDATION_LLM_MODEL: ${HINDSIGHT_API_CONSOLIDATION_LLM_MODEL}
-      HINDSIGHT_API_CONSOLIDATION_LLM_BASE_URL: ${HINDSIGHT_API_CONSOLIDATION_LLM_BASE_URL}
-
-      # ============================================================
-      # Mental Model Refresh：后台刷新（留空则继承 Reflect，再回落全局 LLM）
-      # ============================================================
-      HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_PROVIDER: ${HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_PROVIDER}
-      HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_API_KEY: ${HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_API_KEY}
-      HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MODEL: ${HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MODEL}
-      HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_BASE_URL: ${HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_BASE_URL}
-
-      # ============================================================
-      # 视觉模型：仅处理带图片附件的 retain 内容（留空则交给 Retain LLM）
-      # ============================================================
-      HINDSIGHT_API_VLM_PROVIDER: ${HINDSIGHT_API_VLM_PROVIDER}
-      HINDSIGHT_API_VLM_API_KEY: ${HINDSIGHT_API_VLM_API_KEY}
-      HINDSIGHT_API_VLM_MODEL: ${HINDSIGHT_API_VLM_MODEL}
-      HINDSIGHT_API_VLM_BASE_URL: ${HINDSIGHT_API_VLM_BASE_URL}
-
-      # ============================================================
-      # 嵌入与重排（slim 镜像不含本地模型，嵌入固定走 OpenAI 兼容接口）
+      # 嵌入模型（slim 镜像不含本地模型，固定走 OpenAI 兼容接口）
       # ============================================================
       HINDSIGHT_API_EMBEDDINGS_PROVIDER: openai
       HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY}
       HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL}
       HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL}
-      HINDSIGHT_API_RERANKER_PROVIDER: ${HINDSIGHT_API_RERANKER_PROVIDER}
+      HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS}
 
       # ============================================================
-      # 认证：API / MCP 使用 API Key，GUI 使用独立访问密钥
+      # 重排（slim 镜像无法使用本地 cross-encoder）
+      # ============================================================
+      HINDSIGHT_API_RERANKER_PROVIDER: ${HINDSIGHT_API_RERANKER_PROVIDER}
+      HINDSIGHT_API_RERANKER_MAX_CANDIDATES: ${HINDSIGHT_API_RERANKER_MAX_CANDIDATES}
+
+      # ============================================================
+      # 认证：API/MCP 用 API Key，GUI 用独立访问密钥
       # ============================================================
       HINDSIGHT_API_TENANT_EXTENSION: hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension
       HINDSIGHT_API_TENANT_API_KEY: ${HINDSIGHT_API_TENANT_API_KEY}
