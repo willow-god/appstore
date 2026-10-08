@@ -1,6 +1,6 @@
 services:
   hindsight:
-    image: ghcr.io/vectorize-io/hindsight:0.10.2-slim
+    image: ghcr.io/vectorize-io/hindsight:0.10.3-slim
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
     labels:
