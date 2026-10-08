@@ -8,7 +8,7 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 
 - 项目地址：[vectorize-io/hindsight](https://github.com/vectorize-io/hindsight)
 - 官方文档：[hindsight.vectorize.io](https://hindsight.vectorize.io/developer/installation)
-- 本应用使用的镜像：`ghcr.io/vectorize-io/hindsight:0.10.1-slim`
+- 本应用使用的镜像：`ghcr.io/vectorize-io/hindsight:0.10.2-slim`
 
 ## 使用说明
 
@@ -29,8 +29,8 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 
    返回空结果说明扩展不可用，Hindsight 会在迁移阶段直接失败。
 
-2. **必须准备外部嵌入（Embeddings）服务。**
-   本应用使用 `-slim` 镜像，镜像内不含本地嵌入与重排模型（这是 slim 与标准镜像的主要区别），所以嵌入必须走外部接口。表单固定使用 OpenAI 兼容接口，任何 OpenAI 兼容的嵌入服务（OpenAI、SiliconFlow、各家中转、TEI 网关等）都能用；API Key 留空时会自动复用主 LLM 的 Key。
+2. **必须准备外部嵌入（Embeddings）与重排（Reranker）服务。**
+   本应用使用 `-slim` 镜像，镜像内不含本地嵌入与重排模型（这是 slim 与标准镜像的主要区别），两者都必须走外部接口。本应用已把这两项都**锁定到硅基流动**（[siliconflow.cn](https://siliconflow.cn)）：嵌入走它的 OpenAI 兼容端点，重排走它 Cohere 兼容的 `/rerank` 端点。安装前请确认账号里可用的嵌入与重排模型，并把对应的 API Key 填进表单。
 
 3. **LLM 需要足够大的输出上限。**
    Retain（事实提取）默认单次调用最多输出 64000 token，官方要求所选模型至少支持 65000 输出 token。模型输出上限较小时，请把「Retain 最大输出 Token」调低（例如 32000 / 16000）；该值必须大于 3000，否则启动即报错。
@@ -39,36 +39,71 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 
 ### 主 LLM
 
-所有操作默认使用这一组模型，四个字段为：提供商、API Key、模型、接口地址。
+提供商已锁定为 `openai`（OpenAI 兼容协议，写在 compose 里）—— 官方 OpenAI、DeepSeek、硅基流动、各类中转等绝大多数服务都提供 OpenAI 兼容接口，用「接口地址」指向实际服务即可。表单三项：
 
-- 提供商：`openai`、`anthropic`、`gemini`、`groq`、`deepseek`、`zai`、`minimax`、`atlas`、`meta`、`ollama`、`lmstudio`、`vertexai`、`bedrock`、`litellm` 等。
-- 模型留空时使用该提供商的推荐默认模型（例如 `openai` → `gpt-4o-mini`）。
-- 接口地址用于 OpenAI 兼容端点，通常是 `https://xxx/v1`（**不是**账号根地址）。
-- 「Retain 最大输出 Token」限定事实提取单次调用的输出预算，也是控制主 LLM 成本最直接的一个旋钮。
+- **LLM API Key**：对应服务的 Key。
+- **LLM 模型**：留空会用 OpenAI 的默认模型 `gpt-4o-mini`。走中转或第三方服务时**请务必填写**，否则会去要一个对方可能并不提供的模型。
+- **LLM 接口地址**：OpenAI 兼容端点，通常是 `https://xxx/v1`（**不是**账号根地址）。
+- 「Retain 最大输出 Token」限定事实提取单次调用的输出预算，也是控制主 LLM 成本最直接的旋钮。
+
+> 要用 `anthropic`、`gemini`、`ollama` 等原生协议，改 compose 里的 `HINDSIGHT_API_LLM_PROVIDER`，并按官方 `.env.example` 补上该提供商所需的变量。
 
 ### 备用 LLM（故障转移）
 
-主模型报错时，Hindsight 会按顺序切换到备用模型。本应用已默认写入故障转移策略 `HINDSIGHT_API_LLM_STRATEGY={"mode": "failover"}`，所以只要填上备用模型的提供商与 Key 即可生效 —— 备用模型的「接口地址」留空时使用**该提供商自己的默认地址**，并不会继承主 LLM 的地址，跨服务商做备份时建议显式填写。
+主模型报错时按顺序切到备用模型，策略 `HINDSIGHT_API_LLM_STRATEGY={"mode": "failover"}` 已写在 compose 里。表单两项：
 
-两点注意：
+- **备用 LLM**：开关。**开** = 使用 `openai`，与主 LLM 共用同一提供商、同一 API Key、同一接口地址，只换模型；**关** = 留空，不启用备用模型。
+- **备用 LLM 模型**：仅在开关打开时生效，必须是主 LLM 那个接口**真实提供**的模型 —— 否则主模型一出错切过去也会立刻失败。
 
-- **备用模型整组留空 = 不启用**，此时策略配置不产生任何影响（上游在成员为空时直接走单模型），不会影响启动。
-- **填了「备用 LLM 提供商」就必须填它的 API Key**，否则容器启动时会直接抛错，这是上游的强校验。
+「关」的状态是安全的：上游扫描多模型成员时，遇到空的 provider 会在**读取 API Key 之前**就停止，所以该成员根本不存在，也不会触发"Key 不能为空"的强校验（策略此时同样失效，因为成员列表为空）。这也是为什么这两项可以放心做成开关，而不必担心关掉后启动失败。
 
-> 需要轮询或按元数据路由时，把 compose 里的策略改成 `{"mode": "round-robin"}` 或 `{"mode": "metadata", "routes": [...]}`，并可按官方 `.env.example` 追加 `HINDSIGHT_API_LLM_2_*`、`HINDSIGHT_API_LLM_3_*` 等成员（序号必须从 1 连续）。
+compose 里 `HINDSIGHT_API_LLM_1_API_KEY` 与 `_BASE_URL` 直接引用主 LLM 的值，这是**必须的**：上游规定成员 provider 非空时其 API Key 不能为空，否则启动直接抛错；而成员又不会自动继承主 LLM 的 BASE_URL，留空会静默回落到 `api.openai.com`（用中转时那就是 401）。引用写法一次解决这两点，也省掉重复填写。
 
-### 嵌入模型
+想换成另一家服务商（例如主用中转、备用直连 DeepSeek）：把 compose 里那三行改成具体值即可，注意 `BASE_URL` 必须写全，它不会回落。
 
-固定使用 `openai`（OpenAI 兼容接口）作为嵌入提供商，表单提供 API Key / 接口地址 / 模型 / 维度四项：
+> 需要轮询或按元数据路由时，把策略改成 `{"mode": "round-robin"}` 或 `{"mode": "metadata", "routes": [...]}`，并可按官方 `.env.example` 追加 `HINDSIGHT_API_LLM_2_*`、`HINDSIGHT_API_LLM_3_*` 等成员（序号必须从 1 连续）。
 
-- **API Key / 接口地址留空**时，分别复用主 LLM 的 Key 与地址。
-- **嵌入维度**留空时使用模型的原生维度（推荐）。填写后会作为 `dimensions` 参数下发给服务端，并决定数据库向量列的宽度 —— 只有 `text-embedding-3-*` 这类支持该参数的模型才能填，其他模型填了会被服务端拒绝。
-- **嵌入模型一旦写入记忆就不要更换**：更换会导致新旧记忆不在同一向量空间，已有记忆需要重新向量化。
+### 嵌入模型（锁定硅基流动）
 
-### 重排
+上游**没有** `siliconflow` 这个嵌入提供商（合法值只有 `local`、`onnx`、`tei`、`openai`、`openai-codex`、`openrouter`、`requesty`、`cohere`、`google`、`zeroentropy`、`litellm`、`litellm-sdk`），所以这里走 OpenAI 兼容通道指向硅基流动：compose 里固定了 `HINDSIGHT_API_EMBEDDINGS_PROVIDER: openai` 和 `HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: https://api.siliconflow.cn/v1`，OpenAI SDK 会自动在其后拼上 `/embeddings`。
 
-- **重排方式**只提供 `rrf`（仅用融合排序，无需外部服务）与 `none`（关闭重排），因为 slim 镜像不含本地 cross-encoder。需要神经重排（`cohere`、`siliconflow`、`tei`、`google`、`alibaba`、`zeroentropy`、`typesafe`、`litellm` 等）时，把 compose 里的 `HINDSIGHT_API_RERANKER_PROVIDER` 改成目标值并补上该提供商所需变量（例如 TEI 需要 `HINDSIGHT_API_RERANKER_TEI_URL`）。
-- **重排候选上限**默认 300，限制每次召回交给 cross-encoder 的候选数；它**只对神经重排生效**，重排方式为 `rrf` 时该配置不产生作用。
+表单只剩三项：
+
+- **嵌入模型 API Key**：你的硅基流动 Key。
+- **嵌入模型**：默认 `BAAI/bge-m3`，**必须存在于你账号的模型列表里**。
+- **嵌入维度**：留空用模型原生维度。硅基流动的 bge / Qwen 系列请保持留空 —— `dimensions` 参数只有 OpenAI `text-embedding-3` 系列接受，其他模型带上会被服务端拒绝。填写后它会作为请求参数下发，并决定数据库向量列的宽度。
+
+**嵌入模型一旦写入记忆就不要更换**：更换后新旧记忆不在同一向量空间，已有记忆需要重新向量化。
+
+> 换到别的 OpenAI 兼容嵌入服务（OpenAI、各类中转）只需改 compose 里的 `HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL`，其余不动；换成 `cohere`、`google`、`tei` 这类非 OpenAI 兼容的服务，则要同时改 `HINDSIGHT_API_EMBEDDINGS_PROVIDER` 并使用该提供商自己的变量（`HINDSIGHT_API_EMBEDDINGS_<提供商>_*`）。
+
+### 重排模型（锁定硅基流动）
+
+compose 里固定了 `HINDSIGHT_API_RERANKER_PROVIDER: siliconflow`，并且**不设** `_SILICONFLOW_BASE_URL` —— 上游的默认值就是 `https://api.siliconflow.cn/v1`，客户端再拼上 `/rerank`，最终请求 `https://api.siliconflow.cn/v1/rerank`（Cohere 兼容格式）。
+
+表单两项：
+
+- **重排模型 API Key**：你的硅基流动 Key。
+- **重排模型**：默认 `BAAI/bge-reranker-v2-m3`，**必须存在于你账号的模型列表里，不要留空**（空值不会被当作「用默认」，会变成空模型名）。
+
+「重排候选上限」默认 300，控制每次召回交给重排模型精排的候选数；调小可降低重排延迟，调大覆盖更多候选（精度略升、耗时增加）。
+
+#### 想停用重排或换 provider
+
+- **停用重排**：把 `HINDSIGHT_API_RERANKER_PROVIDER` 改成 `rrf`。它是透传实现（`RRFPassthroughCrossEncoder`），只做多路召回的融合排序，不加载模型、不需要 Key。**注意上游不接受 `none`**：`none` 会抛 `Unknown reranker provider`，config.py 告警文案里那句「（or none）」是上游过期的说法。
+- **换其它 provider**：合法值有 `local`、`tei`、`cohere`、`openrouter`、`siliconflow`、`alibaba`、`google`、`zeroentropy`、`typesafe`、`litellm`、`litellm-sdk`、`flashrank`、`jina-mlx`、`rrf`，其中 `local` / `flashrank` / `jina-mlx` 依赖镜像内本地模型，**slim 不可用**。各家所需变量见下表（前缀统一为 `HINDSIGHT_API_RERANKER_`）；模型变量不写或填真实值都可以，但**不要写成空字符串**。
+
+| provider | 需要补的变量 |
+| --- | --- |
+| `siliconflow` | `_SILICONFLOW_API_KEY`（必填）、`_SILICONFLOW_MODEL`（默认 `BAAI/bge-reranker-v2-m3`）、可选 `_SILICONFLOW_BASE_URL` |
+| `cohere` | `_COHERE_API_KEY`（必填，也可回退到全局 `HINDSIGHT_API_COHERE_API_KEY`）、`_COHERE_MODEL`（默认 `rerank-english-v3.0`）、可选 `_COHERE_BASE_URL` |
+| `openrouter` | `_OPENROUTER_API_KEY`（必填，可回退到全局 `HINDSIGHT_API_OPENROUTER_API_KEY` 或 LLM 的 Key）、`_OPENROUTER_MODEL`、可选 `_OPENROUTER_BASE_URL` |
+| `tei` | 只要 `_TEI_URL`（自建 HuggingFace TEI 服务，模型由服务端决定，没有 key 和 model 变量） |
+| `alibaba` | `_ALIBABA_API_KEY`、`_ALIBABA_MODEL`（DashScope，没有 base_url 变量） |
+| `google` | `_GOOGLE_PROJECT_ID`、`_GOOGLE_SERVICE_ACCOUNT_KEY`、`_GOOGLE_MODEL` |
+| `zeroentropy` / `typesafe` / `litellm` / `litellm-sdk` | 各自的 `_*_API_KEY`、`_*_MODEL`，必要时加 `_*_BASE_URL` |
+
+- **故障转移链**：按 `HINDSIGHT_API_RERANKER_1_*`、`_2_*` 继续编号即可，成员之间不继承任何配置、要用什么就写全；链尾写 `rrf` 可以让重排失败时退回融合排序，而不是让整次召回失败。
 
 ### 访问密钥与鉴权
 
@@ -124,8 +159,8 @@ claude mcp add --transport http hindsight https://memory.example.com/mem/mcp \
 
 ## 镜像与版本说明
 
-- 本应用跟随上游的 **slim** 镜像变体（版本目录 `0.10.1-slim`）。使用 slim 的原因是拉取体积更小（镜像层压缩后约 458MB，标准镜像约 880MB），代价是嵌入与重排必须依赖外部服务。
-- 想改用镜像自带的本地嵌入/重排模型时，把 compose 中的镜像换成不带 `-slim` 的 tag（例如 `ghcr.io/vectorize-io/hindsight:0.10.1`），并把 `HINDSIGHT_API_EMBEDDINGS_PROVIDER` 改成 `local`、`HINDSIGHT_API_RERANKER_PROVIDER` 改成 `local`。标准镜像已预置 `BAAI/bge-small-en-v1.5`（嵌入）与 `cross-encoder/ms-marco-MiniLM-L-6-v2`（重排），无需联网下载。
+- 本应用跟随上游的 **slim** 镜像变体（版本目录 `0.10.2-slim`）。使用 slim 的原因是拉取体积更小（镜像层压缩后约 458MB，标准镜像约 880MB），代价是嵌入与重排必须依赖外部服务。
+- 想改用镜像自带的本地嵌入/重排模型时，把 compose 中的镜像换成不带 `-slim` 的 tag（例如 `ghcr.io/vectorize-io/hindsight:0.10.2`），并把 `HINDSIGHT_API_EMBEDDINGS_PROVIDER` 改成 `local`、`HINDSIGHT_API_RERANKER_PROVIDER` 改成 `local`。标准镜像已预置 `BAAI/bge-small-en-v1.5`（嵌入）与 `cross-encoder/ms-marco-MiniLM-L-6-v2`（重排），无需联网下载。
 - 上游同时提供带 `-slim` 和不带 `-slim` 的两套 tag，因此 `renovate.json` 中为该镜像加了 `allowedVersions` 规则，自动升级只会落在 `-slim` 这一支上。
 - 该规则里的 `"ignoreUnstable": false` **不能删**：`-slim` 在 semver 里属于预发布版，而当前版本也是预发布版时，Renovate 默认只允许跳到 minor 与 patch 都相同的另一个预发布版，结果是任何版本号变化都不会产生升级 PR。加上这个开关后，才是「按版本号正常升级、且只取 `-slim` 这一支」。
 

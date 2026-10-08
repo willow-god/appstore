@@ -17,37 +17,59 @@ services:
       HINDSIGHT_API_DATABASE_URL: postgresql://${PANEL_DB_USER}:${PANEL_DB_USER_PASSWORD}@${PANEL_DB_HOST}:${PANEL_DB_PORT}/${PANEL_DB_NAME}
 
       # ============================================================
-      # 主 LLM：所有操作默认使用
+      # 主 LLM：所有操作默认使用；提供商锁定为 openai（OpenAI 兼容协议）
+      # 官方 OpenAI、DeepSeek、硅基流动、各类中转等绝大多数服务都提供
+      # OpenAI 兼容接口，用 _BASE_URL 指向实际服务即可，无需改这里。
+      # 若要用 anthropic / gemini / ollama 等原生协议，改这一行，
+      # 并按官方 .env.example 补上该提供商需要的变量。
       # ============================================================
-      HINDSIGHT_API_LLM_PROVIDER: ${HINDSIGHT_API_LLM_PROVIDER}
+      HINDSIGHT_API_LLM_PROVIDER: openai
       HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
       HINDSIGHT_API_LLM_MODEL: ${HINDSIGHT_API_LLM_MODEL}
       HINDSIGHT_API_LLM_BASE_URL: ${HINDSIGHT_API_LLM_BASE_URL}
       HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS: ${HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS}
 
       # ============================================================
-      # 备用 LLM：主模型报错时按顺序故障转移
-      # 整组留空即为不启用；上游在成员为空时直接走单模型，此时 LLM_STRATEGY 不生效
+      # 备用 LLM：主模型报错时按顺序故障转移（只换模型，其余继承主 LLM）
+      # 表单里的「备用 LLM」是开关：开 = openai，关 = 空值。
+      # provider 为空时上游在读取 API Key 之前就停止扫描，成员根本不存在，
+      # 因此"关"的状态不会触发下面的 Key 强校验，也不会创建成员。
+      # KEY / BASE_URL 直接引用主 LLM 的值，原因有二：
+      #   1) 上游规定成员 provider 非空时其 API Key 不能为空，否则启动抛错；
+      #   2) 成员不会继承主 LLM 的 BASE_URL，留空会静默回落到 api.openai.com。
+      # 要换成另一家服务商：把下面三行改成具体值（BASE_URL 必须写全）。
       # ============================================================
       HINDSIGHT_API_LLM_1_PROVIDER: ${HINDSIGHT_API_LLM_1_PROVIDER}
-      HINDSIGHT_API_LLM_1_API_KEY: ${HINDSIGHT_API_LLM_1_API_KEY}
+      HINDSIGHT_API_LLM_1_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
+      HINDSIGHT_API_LLM_1_BASE_URL: ${HINDSIGHT_API_LLM_BASE_URL}
       HINDSIGHT_API_LLM_1_MODEL: ${HINDSIGHT_API_LLM_1_MODEL}
-      HINDSIGHT_API_LLM_1_BASE_URL: ${HINDSIGHT_API_LLM_1_BASE_URL}
       HINDSIGHT_API_LLM_STRATEGY: '{"mode": "failover"}'
 
       # ============================================================
-      # 嵌入模型（slim 镜像不含本地模型，固定走 OpenAI 兼容接口）
+      # 嵌入模型：锁定硅基流动
+      # 上游没有 siliconflow 这个嵌入提供商（合法值只有 local / onnx / tei /
+      # openai / openai-codex / openrouter / requesty / cohere / google /
+      # zeroentropy / litellm / litellm-sdk），所以走 OpenAI 兼容接口指向硅基流动。
+      # OpenAI SDK 会在 base_url 后自动拼 /embeddings，
+      # 即最终请求 https://api.siliconflow.cn/v1/embeddings
       # ============================================================
       HINDSIGHT_API_EMBEDDINGS_PROVIDER: openai
+      HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: https://api.siliconflow.cn/v1
       HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY}
-      HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL}
       HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL}
       HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS}
 
       # ============================================================
-      # 重排（slim 镜像无法使用本地 cross-encoder）
+      # 重排：锁定硅基流动（Cohere 兼容的 /rerank 接口）
+      # 不设 _SILICONFLOW_BASE_URL：上游默认值就是 https://api.siliconflow.cn/v1，
+      # 客户端再拼上 RERANK_PATH("/rerank")，最终请求
+      # https://api.siliconflow.cn/v1/rerank
+      # 备注：上游不接受 "none"（会报 Unknown reranker provider），
+      # 若要停用重排，把 PROVIDER 改成 rrf（透传实现，不加载模型）
       # ============================================================
-      HINDSIGHT_API_RERANKER_PROVIDER: ${HINDSIGHT_API_RERANKER_PROVIDER}
+      HINDSIGHT_API_RERANKER_PROVIDER: siliconflow
+      HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY: ${HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY}
+      HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL: ${HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL}
       HINDSIGHT_API_RERANKER_MAX_CANDIDATES: ${HINDSIGHT_API_RERANKER_MAX_CANDIDATES}
 
       # ============================================================

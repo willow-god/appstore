@@ -88,20 +88,8 @@ additionalProperties:
       type: number
 
     # ============================================================
-    # 主 LLM：全部操作默认使用
+    # 主 LLM：全部操作默认使用；提供商已锁定为 openai（OpenAI 兼容）于 compose 中
     # ============================================================
-    - default: openai
-      envKey: HINDSIGHT_API_LLM_PROVIDER
-      labelEn: LLM Provider
-      labelZh: LLM 提供商
-      label:
-        en: "LLM Provider (openai / anthropic / gemini / deepseek / zai / groq / ollama ...)"
-        zh: LLM 提供商（openai / anthropic / gemini / deepseek / zai / groq / ollama ...）
-        zh-Hant: LLM 供應商（openai / anthropic / gemini / deepseek / zai / groq / ollama ...）
-      required: true
-      rule: paramCommon
-      type: text
-
     - default: ""
       envKey: HINDSIGHT_API_LLM_API_KEY
       labelEn: LLM API Key
@@ -118,9 +106,9 @@ additionalProperties:
       labelEn: LLM Model
       labelZh: LLM 模型
       label:
-        en: LLM Model (blank = the provider's default model)
-        zh: LLM 模型（留空使用该提供商默认模型）
-        zh-Hant: LLM 模型（留空使用該供應商預設模型）
+        en: LLM Model (blank = gpt-4o-mini, the OpenAI default; always fill it when using a relay)
+        zh: LLM 模型（留空 = OpenAI 默认模型 gpt-4o-mini；用中转或第三方服务时请务必填写）
+        zh-Hant: LLM 模型（留空 = OpenAI 預設模型 gpt-4o-mini；用中轉或第三方服務時請務必填寫）
       required: false
       type: text
 
@@ -147,86 +135,61 @@ additionalProperties:
       type: number
 
     # ============================================================
-    # 备用 LLM：主模型失败时按顺序切换（failover）
-    # 整组留空 = 不启用备用模型
+    # 备用 LLM：开 = openai，与主 LLM 共用提供商、Key、接口地址，只换模型
+    # 关 = 留空：上游在 provider 为空时根本不创建该成员（Key 校验也不会触发）
     # ============================================================
-    - default: ""
+    - default: openai
       envKey: HINDSIGHT_API_LLM_1_PROVIDER
-      labelEn: Backup LLM Provider
-      labelZh: 备用 LLM 提供商
+      labelEn: Backup LLM
+      labelZh: 备用 LLM
       label:
-        en: Backup LLM Provider (blank = no backup model)
-        zh: 备用 LLM 提供商（留空则不启用备用模型）
-        zh-Hant: 備用 LLM 供應商（留空則不啟用備用模型）
+        en: "Backup LLM — on: openai, sharing the main LLM's key and endpoint; off: no backup model"
+        zh: 备用 LLM —— 开：使用 openai，与主 LLM 共用 Key 与接口地址；关：不启用备用模型
+        zh-Hant: 備用 LLM —— 開：使用 openai，與主 LLM 共用 Key 與介面位址；關：不啟用備用模型
       required: false
-      type: text
-
-    - default: ""
-      envKey: HINDSIGHT_API_LLM_1_API_KEY
-      labelEn: Backup LLM API Key
-      labelZh: 备用 LLM API Key
-      label:
-        en: Backup LLM API Key (required once a Backup Provider is set, or the container fails to start)
-        zh: 备用 LLM API Key（填了上面的提供商就必填，否则容器启动即失败）
-        zh-Hant: 備用 LLM API Key（填了上面的供應商就必填，否則容器啟動即失敗）
-      required: false
-      type: password
+      type: select
+      values:
+        - label: 开启（openai，与主 LLM 同接口）
+          value: openai
+        - label: 关闭（不使用备用模型）
+          value: ""
 
     - default: ""
       envKey: HINDSIGHT_API_LLM_1_MODEL
       labelEn: Backup LLM Model
       labelZh: 备用 LLM 模型
       label:
-        en: Backup LLM Model (blank = the provider's default model)
-        zh: 备用 LLM 模型（留空使用该提供商默认模型）
-        zh-Hant: 備用 LLM 模型（留空使用該供應商預設模型）
-      required: false
-      type: text
-
-    - default: ""
-      envKey: HINDSIGHT_API_LLM_1_BASE_URL
-      labelEn: Backup LLM Base URL
-      labelZh: 备用 LLM 接口地址
-      label:
-        en: Backup LLM Base URL (blank = the provider's own default endpoint, it does NOT inherit the main LLM's URL)
-        zh: 备用 LLM 接口地址（留空用该提供商默认地址，不会继承主 LLM 的地址）
-        zh-Hant: 備用 LLM 介面位址（留空用該供應商預設位址，不會繼承主 LLM 的位址）
-      required: false
+        en: Backup LLM Model — only used when the backup is on. Must be a model that endpoint actually serves, or a failover will fail too.
+        zh: 备用 LLM 模型 —— 仅在备用开启时生效；必须是主 LLM 接口真实提供的模型，否则主模型出错切过去也会立刻失败
+        zh-Hant: 備用 LLM 模型 —— 僅在備用開啟時生效；必須是主 LLM 介面真實提供的模型，否則主模型出錯切過去也會立刻失敗
+      required: true
+      rule: paramCommon
       type: text
 
     # ============================================================
-    # 嵌入模型（slim 镜像不含本地模型，必须用 OpenAI 兼容接口）
+    # 嵌入模型：锁定硅基流动
+    # 上游没有 siliconflow 这个嵌入提供商，这里走 OpenAI 兼容接口，
+    # 接口地址已在 compose 中固定为 https://api.siliconflow.cn/v1
     # ============================================================
     - default: ""
       envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY
       labelEn: Embeddings API Key
       labelZh: 嵌入模型 API Key
       label:
-        en: Embeddings API Key (blank = reuse the LLM API key)
-        zh: 嵌入模型 API Key（留空复用主 LLM 的 Key）
-        zh-Hant: 嵌入模型 API Key（留空複用主 LLM 的 Key）
-      required: false
+        en: Embeddings API Key (your SiliconFlow API key)
+        zh: 嵌入模型 API Key（硅基流动的 API Key）
+        zh-Hant: 嵌入模型 API Key（矽基流動的 API Key）
+      required: true
       type: password
 
-    - default: ""
-      envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL
-      labelEn: Embeddings Base URL
-      labelZh: 嵌入模型接口地址
-      label:
-        en: Embeddings Base URL (OpenAI-compatible, ending in /v1; blank = the LLM base URL)
-        zh: 嵌入模型接口地址（OpenAI 兼容，以 /v1 结尾；留空沿用主 LLM 地址）
-        zh-Hant: 嵌入模型介面位址（OpenAI 相容，以 /v1 結尾；留空沿用主 LLM 位址）
-      required: false
-      type: text
-
-    - default: text-embedding-3-small
+    - default: BAAI/bge-m3
       envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL
       labelEn: Embeddings Model
       labelZh: 嵌入模型
       label:
-        en: Embeddings Model (never change it after memories exist — they must be re-embedded)
-        zh: 嵌入模型（写入记忆后不要更换，否则已有记忆需要重新向量化）
-        zh-Hant: 嵌入模型（寫入記憶後不要更換，否則已有記憶需要重新向量化）
+        en: Embeddings Model (must exist in your SiliconFlow account; never change it once memories exist)
+        zh: 嵌入模型（需存在于你的硅基流动账号中；写入记忆后不要更换，否则已有记忆要重新向量化）
+        zh-Hant: 嵌入模型（需存在於你的矽基流動帳號中；寫入記憶後不要更換，否則已有記憶要重新向量化）
       required: true
       rule: paramCommon
       type: text
@@ -236,39 +199,46 @@ additionalProperties:
       labelEn: Embeddings Dimensions
       labelZh: 嵌入维度
       label:
-        en: "Embeddings Dimensions (blank = model native; only models supporting a dimensions parameter accept it)"
-        zh: 嵌入维度（留空用模型原生维度；只有支持 dimensions 参数的模型才可填写）
-        zh-Hant: 嵌入維度（留空用模型原生維度；只有支援 dimensions 參數的模型才可填寫）
+        en: "Embeddings Dimensions (blank = the model's native width. SiliconFlow bge / Qwen models: keep blank — the parameter is only accepted by OpenAI text-embedding-3 models)"
+        zh: 嵌入维度（留空 = 用模型原生维度。硅基流动的 bge / Qwen 系列请保持留空；该参数只有 OpenAI text-embedding-3 系列接受）
+        zh-Hant: 嵌入維度（留空 = 用模型原生維度。矽基流動的 bge / Qwen 系列請保持留空；該參數只有 OpenAI text-embedding-3 系列接受）
       required: false
       type: text
 
     # ============================================================
-    # 重排（slim 镜像无法使用本地 cross-encoder）
+    # 重排模型：锁定硅基流动（Cohere 兼容 /rerank，地址与能力都在 compose 里固定）
     # ============================================================
-    - default: rrf
-      envKey: HINDSIGHT_API_RERANKER_PROVIDER
-      labelEn: Reranker Provider
-      labelZh: 重排方式
+    - default: ""
+      envKey: HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY
+      labelEn: Reranker API Key
+      labelZh: 重排模型 API Key
       label:
-        en: Reranker Provider (rrf = fusion order only; no external service needed)
-        zh: 重排方式（rrf = 仅用融合排序，无需外部服务）
-        zh-Hant: 重排方式（rrf = 僅用融合排序，無需外部服務）
+        en: Reranker API Key (your SiliconFlow API key)
+        zh: 重排模型 API Key（硅基流动的 API Key）
+        zh-Hant: 重排模型 API Key（矽基流動的 API Key）
       required: true
-      type: select
-      values:
-        - label: RRF 融合排序（无需外部服务）
-          value: rrf
-        - label: 关闭重排
-          value: none
+      type: password
+
+    - default: BAAI/bge-reranker-v2-m3
+      envKey: HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL
+      labelEn: Reranker Model
+      labelZh: 重排模型
+      label:
+        en: Reranker Model (must exist in your SiliconFlow account; do not leave blank)
+        zh: 重排模型（需存在于你的硅基流动账号中；不要留空）
+        zh-Hant: 重排模型（需存在於你的矽基流動帳號中；不要留空）
+      required: true
+      rule: paramCommon
+      type: text
 
     - default: 300
       envKey: HINDSIGHT_API_RERANKER_MAX_CANDIDATES
       labelEn: Reranker Max Candidates
       labelZh: 重排候选上限
       label:
-        en: Reranker Max Candidates (only applies to a neural reranker; inert while the provider is rrf)
-        zh: 重排候选上限（仅对神经重排生效；重排方式为 rrf 时不生效）
-        zh-Hant: 重排候選上限（僅對神經重排生效；重排方式為 rrf 時不生效）
+        en: Reranker Max Candidates (how many fused candidates the reranker re-scores per recall)
+        zh: 重排候选上限（每次召回交给重排模型精排的候选数）
+        zh-Hant: 重排候選上限（每次召回交給重排模型精排的候選數）
       required: true
       type: number
 
