@@ -58,6 +58,7 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ghcr.io/vectorize-io/hindsight"],
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+-slim$/",
+      "ignoreUnstable": false,
       "versioning": "semver"
     }
   ]
