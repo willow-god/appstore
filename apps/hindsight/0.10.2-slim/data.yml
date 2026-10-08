@@ -106,10 +106,11 @@ additionalProperties:
       labelEn: LLM Model
       labelZh: LLM 模型
       label:
-        en: LLM Model (blank = gpt-4o-mini, the OpenAI default; always fill it when using a relay)
-        zh: LLM 模型（留空 = OpenAI 默认模型 gpt-4o-mini；用中转或第三方服务时请务必填写）
-        zh-Hant: LLM 模型（留空 = OpenAI 預設模型 gpt-4o-mini；用中轉或第三方服務時請務必填寫）
-      required: false
+        en: LLM Model — the model your endpoint actually serves (required)
+        zh: LLM 模型 —— 填这个接口真实提供的模型（必填）
+        zh-Hant: LLM 模型 —— 填這個介面真實提供的模型（必填）
+      required: true
+      rule: paramCommon
       type: text
 
     - default: ""
@@ -123,29 +124,18 @@ additionalProperties:
       required: false
       type: text
 
-    - default: 64000
-      envKey: HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS
-      labelEn: Retain Max Output Tokens
-      labelZh: Retain 最大输出 Token
-      label:
-        en: Retain Max Output Tokens (must exceed 3000; upstream needs 65k-capable models by default, lower it for smaller ones)
-        zh: Retain 最大输出 Token（必须大于 3000；默认要求模型可输出 65k，模型上限较小时请调低）
-        zh-Hant: Retain 最大輸出 Token（必須大於 3000；預設要求模型可輸出 65k，模型上限較小時請調低）
-      required: true
-      type: number
-
     # ============================================================
     # 备用 LLM：开 = openai，与主 LLM 共用提供商、Key、接口地址，只换模型
     # 关 = 留空：上游在 provider 为空时根本不创建该成员（Key 校验也不会触发）
     # ============================================================
-    - default: openai
+    - default: ""
       envKey: HINDSIGHT_API_LLM_1_PROVIDER
       labelEn: Backup LLM
       labelZh: 备用 LLM
       label:
-        en: "Backup LLM — on: openai, sharing the main LLM's key and endpoint; off: no backup model"
-        zh: 备用 LLM —— 开：使用 openai，与主 LLM 共用 Key 与接口地址；关：不启用备用模型
-        zh-Hant: 備用 LLM —— 開：使用 openai，與主 LLM 共用 Key 與介面位址；關：不啟用備用模型
+        en: "Backup LLM (optional) — on: openai, sharing the main LLM's key and endpoint; off: no backup model"
+        zh: 备用 LLM（可选）—— 开：使用 openai，与主 LLM 共用 Key 与接口地址；关：不启用备用模型
+        zh-Hant: 備用 LLM（可選）—— 開：使用 openai，與主 LLM 共用 Key 與介面位址；關：不啟用備用模型
       required: false
       type: select
       values:
@@ -159,11 +149,10 @@ additionalProperties:
       labelEn: Backup LLM Model
       labelZh: 备用 LLM 模型
       label:
-        en: Backup LLM Model — only used when the backup is on. Must be a model that endpoint actually serves, or a failover will fail too.
-        zh: 备用 LLM 模型 —— 仅在备用开启时生效；必须是主 LLM 接口真实提供的模型，否则主模型出错切过去也会立刻失败
-        zh-Hant: 備用 LLM 模型 —— 僅在備用開啟時生效；必須是主 LLM 介面真實提供的模型，否則主模型出錯切過去也會立刻失敗
-      required: true
-      rule: paramCommon
+        en: Backup LLM Model — only used when the backup is switched on, where it is then required. Must be a model that endpoint serves, or a failover would fail too.
+        zh: 备用 LLM 模型 —— 仅在备用开启时生效，开启后必填；必须是主 LLM 接口真实提供的模型，否则主模型出错切过去也会立刻失败
+        zh-Hant: 備用 LLM 模型 —— 僅在備用開啟時生效，開啟後必填；必須是主 LLM 介面真實提供的模型，否則主模型出錯切過去也會立刻失敗
+      required: false
       type: text
 
     # ============================================================

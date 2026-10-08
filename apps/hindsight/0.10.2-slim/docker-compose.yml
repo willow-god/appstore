@@ -27,7 +27,9 @@ services:
       HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
       HINDSIGHT_API_LLM_MODEL: ${HINDSIGHT_API_LLM_MODEL}
       HINDSIGHT_API_LLM_BASE_URL: ${HINDSIGHT_API_LLM_BASE_URL}
-      HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS: ${HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS}
+      # 事实提取单次调用的输出预算，写死 64000（上游默认值，官方要求模型至少能输出 65k）。
+      # 模型输出上限较小时会调用失败，此时把这里调低到 32000 / 16000（必须大于 3000）。
+      HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS: 64000
 
       # ============================================================
       # 备用 LLM：主模型报错时按顺序故障转移（只换模型，其余继承主 LLM）
