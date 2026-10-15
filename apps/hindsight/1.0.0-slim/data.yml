@@ -140,9 +140,9 @@ additionalProperties:
       labelEn: LLM Max Concurrent
       labelZh: LLM 最大并发
       label:
-        en: LLM Max Concurrent (upstream default: 32)
-        zh: LLM 最大并发（上游默认 32）
-        zh-Hant: LLM 最大並發（上游預設 32）
+        en: LLM Max Concurrent
+        zh: LLM 最大并发
+        zh-Hant: LLM 最大並發
       required: true
       type: number
 
@@ -153,18 +153,18 @@ additionalProperties:
     - default: ""
       edit: true
       envKey: HINDSIGHT_API_LLM_1_PROVIDER
-      labelEn: Backup LLM (optional)
-      labelZh: 备用 LLM（可选）
+      labelEn: Backup LLM
+      labelZh: 备用 LLM
       label:
-        en: Backup LLM (optional)
-        zh: 备用 LLM（可选）
-        zh-Hant: 備用 LLM（可選）
+        en: Backup LLM
+        zh: 备用 LLM
+        zh-Hant: 備用 LLM
       required: false
       type: select
       values:
-        - label: 开启（openai，与主 LLM 同接口）
+        - label: 开启（openai）
           value: openai
-        - label: 关闭（不使用备用模型）
+        - label: 关闭
           value: ""
 
     - default: ""
@@ -212,9 +212,9 @@ additionalProperties:
       labelEn: Embeddings Dimensions
       labelZh: 嵌入维度
       label:
-        en: Embeddings Dimensions (blank = the model's native width)
-        zh: 嵌入维度（留空 = 用模型原生维度）
-        zh-Hant: 嵌入維度（留空 = 用模型原生維度）
+        en: Embeddings Dimensions
+        zh: 嵌入维度
+        zh-Hant: 嵌入維度
       required: false
       type: text
 
