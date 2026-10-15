@@ -97,6 +97,7 @@ additionalProperties:
       type: number
 
     - default: "https://vw.example.com/"
+      edit: true
       envKey: PANEL_VW_DOMAIN
       labelEn: Domain
       labelZh: 域名 (反向代理时必填)
@@ -113,6 +114,7 @@ additionalProperties:
       type: text
 
     - default: ""
+      edit: true
       envKey: PANEL_VW_ADMIN_TOKEN
       labelEn: Admin Token
       labelZh: 管理员令牌
@@ -129,6 +131,7 @@ additionalProperties:
       type: password
 
     - default: 80
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口

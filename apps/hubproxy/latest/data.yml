@@ -1,6 +1,7 @@
 additionalProperties:
   formFields:
     - default: 13485
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口

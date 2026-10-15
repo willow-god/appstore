@@ -2,6 +2,7 @@ additionalProperties:
   formFields:
     # HTTP 端口
     - default: 49238
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口
@@ -20,6 +21,7 @@ additionalProperties:
 
     # 站点地址
     - default: https://search.example.com/
+      edit: true
       envKey: SEARXNG_BASE_URL
       labelEn: Site URL
       labelZh: 站点域名
@@ -60,6 +62,7 @@ additionalProperties:
       type: password
 
     - default: "0"
+      edit: true
       envKey: REDIS_DB
       labelEn: Redis Database
       labelZh: Redis 数据库

@@ -2,6 +2,7 @@ additionalProperties:
   formFields:
     # HTTP 端口
     - default: 28324
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口

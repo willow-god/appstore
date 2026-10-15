@@ -101,6 +101,7 @@ additionalProperties:
       type: password
     # 验证密钥
     - default: ""
+      edit: true
       envKey: PANEL_LICENSE_KEY
       labelEn: License Key
       labelZh: 授权密钥
@@ -116,6 +117,7 @@ additionalProperties:
       required: true
       type: password
     - default: 37826
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: Port
       labelZh: HTTP 端口

@@ -80,6 +80,7 @@ additionalProperties:
       required: true
       type: password
     - default: "5"
+      edit: true
       envKey: REDIS_DB
       labelEn: Redis Database
       labelZh: Redis 数据库

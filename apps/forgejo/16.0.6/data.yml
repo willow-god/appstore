@@ -78,6 +78,7 @@ additionalProperties:
         zh-hant: 資料庫密碼
         zh: 数据库密码
     - default: 3000
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: Port
       labelZh: HTTP 端口
@@ -94,6 +95,7 @@ additionalProperties:
         zh-Hant: HTTP 埠
         zh: HTTP 端口
     - default: 222
+      edit: true
       envKey: PANEL_APP_PORT_SSH
       labelEn: Port
       labelZh: SSH 端口

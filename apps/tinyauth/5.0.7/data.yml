@@ -1,6 +1,7 @@
 additionalProperties:
   formFields:
     - default: 14389
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口
@@ -18,6 +19,7 @@ additionalProperties:
       type: number
 
     - default: "https://sso.example.com"
+      edit: true
       envKey: PANEL_TINYAUTH_APP_URL
       labelEn: App URL
       labelZh: 应用地址（结尾不要添加斜杠）
@@ -34,6 +36,7 @@ additionalProperties:
       type: text
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_SECRET
       labelEn: Secret
       labelZh: 密钥
@@ -50,6 +53,7 @@ additionalProperties:
       type: password
 
     - default: "86400"
+      edit: true
       envKey: PANEL_TINYAUTH_SESSION_EXPIRY
       labelEn: Session Expiry (seconds)
       labelZh: 会话过期时间（秒）
@@ -66,6 +70,7 @@ additionalProperties:
       type: number
 
     - default: "TinyAuth"
+      edit: true
       envKey: PANEL_TINYAUTH_APP_TITLE
       labelEn: App Title
       labelZh: 应用标题
@@ -82,6 +87,7 @@ additionalProperties:
       type: text
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_OAUTH_AUTO_REDIRECT
       labelEn: Auto Redirect Provider
       labelZh: 自动跳转到登录页面
@@ -103,6 +109,7 @@ additionalProperties:
           value: "PROVIDER_ID_PLACEHOLDER" # 后面会替换掉为对应的提供商
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_BACKGROUND_IMAGE
       labelEn: Background Image
       labelZh: 背景图片
@@ -119,6 +126,7 @@ additionalProperties:
       type: text
   
     - default: "github"
+      edit: true
       envKey: PANEL_TINYAUTH_PROVIDER_ID
       labelEn: Provider ID
       labelZh: 提供商ID（仅填写一个，名称任意，如果为github或google，后面参数仅需要填写client_id和client_secret）
@@ -136,6 +144,7 @@ additionalProperties:
 
     # Generic
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_GENERIC_CLIENT_ID
       labelEn: Generic Client ID
       labelZh: 通用客户端ID
@@ -143,6 +152,7 @@ additionalProperties:
       type: text
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_GENERIC_CLIENT_SECRET
       labelEn: Generic Client Secret
       labelZh: 通用客户端密钥
@@ -150,6 +160,7 @@ additionalProperties:
       type: password
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_GENERIC_NAME
       labelEn: Generic Provider Name
       labelZh: 通用提供商名称
@@ -157,6 +168,7 @@ additionalProperties:
       type: text
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_GENERIC_AUTH_URL
       labelEn: Generic Auth URL
       labelZh: 通用认证地址
@@ -164,6 +176,7 @@ additionalProperties:
       type: text
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_GENERIC_TOKEN_URL
       labelEn: Generic Token URL
       labelZh: 通用令牌地址
@@ -171,6 +184,7 @@ additionalProperties:
       type: text
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_GENERIC_USER_INFO_URL
       labelEn: Generic User Info URL
       labelZh: 通用用户信息地址
@@ -178,6 +192,7 @@ additionalProperties:
       type: text
 
     - default: ""
+      edit: true
       envKey: PANEL_TINYAUTH_GENERIC_SCOPES
       labelEn: Generic Scopes
       labelZh: 通用范围

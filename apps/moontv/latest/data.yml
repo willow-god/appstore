@@ -2,6 +2,7 @@ additionalProperties:
   formFields:
     # HTTP 端口
     - default: 32094
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口
@@ -20,6 +21,7 @@ additionalProperties:
 
     # 管理员账号
     - default: admin
+      edit: true
       envKey: MOONTV_ADMIN_USER
       labelEn: Admin Username
       labelZh: 管理员用户名
@@ -37,6 +39,7 @@ additionalProperties:
 
     # 管理员密码
     - default: "password"
+      edit: true
       envKey: MOONTV_ADMIN_PASSWORD
       labelEn: Admin Password
       labelZh: 管理员密码
@@ -55,6 +58,7 @@ additionalProperties:
 
     # 是否开启注册
     - default: 启用
+      edit: true
       envKey: MOONTV_ENABLE_REGISTER
       required: true
       type: select
@@ -75,6 +79,7 @@ additionalProperties:
 
     # 站点名称
     - default: MoonTV
+      edit: true
       envKey: MOONTV_SITE_NAME
       labelEn: Site Name
       labelZh: 站点名称
@@ -92,6 +97,7 @@ additionalProperties:
 
     # 站点公告
     - default: 本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。
+      edit: true
       envKey: MOONTV_ANNOUNCEMENT
       labelEn: Announcement
       labelZh: 站点公告
@@ -109,6 +115,7 @@ additionalProperties:
 
     # 存储类型选择
     - default: kvrocks
+      edit: true
       envKey: MOONTV_STORAGE_TYPE
       labelEn: Storage Type
       labelZh: 存储类型
@@ -131,6 +138,7 @@ additionalProperties:
 
     # Kvrocks URL（可选）
     - default: ""
+      edit: true
       envKey: KVROCKS_CONNECT_URL
       labelEn: Kvrocks URL
       labelZh: Kvrocks 连接 URL
@@ -151,6 +159,7 @@ additionalProperties:
 
     # Redis URL（可选）
     - default: ""
+      edit: true
       envKey: REDIS_CONNECT_URL
       labelEn: Redis URL
       labelZh: Redis 连接 URL

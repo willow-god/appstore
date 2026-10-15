@@ -223,6 +223,29 @@ ports:
 
 建议为公开 HTTP 服务使用 `PANEL_APP_PORT_HTTP`，因为 1Panel 会把 `PANEL_APP_PORT` 前缀识别为端口字段并在安装前检查端口冲突。这里填写的是宿主机端口，不是容器端口。
 
+### 允许安装后修改的字段（`edit`）
+
+**默认不可改。** 1Panel「已安装应用 → 参数」抽屉里每个控件都绑定了 `:disabled="!p.edit"`，后端只会把版本 `data.yml` 中带 `edit: true` 的字段标记为可编辑。不写这个键，用户点开「编辑」后所有输入框都是灰的 —— 看着能改，实际一个字都改不了（本仓库的 hindsight 应用最初就漏了这个键）。
+
+```yaml
+- default: 3000
+  edit: true          # 装完之后允许在「参数」里改
+  envKey: PANEL_APP_PORT_HTTP
+  required: true
+  rule: paramPort
+  type: number
+```
+
+参照官方应用（planka、umami、artalk）的惯例判断：
+
+- 用户真实凭据、模型名、端口、开关等**装完之后还会变**的字段，加 `edit: true`。本仓库默认「能改就改」，不加的是少数。
+- `PANEL_DB_*` 与 `PANEL_VW_DB_*`（数据库连接）**不加**：属于安装时决定，改掉只会让容器连到一个空库。
+- `PANEL_REDIS_HOST`、`PANEL_REDIS_ROOT_PASSWORD` **不加**：它们指向被选中的 Redis 应用，在这里改会和 Redis 服务端对不上。
+- 决定「数据落在哪」的路径字段（如 `PANEL_APP_LOCAL_PATH`）**不加**：改完只会指向一个空目录。
+- `type: apps` 与 `type: service` 字段一律不加：编辑抽屉只认 `number` / `password` / `select`，其它类型会退化成普通文本框。
+
+> 数据库、Redis、路径这些「装的时候定死」的东西，用户真要换只能重装 —— 这也是本仓库把它们的默认值做得可用的原因。
+
 ### 已声明字段与 Compose 的对应关系
 
 版本 `data.yml` 中声明的每个 `envKey` 都应在 Compose 中被引用；反过来，Compose 中出现的每个 `${...}` 业务变量也都要在版本 `data.yml` 中声明。
@@ -546,6 +569,7 @@ git push
 - [ ] 服务连接 `1panel-network`。
 - [ ] 服务包含 `createdBy: "Apps"` 标签。
 - [ ] 数据挂载在 `./data` 下。
+- [ ] 装完之后还可能要改的字段都带了 `edit: true`（数据库连接字段除外）。
 - [ ] Logo 已实际提交且位于应用根目录。
 - [ ] YAML 解析通过。
 - [ ] `git diff --check` 通过。

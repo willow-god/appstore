@@ -1,6 +1,7 @@
 additionalProperties:
   formFields:
     - default: 1933
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口
@@ -13,6 +14,7 @@ additionalProperties:
       type: number
 
     - default: ""
+      edit: true
       envKey: OPENVIKING_PUBLIC_BASE_URL
       labelEn: Public Base URL
       labelZh: 公网访问地址

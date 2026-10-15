@@ -1,6 +1,7 @@
 additionalProperties:
   formFields:
     - default: 6277
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口
@@ -18,6 +19,7 @@ additionalProperties:
       type: number
 
     - default: "my-very-secret"
+      edit: true
       envKey: PANEL_ECH0_JWT_SECRET
       labelEn: JWT Secret
       labelZh: JWT 安全密钥

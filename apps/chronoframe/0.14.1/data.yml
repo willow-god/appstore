@@ -1,6 +1,7 @@
 additionalProperties:
   formFields:
     - default: 6231
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: HTTP Port
       labelZh: HTTP 端口
@@ -18,6 +19,7 @@ additionalProperties:
       type: number
     
     - default: admin@chronoframe.com
+      edit: true
       envKey: PANEL_APP_ADMIN_EMAIL
       labelEn: Admin Email
       labelZh: 管理员邮箱
@@ -33,12 +35,14 @@ additionalProperties:
       required: true
       type: text
     - default: ChronoFrame
+      edit: true
       envKey: PANEL_APP_ADMIN_NAME
       labelEn: Admin Name
       labelZh: 管理员用户名
       required: true
       type: text
     - default: chronoframe
+      edit: true
       envKey: PANEL_APP_ADMIN_PASSWORD
       labelEn: Admin Password
       labelZh: 管理员密码
@@ -47,6 +51,7 @@ additionalProperties:
       random: true
 
     - default: 清羽相册
+      edit: true
       envKey: PANEL_APP_SITE_TITLE
       labelEn: Site Name
       labelZh: 站点名称
@@ -62,6 +67,7 @@ additionalProperties:
       required: true
       type: text
     - default: 清羽飞扬の相册系统
+      edit: true
       envKey: PANEL_APP_SITE_SLOGAN
       labelEn: Site Slogan
       labelZh: 站点标语
@@ -77,6 +83,7 @@ additionalProperties:
       required: true
       type: text
     - default: LiuShen
+      edit: true
       envKey: PANEL_APP_SITE_AUTHOR
       labelEn: Site Author
       labelZh: 站点作者
@@ -92,6 +99,7 @@ additionalProperties:
       required: true
       type: text
     - default: https://www.liushen.fun/favicon.ico
+      edit: true
       envKey: PANEL_APP_SITE_AVATAR_URL
       labelEn: Site Avatar URL
       labelZh: 站点头像 URL
@@ -108,6 +116,7 @@ additionalProperties:
       type: text
     
     - default: maptiler_key
+      edit: true
       envKey: PANEL_APP_MAP_MAPLIBRE_TOKEN
       labelEn: MapTiler Token
       labelZh: MapTiler 令牌
@@ -124,6 +133,7 @@ additionalProperties:
       type: password
 
     - default: local
+      edit: true
       envKey: PANEL_APP_STORAGE_PROVIDER
       labelEn: Storage Provider
       labelZh: 存储提供商
@@ -162,6 +172,7 @@ additionalProperties:
       type: text
     
     - default: /storage
+      edit: true
       envKey: PANEL_APP_LOCAL_BASE_URL
       labelEn: Storage Base URL
       labelZh: 存储基础 URL
@@ -178,6 +189,7 @@ additionalProperties:
       type: text
 
     - default: s3.endpoint.com
+      edit: true
       envKey: PANEL_APP_S3_ENDPOINT
       labelEn: S3 Endpoint
       labelZh: S3 端点
@@ -193,6 +205,7 @@ additionalProperties:
       required: false
       type: text
     - default: chronoframe
+      edit: true
       envKey: PANEL_APP_S3_BUCKET
       labelEn: S3 Bucket
       labelZh: S3 存储桶
@@ -208,6 +221,7 @@ additionalProperties:
       required: false
       type: text
     - default: asia-east1
+      edit: true
       envKey: PANEL_APP_S3_REGION
       labelEn: S3 Region
       labelZh: S3 区域
@@ -223,6 +237,7 @@ additionalProperties:
       required: false
       type: text
     - default: chronoframe
+      edit: true
       envKey: PANEL_APP_S3_ACCESS_KEY_ID
       labelEn: S3 Key ID
       labelZh: S3 Key ID
@@ -239,6 +254,7 @@ additionalProperties:
       type: text
       random: true
     - default: chronoframe
+      edit: true
       envKey: PANEL_APP_S3_SECRET_ACCESS_KEY
       labelEn: S3 Access Key
       labelZh: S3 Access Key
@@ -255,6 +271,7 @@ additionalProperties:
       type: text
       random: true
     - default: "photos/"
+      edit: true
       envKey: PANEL_APP_S3_PREFIX
       labelEn: S3 Prefix
       labelZh: S3 前缀
@@ -270,6 +287,7 @@ additionalProperties:
       required: false
       type: text
     - default: https://cdn.s3.endpoint.com
+      edit: true
       envKey: PANEL_APP_S3_CDN_URL
       labelEn: S3 CDN URL
       labelZh: S3 CDN URL
@@ -286,6 +304,7 @@ additionalProperties:
       type: text
 
     - default: https://openlist.link
+      edit: true
       envKey: PANEL_APP_OPENLIST_BASE_URL
       labelEn: OpenList URL
       labelZh: OpenList URL
@@ -301,6 +320,7 @@ additionalProperties:
       required: false
       type: text
     - default: "/photos"
+      edit: true
       envKey: PANEL_APP_OPENLIST_ROOT_PATH
       labelEn: OpenList Root Path
       labelZh: OpenList 根路径
@@ -316,6 +336,7 @@ additionalProperties:
       required: false
       type: text
     - default: OpenList-Token
+      edit: true
       envKey: PANEL_APP_OPENLIST_TOKEN
       labelEn: OpenList Token
       labelZh: OpenList 令牌
@@ -331,6 +352,7 @@ additionalProperties:
       required: false
       type: text
     - default: "/api/fs/put"
+      edit: true
       envKey: PANEL_APP_OPENLIST_ENDPOINT_UPLOAD
       labelEn: OpenList Upload Endpoint
       labelZh: OpenList 上传端点
@@ -346,6 +368,7 @@ additionalProperties:
       required: false
       type: text
     - default: ""
+      edit: true
       envKey: PANEL_APP_OPENLIST_ENDPOINT_DOWNLOAD
       labelEn: OpenList Download Endpoint
       labelZh: OpenList 下载端点
@@ -361,6 +384,7 @@ additionalProperties:
       required: false
       type: text
     - default: ""
+      edit: true
       envKey: PANEL_APP_OPENLIST_ENDPOINT_LIST
       labelEn: OpenList List Endpoint
       labelZh: OpenList 列表端点
@@ -376,6 +400,7 @@ additionalProperties:
       required: false
       type: text
     - default: "/api/fs/remove"
+      edit: true
       envKey: PANEL_APP_OPENLIST_ENDPOINT_DELETE
       labelEn: OpenList Delete Endpoint
       labelZh: OpenList 删除端点
@@ -391,6 +416,7 @@ additionalProperties:
       required: false
       type: text
     - default: "/api/fs/get"
+      edit: true
       envKey: PANEL_APP_OPENLIST_ENDPOINT_META
       labelEn: OpenList Meta Endpoint
       labelZh: OpenList 元信息端点
@@ -406,6 +432,7 @@ additionalProperties:
       required: false
       type: text
     - default: path
+      edit: true
       envKey: PANEL_APP_OPENLIST_PATH_FIELD
       labelEn: OpenList Path Field
       labelZh: OpenList 路径字段
@@ -421,6 +448,7 @@ additionalProperties:
       required: false
       type: text
     - default: https://cdn.openlist.link
+      edit: true
       envKey: PANEL_APP_OPENLIST_CDN_URL
       labelEn: OpenList CDN URL
       labelZh: OpenList CDN URL
@@ -437,6 +465,7 @@ additionalProperties:
       type: text
     
     - default: chronoframe
+      edit: true
       envKey: PANEL_APP_SESSION_PASSWORD
       labelEn: Session Password
       labelZh: 会话密码

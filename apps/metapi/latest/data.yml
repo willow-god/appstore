@@ -19,6 +19,7 @@ additionalProperties:
       type: number
 
     - default: ""
+      edit: true
       envKey: AUTH_TOKEN
       labelEn: Admin Token
       labelZh: 管理员令牌
@@ -35,6 +36,7 @@ additionalProperties:
       type: password
 
     - default: ""
+      edit: true
       envKey: PROXY_TOKEN
       labelEn: Proxy Token
       labelZh: 代理令牌
@@ -51,6 +53,7 @@ additionalProperties:
       type: password
 
     - default: "0 8 * * *"
+      edit: true
       envKey: CHECKIN_CRON
       labelEn: Check-in Cron
       labelZh: 自动签到 Cron
@@ -58,6 +61,7 @@ additionalProperties:
       type: text
 
     - default: "0 * * * *"
+      edit: true
       envKey: BALANCE_REFRESH_CRON
       labelEn: Balance Refresh Cron
       labelZh: 余额刷新 Cron
