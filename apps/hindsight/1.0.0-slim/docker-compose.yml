@@ -78,6 +78,10 @@ services:
       HINDSIGHT_API_RERANKER_PROVIDER: siliconflow
       HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY: ${HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY}
       HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL: ${HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL}
+      # 每次召回送去精排的候选上限（上游默认 300，表单填的就是这个默认值）。
+      # 四路召回合流后先按 RRF 粗排，超出的部分直接丢弃、不进重排；上限内的候选
+      # 打包成一次 /rerank 请求，所以调大只是让这一步更慢更贵，调小则可能把
+      # 粗排名次靠后但其实最相关的那条记忆永久切掉。候选池不到 300 时不起作用。
       HINDSIGHT_API_RERANKER_MAX_CANDIDATES: ${HINDSIGHT_API_RERANKER_MAX_CANDIDATES}
 
       # ============================================================

@@ -212,24 +212,24 @@ additionalProperties:
     - default: ""
       edit: true
       envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY
-      labelEn: 3. Embeddings API Key
-      labelZh: 3. 嵌入模型 API Key
+      labelEn: 3. SiliconFlow Embeddings API Key
+      labelZh: 3. 硅基流动嵌入模型 API Key
       label:
-        en: 3. Embeddings API Key
-        zh: 3. 嵌入模型 API Key
-        zh-Hant: 3. 嵌入模型 API Key
+        en: 3. SiliconFlow Embeddings API Key
+        zh: 3. 硅基流动嵌入模型 API Key
+        zh-Hant: 3. 矽基流動嵌入模型 API Key
       required: true
       type: password
 
     - default: BAAI/bge-m3
       edit: true
       envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL
-      labelEn: 3. Embeddings Model
-      labelZh: 3. 嵌入模型
+      labelEn: 3. SiliconFlow Embeddings Model
+      labelZh: 3. 硅基流动嵌入模型
       label:
-        en: 3. Embeddings Model
-        zh: 3. 嵌入模型
-        zh-Hant: 3. 嵌入模型
+        en: 3. SiliconFlow Embeddings Model
+        zh: 3. 硅基流动嵌入模型
+        zh-Hant: 3. 矽基流動嵌入模型
       required: true
       type: text
 
@@ -249,24 +249,24 @@ additionalProperties:
     - default: ""
       edit: true
       envKey: HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY
-      labelEn: 4. Reranker API Key
-      labelZh: 4. 重排模型 API Key
+      labelEn: 4. SiliconFlow Reranker API Key
+      labelZh: 4. 硅基流动重排模型 API Key
       label:
-        en: 4. Reranker API Key
-        zh: 4. 重排模型 API Key
-        zh-Hant: 4. 重排模型 API Key
+        en: 4. SiliconFlow Reranker API Key
+        zh: 4. 硅基流动重排模型 API Key
+        zh-Hant: 4. 矽基流動重排模型 API Key
       required: true
       type: password
 
     - default: BAAI/bge-reranker-v2-m3
       edit: true
       envKey: HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL
-      labelEn: 4. Reranker Model
-      labelZh: 4. 重排模型
+      labelEn: 4. SiliconFlow Reranker Model
+      labelZh: 4. 硅基流动重排模型
       label:
-        en: 4. Reranker Model
-        zh: 4. 重排模型
-        zh-Hant: 4. 重排模型
+        en: 4. SiliconFlow Reranker Model
+        zh: 4. 硅基流动重排模型
+        zh-Hant: 4. 矽基流動重排模型
       required: true
       type: text
 
