@@ -17,41 +17,44 @@ services:
       HINDSIGHT_API_DATABASE_URL: postgresql://${PANEL_DB_USER}:${PANEL_DB_USER_PASSWORD}@${PANEL_DB_HOST}:${PANEL_DB_PORT}/${PANEL_DB_NAME}
 
       # ============================================================
-      # 主 LLM：所有操作默认使用；提供商锁定为 openai（OpenAI 兼容协议）
-      # 官方 OpenAI、DeepSeek、硅基流动、各类中转等绝大多数服务都提供
-      # OpenAI 兼容接口，用 _BASE_URL 指向实际服务即可，无需改这里。
-      # 若要用 anthropic / gemini / ollama 等原生协议，改这一行，
+      # 1. 主 LLM
+      # 提供商锁定为 openai（OpenAI 兼容协议）：官方 OpenAI、DeepSeek、
+      # 硅基流动、各类中转等绝大多数服务都提供 OpenAI 兼容接口，
+      # 用 _BASE_URL 指向实际服务即可，无需改这里。
+      # 若要用 anthropic / gemini / ollama 等原生协议，改下面这一行，
       # 并按官方 .env.example 补上该提供商需要的变量。
       # ============================================================
       HINDSIGHT_API_LLM_PROVIDER: openai
-      HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
-      HINDSIGHT_API_LLM_MODEL: ${HINDSIGHT_API_LLM_MODEL}
       HINDSIGHT_API_LLM_BASE_URL: ${HINDSIGHT_API_LLM_BASE_URL}
+      HINDSIGHT_API_LLM_MODEL: ${HINDSIGHT_API_LLM_MODEL}
+      HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
       # 事实提取单次调用的输出预算，写死 64000（上游默认值，官方要求模型至少能输出 65k）。
       # 模型输出上限较小时会调用失败，此时把这里调低到 32000 / 16000（必须大于 3000）。
       HINDSIGHT_API_RETAIN_MAX_COMPLETION_TOKENS: 64000
-      # 全局 LLM 并发上限，表单默认 4（上游默认 32）。并发越高瞬时 token 消耗越猛，
-      # 中转服务还容易触发限流；接本地模型（Ollama / LM Studio 等）可再调低到 1~2。
-      HINDSIGHT_API_LLM_MAX_CONCURRENT: ${HINDSIGHT_API_LLM_MAX_CONCURRENT}
 
       # ============================================================
-      # 备用 LLM：主模型报错时按顺序故障转移（只换模型，其余继承主 LLM）
-      # 表单里的「备用 LLM」是开关：开 = openai，关 = 空值。
+      # 2. 备用 LLM：主 LLM 报错时按顺序故障转移
+      # 上游的成员只从 HINDSIGHT_API_LLM_1_* 取值，API Key 与 BASE_URL
+      # 都不会从主 LLM 继承。表单里的「备用 LLM 开关」开 = openai，关 = 空值；
       # provider 为空时上游在读取 API Key 之前就停止扫描，成员根本不存在，
-      # 因此"关"的状态不会触发下面的 Key 强校验，也不会创建成员。
-      # KEY / BASE_URL 直接引用主 LLM 的值，原因有二：
-      #   1) 上游规定成员 provider 非空时其 API Key 不能为空，否则启动抛错；
-      #   2) 成员不会继承主 LLM 的 BASE_URL，留空会静默回落到 api.openai.com。
-      # 要换成另一家服务商：把下面三行改成具体值（BASE_URL 必须写全）。
+      # 因此"关"不会触发下面的 Key 强校验，也不会创建成员。
+      # BASE_URL / API_KEY 用 ${A:-${B}} 回落到主 LLM 的同名变量，原因有二：
+      #   1) 成员 provider 非空时 API Key 不能为空，否则 config 阶段直接抛错；
+      #   2) 成员 BASE_URL 留空时 OpenAI SDK 会用它自己的默认地址
+      #      （api.openai.com），接中转站时就是 401。
+      # 表单里这两项留空即与主 LLM 完全一致；要接另一家服务商，
+      # 在表单里填它的接口地址（必须写全）与该服务的 Key 即可。
+      # 另：MODEL 留空不会报错，上游会回落到该 provider 的默认模型 ——
+      # 结果是"开关开着但用的是错模型"，所以表单里注明开关开启后必填。
       # ============================================================
       HINDSIGHT_API_LLM_1_PROVIDER: ${HINDSIGHT_API_LLM_1_PROVIDER}
-      HINDSIGHT_API_LLM_1_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
-      HINDSIGHT_API_LLM_1_BASE_URL: ${HINDSIGHT_API_LLM_BASE_URL}
+      HINDSIGHT_API_LLM_1_BASE_URL: ${HINDSIGHT_API_LLM_1_BASE_URL:-${HINDSIGHT_API_LLM_BASE_URL}}
       HINDSIGHT_API_LLM_1_MODEL: ${HINDSIGHT_API_LLM_1_MODEL}
+      HINDSIGHT_API_LLM_1_API_KEY: ${HINDSIGHT_API_LLM_1_API_KEY:-${HINDSIGHT_API_LLM_API_KEY}}
       HINDSIGHT_API_LLM_STRATEGY: '{"mode": "failover"}'
 
       # ============================================================
-      # 嵌入模型：锁定硅基流动
+      # 3. 嵌入模型：锁定硅基流动
       # 上游没有 siliconflow 这个嵌入提供商（合法值只有 local / onnx / tei /
       # openai / openai-codex / openrouter / requesty / cohere / google /
       # zeroentropy / litellm / litellm-sdk），所以走 OpenAI 兼容接口指向硅基流动。
@@ -65,7 +68,7 @@ services:
       HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS: ${HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS}
 
       # ============================================================
-      # 重排：锁定硅基流动（Cohere 兼容的 /rerank 接口）
+      # 4. 重排：锁定硅基流动（Cohere 兼容的 /rerank 接口）
       # 不设 _SILICONFLOW_BASE_URL：上游默认值就是 https://api.siliconflow.cn/v1，
       # 客户端再拼上 RERANK_PATH("/rerank")，最终请求
       # https://api.siliconflow.cn/v1/rerank
@@ -76,6 +79,14 @@ services:
       HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY: ${HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY}
       HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL: ${HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL}
       HINDSIGHT_API_RERANKER_MAX_CANDIDATES: ${HINDSIGHT_API_RERANKER_MAX_CANDIDATES}
+
+      # ============================================================
+      # 5. 全局 LLM 并发上限，表单默认 4（上游默认 32）
+      # 管的是整个 LLM 栈同时在跑多少请求，主 / 备用 LLM 一起受它限制。
+      # 并发越高瞬时 token 消耗越猛，中转服务还容易触发限流；
+      # 接本地模型（Ollama / LM Studio 等）可再调低到 1~2。
+      # ============================================================
+      HINDSIGHT_API_LLM_MAX_CONCURRENT: ${HINDSIGHT_API_LLM_MAX_CONCURRENT}
 
       # ============================================================
       # 认证：API/MCP 用 API Key，GUI 用独立访问密钥

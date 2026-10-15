@@ -223,6 +223,38 @@ ports:
 
 建议为公开 HTTP 服务使用 `PANEL_APP_PORT_HTTP`，因为 1Panel 会把 `PANEL_APP_PORT` 前缀识别为端口字段并在安装前检查端口冲突。这里填写的是宿主机端口，不是容器端口。
 
+### 字段分组与说明文字
+
+字段多时**把组号写进 `label`**：安装表单是平铺的、没有分组控件，编号是用户在界面上分辨「哪几项是一组」的唯一手段。注释横幅用同一个编号，方便在文件里对照：
+
+```yaml
+# 1. 主 LLM：提供商已在 compose 中固定为 openai（OpenAI 兼容协议）
+- default: "https://api.openai.com/v1"
+  envKey: HINDSIGHT_API_LLM_BASE_URL
+  labelZh: 1. 主 LLM 接口地址
+
+# 2. 备用 LLM：主 LLM 报错时按顺序故障转移
+- default: ""
+  envKey: HINDSIGHT_API_LLM_1_PROVIDER
+  labelZh: 2. 备用 LLM 开关
+```
+
+- 组号按字段在表单里出现的顺序连续编号，不要跳号。
+- 只给真正需要分组的字段编号：数据库连接、端口、访问密钥这类含义自明的 1Panel 标准字段不编号，组号从第一个要分组的业务块开始（hindsight 是主 LLM）。
+- 组内按使用顺序排（接口地址 → 模型 → Key），不要按字母序。
+- 与具体模型无关的全局项单独成末组。hindsight 把「全局 LLM 并发」和访问密钥一起归入「5. 通用配置」，放在所有模型组之后。
+
+确实需要一句补充说明时用 `description`，结构与 `label` 相同：
+
+```yaml
+- envKey: HINDSIGHT_API_LLM_1_API_KEY
+  description:
+    en: Empty = same as main LLM
+    zh: 留空 = 跟随主 LLM
+```
+
+> `description` **只在安装表单里**渲染成输入框下方的小字；「已安装应用 → 参数 → 编辑」抽屉不会显示它（后端 `response.AppParam` 没有这个字段）。因此关键信息仍要写进 `label` 或 README，`description` 只用于补充「留空会怎样」这类非显而易见的语义。
+
 ### 允许安装后修改的字段（`edit`）
 
 **默认不可改。** 1Panel「已安装应用 → 参数」抽屉里每个控件都绑定了 `:disabled="!p.edit"`，后端只会把版本 `data.yml` 中带 `edit: true` 的字段标记为可编辑。不写这个键，用户点开「编辑」后所有输入框都是灰的 —— 看着能改，实际一个字都改不了（本仓库的 hindsight 应用最初就漏了这个键）。
@@ -268,6 +300,16 @@ environment:
 ```
 
 不要写成 `${OPENVIKING_PUBLIC_BASE_URL:-}` 这类默认值形式：变量已在 `data.yml` 中声明，1Panel 安装时会始终写入 `.env`，`:-` 属于冗余写法。仓库中仅 `CONTAINER_NAME` 在个别应用里使用 `:-` 作为兜底。
+
+例外是**跨字段回落**——「留空 = 沿用另一个字段」时必须用 `:-`：
+
+```yaml
+# 表单里留空时，落回主 LLM 的接口地址与 Key
+HINDSIGHT_API_LLM_1_BASE_URL: ${HINDSIGHT_API_LLM_1_BASE_URL:-${HINDSIGHT_API_LLM_BASE_URL}}
+HINDSIGHT_API_LLM_1_API_KEY: ${HINDSIGHT_API_LLM_1_API_KEY:-${HINDSIGHT_API_LLM_API_KEY}}
+```
+
+Compose 规范明确支持嵌套默认值（`${VAR:-${OTHER}}`）。用 `:-` 而不是 `-`：1Panel 写入的 `.env` 里空字段是 `KEY=`（已设置但为空），只有 `:-` 会对这种情况生效。
 
 ### 字段最小化原则
 

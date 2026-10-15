@@ -43,7 +43,7 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 安装表单只留两类东西：真实凭据（API Key）和真实选择（端口、库名、模型名）。其余全部写死在 compose 里并加了注释，装完不用管：
 
 - **LLM 提供商锁死 `openai`**（OpenAI 兼容协议）—— 官方 OpenAI、DeepSeek、硅基流动、各类中转都用这套接口，用「LLM 接口地址」指向实际服务即可。
-- **备用 LLM 也锁死 `openai`**，与主 LLM 共用 Key 与接口地址，只换模型；开关关闭时该成员根本不存在。
+- **备用 LLM 也锁死 `openai`**，接口地址与 Key 留空时回落到主 LLM；开关关闭时该成员根本不存在。
 - **嵌入模型锁死硅基流动**（走 OpenAI 兼容通道）。
 - **重排模型锁死硅基流动**（走 Cohere 兼容的 `/rerank`）。
 - **Retain 输出预算写死 `64000`**（上游默认值）。
@@ -51,57 +51,61 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 
 模型名和接口地址这类字段只校验非空，**字符不受限** —— 带斜杠的模型名（`qwen/qwen3-embedding-4b`、`deepseek/deepseek-chat` 等）可以直接填。
 
-### 主 LLM
+### 表单字段顺序
 
-提供商已锁定为 `openai`（OpenAI 兼容协议，写在 compose 里）—— 官方 OpenAI、DeepSeek、硅基流动、各类中转等绝大多数服务都提供 OpenAI 兼容接口，用「接口地址」指向实际服务即可。表单四项：
+从上到下依次是：数据库 → 端口 → **1. 主 LLM** → **2. 备用 LLM** → **3. 嵌入模型** → **4. 重排模型** → **5. 通用配置**（全局 LLM 并发 + 访问密钥）。
 
-- **LLM API Key**：对应服务的 Key。
-- **LLM 模型**：**必填**，填这个接口真实提供的模型。这里刻意不留默认值 —— 若回落到 OpenAI 的 `gpt-4o-mini`，用中转时只会得到一个"模型不存在"的报错。
-- **LLM 接口地址**：OpenAI 兼容端点，以 `/v1` 结尾（**不是**账号根地址）。默认填的是官方示例 `https://api.openai.com/v1`，用别家时直接覆盖。
-- **LLM 最大并发**：默认 `4`，上游默认是 `32`。它决定同一时刻最多有多少个 LLM 请求在跑，直接关系瞬时 token 消耗峰值。后台任务多、账单偏高就往下调；接的是本地模型（Ollama / LM Studio）建议 `1~2`，云端 API 且追求吞吐可以往上加。
+1Panel 的安装表单是平铺的、没有分组控件，所以**组号直接写在字段名开头** —— 这是用户在界面上分辨「哪几项是一组」的唯一办法。数据库连接、端口、访问密钥含义自明，不编号，组号从主 LLM 起算；组内一律按「接口地址 → 模型 → Key」排列。
+
+### 1. 主 LLM
+
+提供商已锁定为 `openai`（OpenAI 兼容协议，写在 compose 里）—— 官方 OpenAI、DeepSeek、硅基流动、各类中转等绝大多数服务都提供 OpenAI 兼容接口，用「接口地址」指向实际服务即可。这一组三项：
+
+- **1. 主 LLM 接口地址**：OpenAI 兼容端点，以 `/v1` 结尾（**不是**账号根地址）。默认填的是官方示例 `https://api.openai.com/v1`，用别家时直接覆盖。
+- **1. 主 LLM 模型**：**必填**，填这个接口真实提供的模型。这里刻意不留默认值 —— 若回落到 OpenAI 的 `gpt-4o-mini`，用中转时只会得到一个"模型不存在"的报错。
+- **1. 主 LLM API Key**：对应服务的 Key。
 
 > 「Retain 最大输出 Token」已写死为 `64000`（上游默认值），不再作为表单项。模型输出上限较小导致调用失败时，改 compose 里那行即可（必须大于 3000）。
 > 要用 `anthropic`、`gemini`、`ollama` 等原生协议，改 compose 里的 `HINDSIGHT_API_LLM_PROVIDER`，并按官方 `.env.example` 补上该提供商所需的变量。
 
-### 备用 LLM（故障转移）
+### 2. 备用 LLM（故障转移）
 
-主模型报错时按顺序切到备用模型，策略 `HINDSIGHT_API_LLM_STRATEGY={"mode": "failover"}` 已写在 compose 里。这一组是**可选**的，默认关闭，表单两项：
+主模型报错时按顺序切到备用模型，策略 `HINDSIGHT_API_LLM_STRATEGY={"mode": "failover"}` 已写在 compose 里。这一组是**可选**的，默认关闭，表单四项：
 
-- **备用 LLM**：开关，默认**关**。开 = 使用 `openai`，与主 LLM 共用同一提供商、同一 API Key、同一接口地址，只换模型；关 = 留空，不启用备用模型。
-- **备用 LLM 模型**：仅在开关打开后生效，**开启后必须填**，且必须是主 LLM 那个接口**真实提供**的模型 —— 否则主模型一出错切过去也会立刻失败。
+- **2. 备用 LLM 开关**：默认**关**。开 = 使用 `openai`；关 = 留空，不创建备用成员。
+- **2. 备用 LLM 接口地址**：**留空 = 跟随主 LLM**。要给备用模型接另一家服务商（例如主用中转、备用直连 DeepSeek）时才填，必须写全（含 `/v1`）—— 上游的备用成员**不会继承**主 LLM 的地址，留空时用的是 OpenAI SDK 自己的默认地址（`api.openai.com`），接中转站的话就是 401。
+- **2. 备用 LLM 模型**：**开关打开后必填**，必须是上面那个接口**真实提供**的模型。留空不会报错 —— 上游会回落到 `openai` 的默认模型，等于把请求发给了错的模型，要等真正故障转移时才会暴露。
+- **2. 备用 LLM API Key**：**留空 = 跟随主 LLM**。换成别家服务商时填该家的 Key —— 上游规定成员 provider 非空时 Key 不能为空，**留空会在启动时直接抛错**，所以不能靠"留空"来跳过它。
 
-「关」的状态是安全的：上游扫描多模型成员时，遇到空的 provider 会在**读取 API Key 之前**就停止，所以该成员根本不存在，也不会触发"Key 不能为空"的强校验（策略此时同样失效，因为成员列表为空）。这也是为什么这两项可以放心做成开关，而不必担心关掉后启动失败。
+两项的「留空跟随」是 compose 里的 `${HINDSIGHT_API_LLM_1_API_KEY:-${HINDSIGHT_API_LLM_API_KEY}}` 实现的（Compose 规范支持嵌套默认值，且 `:-` 对空字符串同样生效）。
 
-compose 里 `HINDSIGHT_API_LLM_1_API_KEY` 与 `_BASE_URL` 直接引用主 LLM 的值，这是**必须的**：上游规定成员 provider 非空时其 API Key 不能为空，否则启动直接抛错；而成员又不会自动继承主 LLM 的 BASE_URL，留空会静默回落到 `api.openai.com`（用中转时那就是 401）。引用写法一次解决这两点，也省掉重复填写。
-
-想换成另一家服务商（例如主用中转、备用直连 DeepSeek）：把 compose 里那三行改成具体值即可，注意 `BASE_URL` 必须写全，它不会回落。
+「关」的状态是安全的：上游扫描多模型成员时，遇到空的 provider 会在**读取 API Key 之前**就停止，所以该成员根本不存在，也不会触发"Key 不能为空"的强校验（策略此时同样失效，因为成员列表为空）。这也是为什么这一组可以放心做成开关，而不必担心关掉后启动失败。
 
 > 需要轮询或按元数据路由时，把策略改成 `{"mode": "round-robin"}` 或 `{"mode": "metadata", "routes": [...]}`，并可按官方 `.env.example` 追加 `HINDSIGHT_API_LLM_2_*`、`HINDSIGHT_API_LLM_3_*` 等成员（序号必须从 1 连续）。
 
-### 嵌入模型（锁定硅基流动）
+### 3. 嵌入模型（锁定硅基流动）
 
 上游**没有** `siliconflow` 这个嵌入提供商（合法值只有 `local`、`onnx`、`tei`、`openai`、`openai-codex`、`openrouter`、`requesty`、`cohere`、`google`、`zeroentropy`、`litellm`、`litellm-sdk`），所以这里走 OpenAI 兼容通道指向硅基流动：compose 里固定了 `HINDSIGHT_API_EMBEDDINGS_PROVIDER: openai` 和 `HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL: https://api.siliconflow.cn/v1`，OpenAI SDK 会自动在其后拼上 `/embeddings`。
 
-表单只剩三项：
+表单三项：
 
-- **嵌入模型 API Key**：你的硅基流动 Key。
-- **嵌入模型**：默认 `BAAI/bge-m3`，**必须存在于你账号的模型列表里**。
-- **嵌入维度**：留空用模型原生维度。硅基流动的 bge / Qwen 系列请保持留空 —— `dimensions` 参数只有 OpenAI `text-embedding-3` 系列接受，其他模型带上会被服务端拒绝。填写后它会作为请求参数下发，并决定数据库向量列的宽度。
+- **3. 嵌入模型 API Key**：你的硅基流动 Key。
+- **3. 嵌入模型**：默认 `BAAI/bge-m3`，**必须存在于你账号的模型列表里**。
+- **3. 嵌入维度**：留空用模型原生维度。硅基流动的 bge / Qwen 系列请保持留空 —— `dimensions` 参数只有 OpenAI `text-embedding-3` 系列接受，其他模型带上会被服务端拒绝。填写后它会作为请求参数下发，并决定数据库向量列的宽度。
 
 **嵌入模型一旦写入记忆就不要更换**：更换后新旧记忆不在同一向量空间，已有记忆需要重新向量化。
 
 > 换到别的 OpenAI 兼容嵌入服务（OpenAI、各类中转）只需改 compose 里的 `HINDSIGHT_API_EMBEDDINGS_OPENAI_BASE_URL`，其余不动；换成 `cohere`、`google`、`tei` 这类非 OpenAI 兼容的服务，则要同时改 `HINDSIGHT_API_EMBEDDINGS_PROVIDER` 并使用该提供商自己的变量（`HINDSIGHT_API_EMBEDDINGS_<提供商>_*`）。
 
-### 重排模型（锁定硅基流动）
+### 4. 重排模型（锁定硅基流动）
 
 compose 里固定了 `HINDSIGHT_API_RERANKER_PROVIDER: siliconflow`，并且**不设** `_SILICONFLOW_BASE_URL` —— 上游的默认值就是 `https://api.siliconflow.cn/v1`，客户端再拼上 `/rerank`，最终请求 `https://api.siliconflow.cn/v1/rerank`（Cohere 兼容格式）。
 
-表单两项：
+表单三项：
 
-- **重排模型 API Key**：你的硅基流动 Key。
-- **重排模型**：默认 `BAAI/bge-reranker-v2-m3`，**必须存在于你账号的模型列表里，不要留空**（空值不会被当作「用默认」，会变成空模型名）。
-
-「重排候选上限」默认 300，控制每次召回交给重排模型精排的候选数；调小可降低重排延迟，调大覆盖更多候选（精度略升、耗时增加）。
+- **4. 重排模型 API Key**：你的硅基流动 Key。
+- **4. 重排模型**：默认 `BAAI/bge-reranker-v2-m3`，**必须存在于你账号的模型列表里，不要留空**（空值不会被当作「用默认」，会变成空模型名）。
+- **4. 重排候选上限**：默认 300，控制每次召回交给重排模型精排的候选数；调小可降低重排延迟，调大覆盖更多候选（精度略升、耗时增加）。
 
 #### 想停用重排或换 provider
 
@@ -120,7 +124,13 @@ compose 里固定了 `HINDSIGHT_API_RERANKER_PROVIDER: siliconflow`，并且**�
 
 - **故障转移链**：按 `HINDSIGHT_API_RERANKER_1_*`、`_2_*` 继续编号即可，成员之间不继承任何配置、要用什么就写全；链尾写 `rrf` 可以让重排失败时退回融合排序，而不是让整次召回失败。
 
-### 访问密钥与鉴权
+### 5. 通用配置
+
+这一组是与具体模型无关的应用级设置，因此排在所有模型组之后。
+
+- **5. 全局 LLM 并发**：默认 `4`，上游默认是 `32`。它管的是**整个 LLM 栈**——同一时刻最多有多少个 LLM 请求在跑，主 LLM 与备用 LLM 一起受它限制（嵌入与重排不走这条路，不受影响），所以它不属于上面任何一组模型，单独编号放在最后。并发越高瞬时 token 消耗越猛，中转服务还容易触发限流；后台任务多、账单偏高就往下调，接本地模型（Ollama / LM Studio）建议 `1~2`，云端 API 且追求吞吐可以往上加。
+
+#### 访问密钥与鉴权
 
 - **API / MCP 访问密钥**（`HINDSIGHT_API_TENANT_API_KEY`）：Hindsight 默认**完全无鉴权**，本应用通过内置的 `ApiKeyTenantExtension` 打开 API Key 校验，请求必须携带 `Authorization: Bearer <密钥>`，否则返回 401。控制台访问数据面 API 时复用同一把密钥，无需另外配置。
 - **GUI 访问密钥**（`HINDSIGHT_CP_ACCESS_KEY`）：访问控制台时会出现登录页，输入该密钥才能进入（`/api/health` 除外）。它必须与 API 访问密钥不同。
@@ -129,7 +139,7 @@ compose 里固定了 `HINDSIGHT_API_RERANKER_PROVIDER: siliconflow`，并且**�
 
 Hindsight 会在后台自动刷新**心智模型（mental model）**与知识页，这条路径跑的是完整的 reflect 流程（多轮自回归推理），如果触发频繁，消耗会显著高于日常的 retain/recall。注意这与上面的模型配置无关：把模型换成便宜的只会降低单价，不会减少调用次数。
 
-表单里的「LLM 最大并发」默认 `4`（上游默认 `32`），后台任务不会一次性全部开火；想再省一点可以改到 `1~2`（代价是 retain / recall 变慢），装完也能在「参数 → 编辑」里随时调整。
+表单里的「5. 全局 LLM 并发」默认 `4`（上游默认 `32`），后台任务不会一次性全部开火；想再省一点可以改到 `1~2`（代价是 retain / recall 变慢），装完也能在「参数 → 编辑」里随时调整。
 
 当前版本没有全局开关，按下面两点处理：
 
