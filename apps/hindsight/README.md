@@ -48,6 +48,7 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 - **重排模型锁死硅基流动**（走 Cohere 兼容的 `/rerank`）。
 - **Retain 输出预算写死 `64000`**（上游默认值）。
 - **故障转移策略写死 `{"mode": "failover"}`**，**API / MCP 鉴权默认开启**。
+- **后台任务的 worker 标识写死为安装名**（`HINDSIGHT_API_WORKER_ID=${CONTAINER_NAME}`）—— 上游不设时取容器 hostname，而重建容器会换 hostname，卡在 `processing` 状态的任务便再也回收不了（启动时只回收 `worker_id` 相同的行），对应记忆库会一直卡住。用安装名则重建前后一致，也顺带消掉启动日志里那条 `HINDSIGHT_API_WORKER_ID is not set` 的 WARNING。
 
 模型名和接口地址这类字段只校验非空，**字符不受限** —— 带斜杠的模型名（`qwen/qwen3-embedding-4b`、`deepseek/deepseek-chat` 等）可以直接填。
 

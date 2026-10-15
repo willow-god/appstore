@@ -10,6 +10,14 @@ services:
       - "${PANEL_APP_PORT_API}:8888"
     environment:
       TZ: Asia/Shanghai
+      # 后台任务的 worker 标识。上游不设时取容器 hostname，而本应用改名 / 改参数
+      # 都会重建容器，hostname 一变，卡在 processing 状态的任务就再也回收不了
+      # （启动时的 recover_own_tasks 只回收 worker_id 相同的行），会把对应的
+      # 记忆库一直卡住。这里取安装名（即上面的 container_name）：重建前后一致，
+      # 多实例互不冲突，顺带消掉启动日志里那条 "HINDSIGHT_API_WORKER_ID is not
+      # set ..." 的 WARNING。改动这一行等于换 worker，旧任务需 hindsight-admin
+      # recover 才会释放。
+      HINDSIGHT_API_WORKER_ID: ${CONTAINER_NAME}
 
       # ============================================================
       # PostgreSQL（需已安装 pgvector 扩展）

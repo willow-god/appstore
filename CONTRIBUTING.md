@@ -353,6 +353,7 @@ networks:
 
 - 服务名使用简洁、稳定的英文名称。
 - `container_name` 使用 `${CONTAINER_NAME}`，由 1Panel 生成实例名。
+- 应用自身需要「稳定实例标识」的环境变量（后台任务的 worker id、节点名之类），也应取 `${CONTAINER_NAME}`：重建容器、改参数都不会变，多实例之间也互不冲突。
 - 必须连接外部网络 `1panel-network`，与本仓库其他应用保持一致。
 - 添加 `labels.createdBy: "Apps"`。
 - 宿主机端口使用版本 `data.yml` 声明的 `${PANEL_APP_PORT_HTTP}`。
