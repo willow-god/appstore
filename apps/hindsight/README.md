@@ -8,7 +8,7 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 
 - 项目地址：[vectorize-io/hindsight](https://github.com/vectorize-io/hindsight)
 - 官方文档：[hindsight.vectorize.io](https://hindsight.vectorize.io/developer/installation)
-- 本应用使用的镜像：`ghcr.io/vectorize-io/hindsight:0.10.2-slim`
+- 本应用使用的镜像：`ghcr.io/vectorize-io/hindsight:1.0.0-slim`
 
 ## 使用说明
 
@@ -16,7 +16,8 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 - **数据面 API 端口**：`8888`，对应「数据面 API 端口」（`PANEL_APP_PORT_API`）。API 与 MCP 都走这个端口。
 - **数据持久化**：全部在 PostgreSQL 中。Hindsight 不使用本地卷 —— 记忆、实体、操作记录以及上传的文件附件（文件存储默认 `native`，即存 PostgreSQL 的 BYTEA 字段）都在数据库里。**备份应用等于备份这个数据库**，容器可以随时删除重建。
 - **首次启动**：容器会自动在目标数据库的 `public` schema 中建表并执行迁移，首次启动到 `/health` 转为健康需要一两分钟。健康检查探针会验证数据库连通性，因此数据库不可达时容器会显示为 unhealthy。
-- **初始账号**：没有内置账号。控制台用「GUI 访问密钥」登录，API/MCP 用「API / MCP 访问密钥」鉴权，两者都在安装表单里随机生成；安装后在 1Panel 应用页的「参数」中可以查看和修改。
+- **初始账号**：没有内置账号。控制台用「GUI 访问密钥」登录，API/MCP 用「API / MCP 访问密钥」鉴权，两者都在安装表单里随机生成。
+- **装完想改配置**：1Panel 应用页 →「参数」→ 右上角「编辑」。除数据库连接（库名 / 用户 / 密码）外**所有字段都能改**，保存后容器会自动重建。数据库连接属于安装时决定，要换库请重装应用。
 
 ## 安装前置条件（重要）
 
@@ -37,13 +38,27 @@ Hindsight 是面向 AI Agent 的可自托管长期记忆服务。它把对话与
 
 ## 配置说明
 
+### 已经替你锁定的部分
+
+安装表单只留两类东西：真实凭据（API Key）和真实选择（端口、库名、模型名）。其余全部写死在 compose 里并加了注释，装完不用管：
+
+- **LLM 提供商锁死 `openai`**（OpenAI 兼容协议）—— 官方 OpenAI、DeepSeek、硅基流动、各类中转都用这套接口，用「LLM 接口地址」指向实际服务即可。
+- **备用 LLM 也锁死 `openai`**，与主 LLM 共用 Key 与接口地址，只换模型；开关关闭时该成员根本不存在。
+- **嵌入模型锁死硅基流动**（走 OpenAI 兼容通道）。
+- **重排模型锁死硅基流动**（走 Cohere 兼容的 `/rerank`）。
+- **Retain 输出预算写死 `64000`**（上游默认值）。
+- **故障转移策略写死 `{"mode": "failover"}`**，**API / MCP 鉴权默认开启**。
+
+模型名和接口地址这类字段只校验非空，**字符不受限** —— 带斜杠的模型名（`qwen/qwen3-embedding-4b`、`deepseek/deepseek-chat` 等）可以直接填。
+
 ### 主 LLM
 
-提供商已锁定为 `openai`（OpenAI 兼容协议，写在 compose 里）—— 官方 OpenAI、DeepSeek、硅基流动、各类中转等绝大多数服务都提供 OpenAI 兼容接口，用「接口地址」指向实际服务即可。表单三项：
+提供商已锁定为 `openai`（OpenAI 兼容协议，写在 compose 里）—— 官方 OpenAI、DeepSeek、硅基流动、各类中转等绝大多数服务都提供 OpenAI 兼容接口，用「接口地址」指向实际服务即可。表单四项：
 
 - **LLM API Key**：对应服务的 Key。
 - **LLM 模型**：**必填**，填这个接口真实提供的模型。这里刻意不留默认值 —— 若回落到 OpenAI 的 `gpt-4o-mini`，用中转时只会得到一个"模型不存在"的报错。
-- **LLM 接口地址**：OpenAI 兼容端点，通常是 `https://xxx/v1`（**不是**账号根地址）。
+- **LLM 接口地址**：OpenAI 兼容端点，以 `/v1` 结尾（**不是**账号根地址）。默认填的是官方示例 `https://api.openai.com/v1`，用别家时直接覆盖。
+- **LLM 最大并发**：默认 `4`，上游默认是 `32`。它决定同一时刻最多有多少个 LLM 请求在跑，直接关系瞬时 token 消耗峰值。后台任务多、账单偏高就往下调；接的是本地模型（Ollama / LM Studio）建议 `1~2`，云端 API 且追求吞吐可以往上加。
 
 > 「Retain 最大输出 Token」已写死为 `64000`（上游默认值），不再作为表单项。模型输出上限较小导致调用失败时，改 compose 里那行即可（必须大于 3000）。
 > 要用 `anthropic`、`gemini`、`ollama` 等原生协议，改 compose 里的 `HINDSIGHT_API_LLM_PROVIDER`，并按官方 `.env.example` 补上该提供商所需的变量。
@@ -114,6 +129,8 @@ compose 里固定了 `HINDSIGHT_API_RERANKER_PROVIDER: siliconflow`，并且**�
 
 Hindsight 会在后台自动刷新**心智模型（mental model）**与知识页，这条路径跑的是完整的 reflect 流程（多轮自回归推理），如果触发频繁，消耗会显著高于日常的 retain/recall。注意这与上面的模型配置无关：把模型换成便宜的只会降低单价，不会减少调用次数。
 
+表单里的「LLM 最大并发」默认 `4`（上游默认 `32`），后台任务不会一次性全部开火；想再省一点可以改到 `1~2`（代价是 retain / recall 变慢），装完也能在「参数 → 编辑」里随时调整。
+
 当前版本没有全局开关，按下面两点处理：
 
 1. **在控制台里检查**每个记忆库下的心智模型 / 知识页及其触发器。触发器里的 `refresh_after_consolidation: true` 意味着每次记忆整合后都会刷新一次，这是最常见的放大来源；删除或改用 `refresh_cron` 定时触发即可。
@@ -159,8 +176,8 @@ claude mcp add --transport http hindsight https://memory.example.com/mem/mcp \
 
 ## 镜像与版本说明
 
-- 本应用跟随上游的 **slim** 镜像变体（版本目录 `0.10.2-slim`）。使用 slim 的原因是拉取体积更小（镜像层压缩后约 458MB，标准镜像约 880MB），代价是嵌入与重排必须依赖外部服务。
-- 想改用镜像自带的本地嵌入/重排模型时，把 compose 中的镜像换成不带 `-slim` 的 tag（例如 `ghcr.io/vectorize-io/hindsight:0.10.2`），并把 `HINDSIGHT_API_EMBEDDINGS_PROVIDER` 改成 `local`、`HINDSIGHT_API_RERANKER_PROVIDER` 改成 `local`。标准镜像已预置 `BAAI/bge-small-en-v1.5`（嵌入）与 `cross-encoder/ms-marco-MiniLM-L-6-v2`（重排），无需联网下载。
+- 本应用跟随上游的 **slim** 镜像变体（版本目录 `1.0.0-slim`）。使用 slim 的原因是拉取体积更小（镜像层压缩后约 458MB，标准镜像约 880MB），代价是嵌入与重排必须依赖外部服务。
+- 想改用镜像自带的本地嵌入/重排模型时，把 compose 中的镜像换成不带 `-slim` 的 tag（例如 `ghcr.io/vectorize-io/hindsight:1.0.0`），并把 `HINDSIGHT_API_EMBEDDINGS_PROVIDER` 改成 `local`、`HINDSIGHT_API_RERANKER_PROVIDER` 改成 `local`。标准镜像已预置 `BAAI/bge-small-en-v1.5`（嵌入）与 `cross-encoder/ms-marco-MiniLM-L-6-v2`（重排），无需联网下载。
 - 上游同时提供带 `-slim` 和不带 `-slim` 的两套 tag，因此 `renovate.json` 中为该镜像加了 `allowedVersions` 规则，自动升级只会落在 `-slim` 这一支上。
 - 该规则里的 `"ignoreUnstable": false` **不能删**：`-slim` 在 semver 里属于预发布版，而当前版本也是预发布版时，Renovate 默认只允许跳到 minor 与 patch 都相同的另一个预发布版，结果是任何版本号变化都不会产生升级 PR。加上这个开关后，才是「按版本号正常升级、且只取 `-slim` 这一支」。
 

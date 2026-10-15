@@ -2,6 +2,8 @@ additionalProperties:
   formFields:
     # ============================================================
     # PostgreSQL（需已安装 pgvector 扩展）
+    # 数据库连接属于「安装时决定」的参数，不带 edit: true ——
+    # 与官方应用一致（改库要重装，避免容器指向别的空库）
     # ============================================================
     - child:
         default: ""
@@ -64,6 +66,7 @@ additionalProperties:
     # 端口：控制台(GUI) / 数据面 API
     # ============================================================
     - default: 9999
+      edit: true
       envKey: PANEL_APP_PORT_HTTP
       labelEn: Control Plane (GUI) Port
       labelZh: 控制台(GUI)端口
@@ -76,6 +79,7 @@ additionalProperties:
       type: number
 
     - default: 8888
+      edit: true
       envKey: PANEL_APP_PORT_API
       labelEn: Dataplane API Port
       labelZh: 数据面 API 端口
@@ -88,9 +92,14 @@ additionalProperties:
       type: number
 
     # ============================================================
-    # 主 LLM：全部操作默认使用；提供商已锁定为 openai（OpenAI 兼容）于 compose 中
+    # 主 LLM：提供商已在 compose 中固定为 openai（OpenAI 兼容协议）
+    # 注意：模型名与接口地址都不要加 rule —— paramCommon 的正则
+    # /^[a-zA-Z0-9][a-zA-Z0-9._-]{1,63}$/ 不接受斜杠，
+    # 而 "厂商/模型"（qwen/qwen3-embedding-4b 等）是常见写法。
+    # 不写 rule 时只校验非空，其余字符随意。
     # ============================================================
     - default: ""
+      edit: true
       envKey: HINDSIGHT_API_LLM_API_KEY
       labelEn: LLM API Key
       labelZh: LLM API Key
@@ -102,40 +111,54 @@ additionalProperties:
       type: password
 
     - default: ""
+      edit: true
       envKey: HINDSIGHT_API_LLM_MODEL
       labelEn: LLM Model
       labelZh: LLM 模型
       label:
-        en: LLM Model — the model your endpoint actually serves (required)
-        zh: LLM 模型 —— 填这个接口真实提供的模型（必填）
-        zh-Hant: LLM 模型 —— 填這個介面真實提供的模型（必填）
+        en: LLM Model
+        zh: LLM 模型
+        zh-Hant: LLM 模型
       required: true
-      rule: paramCommon
       type: text
 
-    - default: ""
+    - default: "https://api.openai.com/v1"
+      edit: true
       envKey: HINDSIGHT_API_LLM_BASE_URL
       labelEn: LLM Base URL
       labelZh: LLM 接口地址
       label:
-        en: LLM Base URL (OpenAI-compatible endpoint, ending in /v1)
-        zh: LLM 接口地址（OpenAI 兼容端点，以 /v1 结尾）
-        zh-Hant: LLM 介面位址（OpenAI 相容端點，以 /v1 結尾）
+        en: LLM Base URL
+        zh: LLM 接口地址
+        zh-Hant: LLM 介面位址
       required: false
       type: text
 
+    - default: 4
+      edit: true
+      envKey: HINDSIGHT_API_LLM_MAX_CONCURRENT
+      labelEn: LLM Max Concurrent
+      labelZh: LLM 最大并发
+      label:
+        en: LLM Max Concurrent (upstream default: 32)
+        zh: LLM 最大并发（上游默认 32）
+        zh-Hant: LLM 最大並發（上游預設 32）
+      required: true
+      type: number
+
     # ============================================================
-    # 备用 LLM：开 = openai，与主 LLM 共用提供商、Key、接口地址，只换模型
-    # 关 = 留空：上游在 provider 为空时根本不创建该成员（Key 校验也不会触发）
+    # 备用 LLM：开 = openai（与主 LLM 共用 Key 与接口地址，只换模型）
+    # 关 = 留空，上游不会创建该成员
     # ============================================================
     - default: ""
+      edit: true
       envKey: HINDSIGHT_API_LLM_1_PROVIDER
-      labelEn: Backup LLM
-      labelZh: 备用 LLM
+      labelEn: Backup LLM (optional)
+      labelZh: 备用 LLM（可选）
       label:
-        en: "Backup LLM (optional) — on: openai, sharing the main LLM's key and endpoint; off: no backup model"
-        zh: 备用 LLM（可选）—— 开：使用 openai，与主 LLM 共用 Key 与接口地址；关：不启用备用模型
-        zh-Hant: 備用 LLM（可選）—— 開：使用 openai，與主 LLM 共用 Key 與介面位址；關：不啟用備用模型
+        en: Backup LLM (optional)
+        zh: 备用 LLM（可选）
+        zh-Hant: 備用 LLM（可選）
       required: false
       type: select
       values:
@@ -145,89 +168,92 @@ additionalProperties:
           value: ""
 
     - default: ""
+      edit: true
       envKey: HINDSIGHT_API_LLM_1_MODEL
       labelEn: Backup LLM Model
       labelZh: 备用 LLM 模型
       label:
-        en: Backup LLM Model — only used when the backup is switched on, where it is then required. Must be a model that endpoint serves, or a failover would fail too.
-        zh: 备用 LLM 模型 —— 仅在备用开启时生效，开启后必填；必须是主 LLM 接口真实提供的模型，否则主模型出错切过去也会立刻失败
-        zh-Hant: 備用 LLM 模型 —— 僅在備用開啟時生效，開啟後必填；必須是主 LLM 介面真實提供的模型，否則主模型出錯切過去也會立刻失敗
+        en: Backup LLM Model
+        zh: 备用 LLM 模型
+        zh-Hant: 備用 LLM 模型
       required: false
       type: text
 
     # ============================================================
-    # 嵌入模型：锁定硅基流动
-    # 上游没有 siliconflow 这个嵌入提供商，这里走 OpenAI 兼容接口，
-    # 接口地址已在 compose 中固定为 https://api.siliconflow.cn/v1
+    # 嵌入模型：已在 compose 中锁定硅基流动
     # ============================================================
     - default: ""
+      edit: true
       envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_API_KEY
       labelEn: Embeddings API Key
       labelZh: 嵌入模型 API Key
       label:
-        en: Embeddings API Key (your SiliconFlow API key)
-        zh: 嵌入模型 API Key（硅基流动的 API Key）
-        zh-Hant: 嵌入模型 API Key（矽基流動的 API Key）
+        en: Embeddings API Key
+        zh: 嵌入模型 API Key
+        zh-Hant: 嵌入模型 API Key
       required: true
       type: password
 
     - default: BAAI/bge-m3
+      edit: true
       envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_MODEL
       labelEn: Embeddings Model
       labelZh: 嵌入模型
       label:
-        en: Embeddings Model (must exist in your SiliconFlow account; never change it once memories exist)
-        zh: 嵌入模型（需存在于你的硅基流动账号中；写入记忆后不要更换，否则已有记忆要重新向量化）
-        zh-Hant: 嵌入模型（需存在於你的矽基流動帳號中；寫入記憶後不要更換，否則已有記憶要重新向量化）
+        en: Embeddings Model
+        zh: 嵌入模型
+        zh-Hant: 嵌入模型
       required: true
-      rule: paramCommon
       type: text
 
     - default: ""
+      edit: true
       envKey: HINDSIGHT_API_EMBEDDINGS_OPENAI_DIMENSIONS
       labelEn: Embeddings Dimensions
       labelZh: 嵌入维度
       label:
-        en: "Embeddings Dimensions (blank = the model's native width. SiliconFlow bge / Qwen models: keep blank — the parameter is only accepted by OpenAI text-embedding-3 models)"
-        zh: 嵌入维度（留空 = 用模型原生维度。硅基流动的 bge / Qwen 系列请保持留空；该参数只有 OpenAI text-embedding-3 系列接受）
-        zh-Hant: 嵌入維度（留空 = 用模型原生維度。矽基流動的 bge / Qwen 系列請保持留空；該參數只有 OpenAI text-embedding-3 系列接受）
+        en: Embeddings Dimensions (blank = the model's native width)
+        zh: 嵌入维度（留空 = 用模型原生维度）
+        zh-Hant: 嵌入維度（留空 = 用模型原生維度）
       required: false
       type: text
 
     # ============================================================
-    # 重排模型：锁定硅基流动（Cohere 兼容 /rerank，地址与能力都在 compose 里固定）
+    # 重排模型：已在 compose 中锁定硅基流动
     # ============================================================
     - default: ""
+      edit: true
       envKey: HINDSIGHT_API_RERANKER_SILICONFLOW_API_KEY
       labelEn: Reranker API Key
       labelZh: 重排模型 API Key
       label:
-        en: Reranker API Key (your SiliconFlow API key)
-        zh: 重排模型 API Key（硅基流动的 API Key）
-        zh-Hant: 重排模型 API Key（矽基流動的 API Key）
+        en: Reranker API Key
+        zh: 重排模型 API Key
+        zh-Hant: 重排模型 API Key
       required: true
       type: password
 
     - default: BAAI/bge-reranker-v2-m3
+      edit: true
       envKey: HINDSIGHT_API_RERANKER_SILICONFLOW_MODEL
       labelEn: Reranker Model
       labelZh: 重排模型
       label:
-        en: Reranker Model (must exist in your SiliconFlow account; do not leave blank)
-        zh: 重排模型（需存在于你的硅基流动账号中；不要留空）
-        zh-Hant: 重排模型（需存在於你的矽基流動帳號中；不要留空）
+        en: Reranker Model
+        zh: 重排模型
+        zh-Hant: 重排模型
       required: true
-      rule: paramCommon
       type: text
 
     - default: 300
+      edit: true
       envKey: HINDSIGHT_API_RERANKER_MAX_CANDIDATES
       labelEn: Reranker Max Candidates
       labelZh: 重排候选上限
       label:
-        en: Reranker Max Candidates (how many fused candidates the reranker re-scores per recall)
-        zh: 重排候选上限（每次召回交给重排模型精排的候选数）
-        zh-Hant: 重排候選上限（每次召回交給重排模型精排的候選數）
+        en: Reranker Max Candidates
+        zh: 重排候选上限
+        zh-Hant: 重排候選上限
       required: true
       type: number
 
@@ -235,25 +261,27 @@ additionalProperties:
     # 认证：API/MCP 用 API Key，GUI 用独立访问密钥
     # ============================================================
     - default: ""
+      edit: true
       envKey: HINDSIGHT_API_TENANT_API_KEY
       labelEn: API / MCP Access Key
       labelZh: API / MCP 访问密钥
       label:
-        en: API / MCP Access Key (clients send it as Authorization Bearer)
-        zh: API / MCP 访问密钥（客户端以 Bearer 形式携带）
-        zh-Hant: API / MCP 存取金鑰（客戶端以 Bearer 形式攜帶）
+        en: API / MCP Access Key
+        zh: API / MCP 访问密钥
+        zh-Hant: API / MCP 存取金鑰
       random: true
       required: true
       type: password
 
     - default: ""
+      edit: true
       envKey: HINDSIGHT_CP_ACCESS_KEY
       labelEn: GUI Access Key
       labelZh: GUI 访问密钥
       label:
-        en: GUI Access Key (must differ from the API access key)
-        zh: GUI 访问密钥（必须与 API 访问密钥不同）
-        zh-Hant: GUI 存取金鑰（必須與 API 存取金鑰不同）
+        en: GUI Access Key
+        zh: GUI 访问密钥
+        zh-Hant: GUI 存取金鑰
       random: true
       required: true
       type: password
