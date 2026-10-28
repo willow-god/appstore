@@ -1,0 +1,28 @@
+additionalProperties:
+  formFields:
+    - default: 45964
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      label:
+        en: HTTP Port
+        zh: HTTP 端口
+        zh-Hant: HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    # 只用于容器内 nginx 的 server_name：容器里只有一个站点，填错也能访问；
+    # 走 1Panel 反向代理时这里填不填都不影响，保留它是为了用镜像内置 HTTPS 时对得上证书域名。
+    - default: localhost
+      edit: true
+      envKey: DOMAIN
+      labelEn: Domain
+      labelZh: 访问域名
+      label:
+        en: Domain
+        zh: 访问域名
+        zh-Hant: 存取網域
+      required: true
+      type: text

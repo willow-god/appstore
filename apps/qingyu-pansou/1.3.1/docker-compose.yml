@@ -1,0 +1,28 @@
+services:
+  qingyu-pansou:
+    image: ghcr.io/liushen-fork/pansou-web:v1.3.1
+    container_name: ${CONTAINER_NAME}
+    restart: unless-stopped
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:80"
+    volumes:
+      # 账户库（pansou-admin.db）、搜索缓存、前后端日志与 SSL 证书都在 /app/data 下。
+      # 升级镜像只替换容器，这些数据不会丢；备份应用目录即可备份账户体系。
+      - ./data:/app/data
+    environment:
+      TZ: Asia/Shanghai
+      # 仅用于容器内 nginx 的 server_name，含义见版本 data.yml 里的注释
+      DOMAIN: ${DOMAIN}
+      # 其余运行参数不在安装表单里暴露，全部在管理后台维护：
+      # · 代理、缓存开关 / TTL、默认并发、出口并发、网页搜索签名密钥 →「运行参数」
+      # · TG 频道与启用插件 →「上游自动同步」（镜像内已带一份构建时的上游快照）
+      # · 旧版简单认证（AUTH_ENABLED / AUTH_USERS / AUTH_JWT_SECRET）已被账户体系取代，
+      #   保持默认关闭，账号、OAuth2、每日配额都在「认证与站点」里配置
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

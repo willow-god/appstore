@@ -1,0 +1,29 @@
+name: QingYu-Sou
+tags:
+  - 网盘
+  - 搜索
+  - 自托管
+title: 基于 PanSou 二开的网盘搜索服务，带完整管理后台
+description: 清羽盘搜是 PanSou 的二开版本（Vue 3 前端 + Go 后端同仓构建），在保留上游搜索 API 的基础上补齐了账户体系、每日配额、OAuth2 登录与完整管理后台。
+additionalProperties:
+  key: qingyu-pansou
+  name: QingYu-Sou
+  tags:
+    - WebSite
+    - Tool
+  shortDescZh: PanSou 二开版，带账户体系与完整管理后台的网盘搜索服务
+  shortDescEn: PanSou-derived cloud drive search with accounts and a full admin backend
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://github.com/LiuShen-Fork/pansou-web
+  github: https://github.com/LiuShen-Fork/pansou-web
+  document: https://github.com/LiuShen-Fork/pansou-web
+  description:
+    en: Qingyu PanSou is a PanSou-derived cloud drive search service (Vue 3 frontend + Go backend built into one image). It keeps the upstream search API compatible and adds user accounts, daily quotas, OAuth2 sign-in and a full admin backend.
+    zh: 清羽盘搜是 PanSou 的二开版本（Vue 3 前端 + Go 后端同仓构建），在保留上游搜索 API 的基础上补齐了账户体系、每日配额、OAuth2 登录与完整管理后台。
+    zh-Hant: 清羽盤搜是 PanSou 的二開版本（Vue 3 前端 + Go 後端同倉建置），在保留上游搜尋 API 的基礎上補齊帳號體系、每日配額、OAuth2 登入與完整管理後台。
+  architectures:
+    - amd64
+    - arm64
