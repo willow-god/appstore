@@ -1,6 +1,6 @@
 services:
   qingyu-pansou:
-    image: ghcr.io/liushen-fork/pansou-web:v1.3.1
+    image: ghcr.io/liushen-fork/pansou-web:v2.0.0
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
     labels:
