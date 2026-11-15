@@ -2,53 +2,24 @@ services:
   chronoframe:
     image: ghcr.io/hoshinosuzumi/chronoframe:1.2.0
     container_name: ${CONTAINER_NAME}
-    ports:
-      - "${PANEL_APP_PORT_HTTP}:3000"
-    environment:
-      - CFRAME_ADMIN_NAME=${PANEL_APP_ADMIN_NAME}
-      - CFRAME_ADMIN_EMAIL=${PANEL_APP_ADMIN_EMAIL}
-      - CFRAME_ADMIN_PASSWORD=${PANEL_APP_ADMIN_PASSWORD}
-
-      - NUXT_PUBLIC_APP_TITLE=${PANEL_APP_SITE_TITLE}
-      - NUXT_PUBLIC_APP_SLOGAN=${PANEL_APP_SITE_SLOGAN}
-      - NUXT_PUBLIC_APP_AUTHOR=${PANEL_APP_SITE_AUTHOR}
-      - NUXT_PUBLIC_APP_AVATAR_URL=${PANEL_APP_SITE_AVATAR_URL}
-
-      - NUXT_PUBLIC_MAP_MAPLIBRE_TOKEN=${PANEL_APP_MAP_MAPLIBRE_TOKEN}
-
-      - NUXT_STORAGE_PROVIDER=${PANEL_APP_STORAGE_PROVIDER}
-
-      - NUXT_PROVIDER_LOCAL_PATH=${PANEL_APP_LOCAL_PATH}
-      - NUXT_PROVIDER_LOCAL_BASE_URL=${PANEL_APP_LOCAL_BASE_URL}
-
-      - NUXT_PROVIDER_S3_ENDPOINT=${PANEL_APP_S3_ENDPOINT}
-      - NUXT_PROVIDER_S3_BUCKET=${PANEL_APP_S3_BUCKET}
-      - NUXT_PROVIDER_S3_REGION=${PANEL_APP_S3_REGION}
-      - NUXT_PROVIDER_S3_ACCESS_KEY_ID=${PANEL_APP_S3_ACCESS_KEY_ID}
-      - NUXT_PROVIDER_S3_SECRET_ACCESS_KEY=${PANEL_APP_S3_SECRET_ACCESS_KEY}
-      - NUXT_PROVIDER_S3_PREFIX=${PANEL_APP_S3_PREFIX}
-      - NUXT_PROVIDER_S3_CDN_URL=${PANEL_APP_S3_CDN_URL}
-
-      - NUXT_PROVIDER_OPENLIST_BASE_URL=${PANEL_APP_OPENLIST_BASE_URL}
-      - NUXT_PROVIDER_OPENLIST_ROOT_PATH=${PANEL_APP_OPENLIST_ROOT_PATH}
-      - NUXT_PROVIDER_OPENLIST_TOKEN=${PANEL_APP_OPENLIST_TOKEN}
-      - NUXT_PROVIDER_OPENLIST_ENDPOINT_UPLOAD=${PANEL_APP_OPENLIST_ENDPOINT_UPLOAD}
-      - NUXT_PROVIDER_OPENLIST_ENDPOINT_DOWNLOAD=${PANEL_APP_OPENLIST_ENDPOINT_DOWNLOAD}
-      - NUXT_PROVIDER_OPENLIST_ENDPOINT_LIST=${PANEL_APP_OPENLIST_ENDPOINT_LIST}
-      - NUXT_PROVIDER_OPENLIST_ENDPOINT_DELETE=${PANEL_APP_OPENLIST_ENDPOINT_DELETE}
-      - NUXT_PROVIDER_OPENLIST_ENDPOINT_META=${PANEL_APP_OPENLIST_ENDPOINT_META}
-      - NUXT_PROVIDER_OPENLIST_PATH_FIELD=${PANEL_APP_OPENLIST_PATH_FIELD}
-      - NUXT_PROVIDER_OPENLIST_CDN_URL=${PANEL_APP_OPENLIST_CDN_URL}
-
-      - NUXT_SESSION_PASSWORD=${PANEL_APP_SESSION_PASSWORD}
-      - NUXT_UPLOAD_MIME_WHITELIST_ENABLED=false
-    volumes:
-      - ./data:/app/data
+    restart: always
     labels:
       createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:3000"
+    volumes:
+      # SQLite 数据库 app.sqlite3、自动生成的会话密钥 .session-password 和本地存储的照片
+      # 都在 /app/data 下，升级镜像只替换容器，这些数据不会丢；备份应用目录即可备份相册。
+      - ./data:/app/data
+    environment:
+      # 1.0 起管理员、站点、存储、地图等设置全部在首次访问的设置向导和后台维护，
+      # 旧版的 CFRAME_ADMIN_* / NUXT_* 环境变量已不再需要，这里不再注入。
+      # 部署侧唯一保留的开关是 NUXT_TRUST_PROXY（默认 false）：
+      # 只有 3000 端口仅能被可信代理访问、且代理会覆盖 X-Forwarded-For 时才需要改成 "true"，
+      # 用法见 https://github.com/HoshinoSuzumi/chronoframe 的快速开始文档。
+      TZ: Asia/Shanghai
     networks:
       - 1panel-network
-    restart: always
 
 networks:
   1panel-network:
