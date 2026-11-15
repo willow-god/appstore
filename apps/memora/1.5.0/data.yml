@@ -1,0 +1,23 @@
+additionalProperties:
+  formFields:
+    - default: 6232
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      label:
+        en: HTTP Port
+        ja: ポート
+        ms: Port
+        pt-br: Porta
+        ru: Порт
+        ko: 포트
+        zh: HTTP 端口
+        zh-Hant: HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    # 1.5 起管理员账号、站点信息、存储提供商、地图令牌、上传大小、媒体处理与任务队列
+    # 全部在首次设置向导和 /dashboard 后台维护，会话密钥首次启动自动生成到
+    # data/.session-secret，安装表单不再需要任何环境变量。

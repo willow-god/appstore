@@ -1,0 +1,31 @@
+services:
+  memora:
+    image: ghcr.io/liushen-fork/memora:1.5.0
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:3000"
+    environment:
+      # 管理员账号在首次设置向导里创建，站点、存储、地图、上传与媒体处理、任务队列
+      # 等设置都在向导和 /dashboard 后台维护，部署时不需要传环境变量。
+      # 会话密钥首次启动自动生成到 /app/data/.session-secret，随数据卷一起备份。
+      # 确需覆盖时用 MEMORA_* 变量（旧名 CFRAME_* 仍会被读取，但会输出弃用警告）。
+      - TZ=Asia/Shanghai
+    volumes:
+      # SQLite 数据库 app.sqlite3、会话密钥和本地存储的照片都在 /app/data 下；
+      # 与 ChronoFrame 的目录结构一致，升级镜像或从 ChronoFrame 迁移都不会丢数据。
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

@@ -1,0 +1,33 @@
+name: Memora
+tags:
+  - 相册
+  - 发布平台
+  - 自托管
+title: ChronoFrame 重构版轻量相册
+description: 由 ChronoFrame 硬分叉而来的自托管相册，改用 Go 后端，数据目录与 ChronoFrame 兼容
+additionalProperties:
+  key: memora
+  name: Memora
+  tags:
+    - WebSite
+    - Tool
+  shortDescZh: ChronoFrame 的 Go 重构版，轻量、自托管的相册程序
+  shortDescEn: A lightweight, self-hosted photo album rebuilt from ChronoFrame in Go.
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  website: https://github.com/LiuShen-Fork/Memora
+  github: https://github.com/LiuShen-Fork/Memora
+  document: https://github.com/LiuShen-Fork/Memora/tree/main/docs
+  description:
+    en: A self-hosted photo album hard-forked from ChronoFrame, rebuilt with a Go backend while keeping the data directory compatible.
+    zh: 从 ChronoFrame 硬分叉而来的自托管相册，改用 Go 后端，数据目录与 ChronoFrame 兼容。
+    zh-Hant: 從 ChronoFrame 硬分叉而來的自託管相冊，改用 Go 後端，資料目錄與 ChronoFrame 相容。
+    ja: ChronoFrame からハードフォークしたセルフホスト型フォトアルバム。Go バックエンドで再実装し、データディレクトリは ChronoFrame と互換です。
+    ms: Album foto kendiri yang difork keras daripada ChronoFrame, dibina semula dengan backend Go dan direktori data yang serasi.
+    pt-br: Álbum de fotos auto-hospedado, bifurcado do ChronoFrame e reimplementado com backend em Go, com diretório de dados compatível.
+    ru: Самостоятельно размещаемый фотоальбом, ответвлённый от ChronoFrame и переписанный на Go с совместимым каталогом данных.
+    ko: ChronoFrame에서 하드 포크한 셀프 호스팅 사진 앨범으로, Go 백엔드로 다시 구현했으며 데이터 디렉터리가 호환됩니다.
+  architectures:
+    - amd64
+    - arm64
