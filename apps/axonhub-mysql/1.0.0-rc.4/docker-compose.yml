@@ -1,0 +1,29 @@
+services:
+  axonhub_mysql:
+    image: looplj/axonhub:v1.0.0-rc.4
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    environment:
+      # 1.0 起配置文件完全可选：找不到 config.yml 时直接使用内置默认值 + AXONHUB_* 环境变量，
+      # 所有配置项都能用 AXONHUB_<大写路径_下划线> 覆盖（如 AXONHUB_CACHE_MODE、AXONHUB_LOG_LEVEL）。
+      AXONHUB_DB_DIALECT: mysql
+      AXONHUB_DB_DSN: ${PANEL_DB_USER}:${PANEL_DB_USER_PASSWORD}@tcp(${PANEL_DB_HOST}:${PANEL_DB_PORT})/${PANEL_DB_NAME}?charset=utf8mb4&parseTime=True&loc=Local
+    volumes:
+      # 数据库走外部 MySQL，这里只留给备份/日志等碎片文件
+      - ./data/data:/data
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:8090"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      createdBy: "Apps"
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

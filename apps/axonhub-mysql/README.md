@@ -58,11 +58,35 @@ AxonHub 主要用于为开发者和企业提供统一的 AI 服务接入层，�
 
 ------
 
+## ⚙️ 配置说明
+
+自 1.0 起，**配置文件是可选的**：镜像内不带 `config.yml`，启动时找不到就使用内置默认值 + `AXONHUB_*` 环境变量，因此本应用不再预置 `config.yml`。
+
+- 所有配置项都能用环境变量覆盖，规则是配置路径加 `AXONHUB_` 前缀、`.` 换成 `_`，例如 `cache.mode` → `AXONHUB_CACHE_MODE`、`log.level` → `AXONHUB_LOG_LEVEL`、`server.public_url` → `AXONHUB_SERVER_PUBLIC_URL`。
+- 数据库连接已由安装表单注入（`AXONHUB_DB_DIALECT` / `AXONHUB_DB_DSN`），无需额外填写。
+- 需要文件式配置（如 Redis 缓存、Prometheus 指标、CORS）时，自行在编排里加挂载并放一份配置：
+
+  ```yaml
+  volumes:
+    - ./data/data:/data
+    - ./data/config.yml:/app/config.yml:ro
+  ```
+
+  配置格式参考上游 [`config.example.yml`](https://github.com/looplj/axonhub/blob/main/config.example.yml)，注意这份文件不会随应用升级自动更新，升级后请自行比对新增项。
+- 健康检查走 `GET /health`，容器状态异常时先看日志里是否有 `invalid log level` 之类的配置错误。
+
+## 💾 数据与端口
+
+- 数据存在外部 MySQL（安装表单里选择/填写的实例与库名），`./data/data` 只用于零散文件。
+- 容器内端口 `8090`，通过 `GET /health` 可做健康检查。
+
 ## 📦 部署说明
 
 1. 通过 1Panel 安装应用
 2. 配置 MySQL 连接参数
 3. 启动容器后平台会自动初始化
 4. 打开浏览器访问界面完成初始设置
+
+> 当前镜像版本为 `1.0.0-rc.4`。上游迭代很快，长期只发布 rc / beta 预发布版，这些就是正常可用版本，本仓库会持续跟踪。
 
 支持 AMD64 / ARM64 架构。

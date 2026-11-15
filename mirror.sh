@@ -73,17 +73,18 @@ replace_image() {
 # --- 如果镜像配置文件存在，才执行镜像替换 ---
 if [[ -f "$MIRROR_CONFIG" ]]; then
     # --- 遍历每个源 ---
+    # 每个源可以对应多个清单变量（空格分隔），指向的清单都会处理
     declare -A SOURCES
     SOURCES=(
         ["GHCR"]="GHCR_ENABLE GHCR_MIRROR ghcr.io GHCR_IO_LIST"
         ["QUAY"]="QUAY_ENABLE QUAY_MIRROR quay.io QUAY_IO_LIST"
         ["GCR"]="GCR_ENABLE GCR_MIRROR gcr.io GCR_IO_LIST"
-        ["K8S_GCR"]="K8S_GCR_ENABLE K8S_GCR_MIRROR k8s.gcr.io K8S_GCR_IO_ARRAY"
-        ["K8S_REG"]="K8S_REG_ENABLE K8S_REG_MIRROR registry.k8s.io NON_DOCKER_IO_LIST"
+        ["K8S_GCR"]="K8S_GCR_ENABLE K8S_GCR_MIRROR k8s.gcr.io K8S_GCR_IO_LIST"
+        ["K8S_REG"]="K8S_REG_ENABLE K8S_REG_MIRROR registry.k8s.io REGISTRY_K8S_IO_LIST NON_DOCKER_IO_LIST"
     )
 
     for key in "${!SOURCES[@]}"; do
-        read -r ENABLE_VAR MIRROR_VAR SRC_REG ARRAY_NAME <<<"${SOURCES[$key]}"
+        read -r ENABLE_VAR MIRROR_VAR SRC_REG ARRAY_NAMES <<<"${SOURCES[$key]}"
 
         ENABLE=${!ENABLE_VAR}
         MIRROR=${!MIRROR_VAR}
@@ -93,23 +94,29 @@ if [[ -f "$MIRROR_CONFIG" ]]; then
             continue
         fi
 
-        # 获取应用数组（以逗号分隔）
-        APP_LIST=${!ARRAY_NAME}
-        IFS=',' read -r -a APPS <<< "$APP_LIST"
+        for ARRAY_NAME in $ARRAY_NAMES; do
+            APP_LIST=${!ARRAY_NAME:-}
+            IFS=',' read -r -a APPS <<< "$APP_LIST"
 
-        for app in "${APPS[@]}"; do
-            app_dir="./apps/$app"
-            
-            # 【修改处】检查应用目录是否存在，不存在则跳过
-            if [ ! -d "$app_dir" ]; then
-                echo "应用目录不存在，跳过: $app_dir"
-                continue
-            fi
-            
-            # 查找 docker-compose 文件
-            files=$(find "$app_dir" -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" \))
-            for file in $files; do
-                replace_image "$file" "$SRC_REG" "$MIRROR"
+            for app in "${APPS[@]}"; do
+                # 清单为空或有多余逗号时会解析出空名字，跳过以免误扫整个 apps 目录
+                if [ -z "$app" ]; then
+                    continue
+                fi
+
+                app_dir="./apps/$app"
+
+                # 【修改处】检查应用目录是否存在，不存在则跳过
+                if [ ! -d "$app_dir" ]; then
+                    echo "应用目录不存在，跳过: $app_dir"
+                    continue
+                fi
+
+                # 查找 docker-compose 文件
+                files=$(find "$app_dir" -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" \))
+                for file in $files; do
+                    replace_image "$file" "$SRC_REG" "$MIRROR"
+                done
             done
         done
     done

@@ -6,26 +6,20 @@
   "prCreation": "immediate",
   "prConcurrentLimit": 1,
   "branchConcurrentLimit": 1,
-  "hostRules": [
-    {
-      "hostType": "docker",
-      "matchHost": "codeberg.org",
-      "registryUrls": [
-        "https://codeberg.org"
-      ]
-    },
-    {
-      "hostType": "docker",
-      "matchHost": "code.forgejo.org",
-      "registryUrls": [
-        "https://code.forgejo.org"
-      ]
-    }
-  ],
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
       "enabled": false
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["codeberg.org/**"],
+      "registryUrls": ["https://codeberg.org"]
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["code.forgejo.org/**"],
+      "registryUrls": ["https://code.forgejo.org"]
     },
     {
       "matchDatasources": ["docker"],
@@ -60,6 +54,15 @@
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+-slim$/",
       "ignoreUnstable": false,
       "versioning": "semver"
+    },
+    {
+      "description": "axonhub 长期只发 rc/beta，按正常发布跟踪。关闭 respectLatest 让“最高版本即最新”，再用 allowedVersions 排掉 rc2 这类不带点、semver 会误判为高于 rc.4 的旧 tag",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["looplj/axonhub"],
+      "versioning": "semver",
+      "ignoreUnstable": false,
+      "respectLatest": false,
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+(?:-(?:rc\\.\\d+|beta\\d+))?$/"
     }
   ]
 }
