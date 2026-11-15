@@ -418,7 +418,7 @@ REGISTRY_K8S_IO_LIST=""
 # docker.io 之外的所有应用列表
 NON_DOCKER_IO_LIST=""
 
-# 需要从以上清单中移除的应用名（逗号分隔，由 adapters/prune-app-lists.sh 处理）
+# 需要清理掉的应用名（逗号分隔，由 adapters/prune-apps.sh 处理）
 PRUNE_APPS="axonhub-lite-mysql"
 ```
 
@@ -429,7 +429,8 @@ PRUNE_APPS="axonhub-lite-mysql"
 - `mirror.sh` 开头会检查 `.env` 是否存在，缺失时直接 `exit 1`，因此不要删除该文件。
 - 如果 `.env` 中列出的应用目录不存在，脚本会打印「应用目录不存在，跳过」并继续执行，不会中断。
 - 新增应用的 PR 中，如果该应用需要镜像替换，必须同时修改 `.env` 和 `mirror-config.env` 说明。
-- `PRUNE_APPS` 是「要清理掉哪些应用名」的白名单，`adapters/prune-app-lists.sh` 只按它删条目，**不会**因为 `apps/` 下没有对应目录就自动删（清单里可能有来自其他应用商店的应用）。想移除某个已下线应用，把它写进 `PRUNE_APPS`（或直接手动删掉条目）；清理完成后名字留在 `PRUNE_APPS` 里也无害。
+- `PRUNE_APPS` 是「要清理掉哪些应用名」的白名单，`adapters/prune-apps.sh` 只按它清理，**不会**因为 `apps/` 下没有对应目录就自动删（清单里可能有来自其他应用商店的应用）。想移除某个已下线应用，把它写进 `PRUNE_APPS`（或直接手动删掉条目）；清理完成后名字留在 `PRUNE_APPS` 里也无害。
+- `PRUNE_APPS` 中对应用户端 1Panel 本地应用目录（默认 `/opt/1panel/resource/apps/local/<应用名>`）里的已部署副本也会被删除：同步脚本只复制、不删除，应用下线后目录会一直留在服务器上。删除有保护（只删 `PRUNE_APPS` 里的名字、要求目标含 `data.yml`、应用仍在 `apps/` 里时跳过、推导出的上级目录必须叫 `local`），且不影响已安装实例。
 
 变量与源的对应关系（`mirror.sh` 中的 `SOURCES`）：一个源可以对应多个清单变量，逐个处理。`k8s.gcr.io` → `K8S_GCR_IO_LIST`；`registry.k8s.io` → `REGISTRY_K8S_IO_LIST` 与 `NON_DOCKER_IO_LIST`。清单为空或含空条目时会被跳过，不会误扫整个 `apps/` 目录。
 

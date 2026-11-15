@@ -77,6 +77,8 @@ done
 echo "✅ Sync completed."
 ```
 
+> 💡 上面三个脚本都只负责**复制**应用，上游已下线（或从未出现在仓库里）的应用不会自动从 1Panel 本地应用目录消失。仓库根目录 `.env` 的 `PRUNE_APPS` 就是用来清理它们的：执行同步脚本时 `adapters/prune-apps.sh` 会把这些名字从应用清单里移除，并删除 `/opt/1panel/resource/apps/local/<应用名>` 这份已部署副本（不会卸载已安装实例）。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
 🌍 国外环境请替换为 GitHub 仓库：
 
 ```bash

@@ -13,9 +13,9 @@
 | 脚本 | 作用 |
 | --- | --- |
 | `hello-world.sh` | 示例脚本 |
-| `prune-app-lists.sh` | 按 `.env` 里的 `PRUNE_APPS`（逗号分隔的应用名），把这些名字从所有 `*_LIST` / `*_ARRAY` 应用清单里移除；幂等、保留原换行风格，可单独执行 `bash adapters/prune-app-lists.sh`（支持 `ENV_FILE=` / `PRUNE_APPS=` 覆盖以便测试） |
+| `prune-apps.sh` | 按 `.env` 里的 `PRUNE_APPS`（逗号分隔的应用名），把这些名字从所有 `*_LIST` / `*_ARRAY` 应用清单里移除，并删除 1Panel 本地应用目录里已经拷贝过去的同名应用；幂等、保留原换行风格，可单独执行 `bash adapters/prune-apps.sh`（支持 `ENV_FILE=` / `PRUNE_APPS=` / `LOCAL_APPS_DIR=` 覆盖以便测试） |
 
-### prune-app-lists.sh 的清理范围
+### prune-apps.sh 的清理范围
 
 只删 `PRUNE_APPS` 明确列出的名字，**不**按 `apps/` 目录是否存在来推断：
 
@@ -24,3 +24,16 @@
 - `PRUNE_APPS` 本身不以 `_LIST` 结尾，不会被自己的规则清空
 
 清掉某个应用后，可以把名字从 `PRUNE_APPS` 里删掉；保留也无害（后续不会再命中）。
+
+#### 为什么要删除已部署副本
+
+同步脚本（README 的同步更新脚本、`scripts/sync-and-refresh.sh`）只会把 `apps/` 复制到 1Panel 本地应用目录，**不会**删除上游已经下线（或从未出现在仓库里）的应用。只清 `.env` 清单的话，服务器上的目录会一直留着，而且克隆目录退出时就被删了，清单改动也随之消失。所以本脚本在清完清单后，还会删掉 `$LOCAL_APPS_DIR/<应用名>`（默认 `LOCAL_APPS_DIR` 是克隆目录的上一级）。
+
+删除有这些保护：
+
+- 只删 `PRUNE_APPS` 里写出的名字，其余目录一律不动
+- 目标必须是 1Panel 应用目录（含 `data.yml`）的普通目录，符号链接、文件一律跳过
+- 应用仍在 `apps/` 里时跳过（删了也会被复制回来）
+- 未显式传入 `LOCAL_APPS_DIR` 时，克隆目录的上级必须叫 `local`，避免在普通开发检出里误删兄弟目录
+
+删除只影响「应用商店列表」，不会卸载已安装实例。

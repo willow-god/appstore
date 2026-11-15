@@ -66,6 +66,8 @@ echo "📥 Cloning appstore repo..."
 git clone "$GIT_REPO" "$TMP_DIR"
 
 echo "🔄 Mirroring apps..."
+# 把本地应用目录传给 mirror.sh 里的 adapters，让 PRUNE_APPS 能清理已部署副本
+export LOCAL_APPS_DIR
 cd "$TMP_DIR"
 if [[ -f ./mirror.sh ]]; then
     chmod +x ./mirror.sh
