@@ -1,6 +1,6 @@
 services:
   memora:
-    image: ghcr.io/liushen-fork/memora:1.5.2
+    image: ghcr.io/liushen-fork/memora:1.5.3
     container_name: ${CONTAINER_NAME}
     restart: always
     labels:
