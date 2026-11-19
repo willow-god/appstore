@@ -70,7 +70,7 @@ bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
 
 ```text
 LOCAL_APPS_DIR = $PANEL_ROOT/resource/apps/local    # 1Panel 本地应用目录
-TMP_DIR        = $LOCAL_APPS_DIR/appstore-localApps # 临时克隆目录，退出时自动删除
+TMP_DIR        = $LOCAL_APPS_DIR/tmp-appstore      # 临时克隆目录，退出时自动删除
 PANEL_DB       = $PANEL_ROOT/db/agent.db            # 数据库，只读查询已安装版本
 ```
 
@@ -146,15 +146,17 @@ export GIT_REPO=https://github.com/willow-god/appstore
 export ONEPANEL_URL=https://panel.example.com:端口
 export ONEPANEL_APIKEY=你的APIKey
 
-# 脚本在仓库里，先克隆到固定目录；REPO_DIR 让 sync-apps.sh 复用这份克隆
-WORK_DIR=/opt/appstore
-rm -rf "$WORK_DIR"
-git clone --depth 1 "$GIT_REPO" "$WORK_DIR"
-export REPO_DIR="$WORK_DIR"
+# 脚本在仓库里，先克隆到临时目录；REPO_DIR 让 sync-apps.sh 复用这份克隆
+# 目录带 tmp- 前缀、和 1Panel 本地应用目录同级，跑完自动删除
+TMP_WORK_DIR="$PANEL_ROOT/resource/apps/local/tmp-appstore"
+trap 'rm -rf "$TMP_WORK_DIR"' EXIT
+rm -rf "$TMP_WORK_DIR"
+git clone --depth 1 "$GIT_REPO" "$TMP_WORK_DIR" || exit 1
+export REPO_DIR="$TMP_WORK_DIR"
 
-bash "$WORK_DIR/scripts/sync-apps.sh"
-bash "$WORK_DIR/scripts/mirror.sh"
-bash "$WORK_DIR/scripts/refresh.sh"
+bash "$TMP_WORK_DIR/scripts/sync-apps.sh" || exit 1
+bash "$TMP_WORK_DIR/scripts/mirror.sh" || exit 1
+bash "$TMP_WORK_DIR/scripts/refresh.sh"
 ```
 
 三个脚本各自独立：想跳过刷新就不写最后一行，只想改镜像就单独跑 `mirror.sh`。

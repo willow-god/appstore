@@ -667,7 +667,7 @@ git push
 
 ```text
 LOCAL_APPS_DIR = $PANEL_ROOT/resource/apps/local
-TMP_DIR        = $LOCAL_APPS_DIR/appstore-localApps
+TMP_DIR        = $LOCAL_APPS_DIR/tmp-appstore
 ```
 
 必填变量缺失时，`check-env.sh` 会打印缺少的变量名并以非零状态码退出，调用脚本不会继续执行。
@@ -759,22 +759,24 @@ export GIT_REPO=https://github.com/willow-god/appstore
 export ONEPANEL_URL=https://panel.example.com
 export ONEPANEL_APIKEY=xxxx
 
-# 脚本在仓库里，先克隆到固定目录；REPO_DIR 让 sync-apps.sh 复用这份克隆
-WORK_DIR=/opt/appstore
-rm -rf "$WORK_DIR"
-git clone --depth 1 "$GIT_REPO" "$WORK_DIR"
-export REPO_DIR="$WORK_DIR"
+# 脚本在仓库里，先克隆到临时目录；REPO_DIR 让 sync-apps.sh 复用这份克隆
+# 目录带 tmp- 前缀、和 1Panel 本地应用目录同级，跑完（含失败）自动删除
+TMP_WORK_DIR="$PANEL_ROOT/resource/apps/local/tmp-appstore"
+trap 'rm -rf "$TMP_WORK_DIR"' EXIT
+rm -rf "$TMP_WORK_DIR"
+git clone --depth 1 "$GIT_REPO" "$TMP_WORK_DIR" || exit 1
+export REPO_DIR="$TMP_WORK_DIR"
 
-bash "$WORK_DIR/scripts/sync-apps.sh"
-bash "$WORK_DIR/scripts/mirror.sh"
-bash "$WORK_DIR/scripts/refresh.sh"
+bash "$TMP_WORK_DIR/scripts/sync-apps.sh" || exit 1
+bash "$TMP_WORK_DIR/scripts/mirror.sh" || exit 1
+bash "$TMP_WORK_DIR/scripts/refresh.sh"
 ```
 
 也可以写成 crontab 一行（`crontab -e`）：
 
 ```bash
 # 每天凌晨 4 点同步、替换镜像并刷新
-0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash -c 'export WORK_DIR=/opt/appstore; rm -rf "$WORK_DIR" && git clone --depth 1 https://github.com/willow-god/appstore "$WORK_DIR" && export REPO_DIR="$WORK_DIR" && bash "$WORK_DIR/scripts/sync-apps.sh" && bash "$WORK_DIR/scripts/mirror.sh" && bash "$WORK_DIR/scripts/refresh.sh"' >> /var/log/appstore-sync.log 2>&1
+0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash -c 'set -e; TMP_WORK_DIR=/opt/1panel/resource/apps/local/tmp-appstore; trap "rm -rf \"$TMP_WORK_DIR\"" EXIT; rm -rf "$TMP_WORK_DIR"; git clone --depth 1 https://github.com/willow-god/appstore "$TMP_WORK_DIR"; export REPO_DIR="$TMP_WORK_DIR"; bash "$TMP_WORK_DIR/scripts/sync-apps.sh"; bash "$TMP_WORK_DIR/scripts/mirror.sh"; bash "$TMP_WORK_DIR/scripts/refresh.sh"' >> /var/log/appstore-sync.log 2>&1
 ```
 
 建议把日志文件加入轮转，避免长期运行占满磁盘。
