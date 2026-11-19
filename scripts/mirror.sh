@@ -28,9 +28,11 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=check-env.sh
 . "$SCRIPT_DIR/check-env.sh" mirror
+
+# 仓库目录由 check-env.sh 准备好（仓库内执行就是本仓库，仓库外执行会临时克隆）
+ROOT_DIR="$REPO_DIR"
 
 MIRROR_CONFIG="${MIRROR_CONFIG:-/opt/mirror-config.env}"
 

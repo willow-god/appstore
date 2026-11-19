@@ -637,14 +637,14 @@ git push
 
 ## 十二、同步脚本（`scripts/`）
 
-同步相关的全局脚本都在 `scripts/` 下，克隆仓库后直接执行，不需要再把脚本复制到服务器上改路径。
+同步相关的全局脚本都在 `scripts/` 下。脚本不依赖所在位置：放在仓库里执行就用这份仓库，单独拷到服务器任意目录执行会自动克隆最新仓库到 `TMP_DIR` 并用仓库里的脚本重新执行，所以定时任务里只写三个脚本的路径。
 
 | 脚本 | 作用 |
 | --- | --- |
-| `scripts/sync-apps.sh` | 克隆仓库，把应用复制到 1Panel 本地应用目录，并清理超量历史版本 |
+| `scripts/sync-apps.sh` | 准备仓库，把应用复制到 1Panel 本地应用目录，并清理超量历史版本 |
 | `scripts/refresh.sh` | 只调用 1Panel API 刷新本地应用商店列表 |
 | `scripts/mirror.sh` | 对已部署的应用目录执行 `adapters/` 适配脚本，并按 `.env` 完成镜像替换 |
-| `scripts/check-env.sh` | 被上面三个脚本 `source`：填默认值、推导目录、校验必填变量，变量不全时直接退出 |
+| `scripts/check-env.sh` | 被上面三个脚本 `source`：填默认值、推导目录、校验必填变量、准备仓库，变量不全时直接退出 |
 
 三个脚本各做一件事、互不调用，完整链路是 `sync-apps.sh && mirror.sh && refresh.sh`（镜像替换必须在复制之后，刷新只读不写）。
 
@@ -657,7 +657,6 @@ git push
 | `PANEL_ROOT` | 1Panel 安装根目录 | `/opt/1panel` |
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空为全部 | 空（全部） |
-| `REPO_DIR` | 已克隆好的仓库目录，设置后 `sync-apps.sh` 不再重复克隆 | 空（现场克隆） |
 | `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
 | `ONEPANEL_URL` | 面板地址，可省略协议（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_APIKEY` | 面板 API Key（仅 `refresh.sh`） | 必填 |
@@ -667,49 +666,38 @@ git push
 
 ```text
 LOCAL_APPS_DIR = $PANEL_ROOT/resource/apps/local
-TMP_DIR        = $LOCAL_APPS_DIR/tmp-appstore
+TMP_DIR        = $LOCAL_APPS_DIR/tmp-appstore   # 脚本不在仓库里时的临时克隆目录
+REPO_DIR       = 脚本所在仓库，或临时克隆目录   # 由 check-env.sh 自动确定
 ```
 
 必填变量缺失时，`check-env.sh` 会打印缺少的变量名并以非零状态码退出，调用脚本不会继续执行。
 
 ### 12.2 使用方法
 
+脚本不依赖所在位置：放在仓库里执行就用这份仓库，单独拷到服务器任意目录执行会自动克隆最新仓库到 `TMP_DIR`（退出时删除）并用仓库里的脚本重新执行。定时任务里只写脚本路径：
+
 ```bash
-# 1Panel 安装根目录；LOCAL_APPS_DIR、TMP_DIR 都由它推导
-export PANEL_ROOT=/opt/1panel
-
-# 应用仓库地址；国内环境换成 https://cnb.cool/Liiiu/appstore
-export GIT_REPO=https://github.com/willow-god/appstore
-
-# 只同步指定应用（apps/ 下的目录名，逗号或空格分隔）；不设置表示全部
+# 可选：只同步指定应用（apps/ 下的目录名，逗号或空格分隔）
 # export APPS="whoami,ech0"
 
-# 每个应用在本机保留的历史版本目录数，默认 10
+# 可选：每个应用在本机保留的历史版本目录数，默认 10
 # export KEEP_VERSIONS=10
-
 
 # 仅 refresh.sh 需要：面板地址与「设置 → 密钥」生成的 API Key
 # export ONEPANEL_URL=https://panel.example.com:端口
 # export ONEPANEL_APIKEY=你的APIKey
 
-# 仅 refresh.sh 需要：多节点环境操作从节点时填节点名，留空为主节点
-# export ONEPANEL_NODE=节点名
-
 # 1. 同步文件到 1Panel 本地应用目录
-bash scripts/sync-apps.sh
+bash /opt/appstore/scripts/sync-apps.sh
 
 # 2. 对已部署目录做镜像替换（每次同步后都要重跑）
-bash scripts/mirror.sh
+bash /opt/appstore/scripts/mirror.sh
 
 # 3. 调用 POST /api/v2/apps/sync/local 刷新应用商店（不需要可跳过）
-ONEPANEL_URL=https://panel.example.com:端口 ONEPANEL_APIKEY=你的APIKey \
-bash scripts/refresh.sh
-
-# 也可以一行串起来
-bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
+bash /opt/appstore/scripts/refresh.sh
 ```
 
-变量缺失时会由 `check-env.sh` 报错并退出，不需要先去读脚本源码确认默认值。
+`/opt/appstore/scripts` 换成实际放脚本的目录；直接 `git clone` 仓库的话就是 `<仓库>/scripts`。变量缺失时会由 `check-env.sh` 报错并退出，不需要先去读脚本源码确认默认值。
 
 ### 12.3 历史版本保留（重要）
 
@@ -730,9 +718,8 @@ bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
 
 `sync-apps.sh`（只负责落盘）：
 
-1. `check-env.sh` 填默认值、推导目录并校验变量。
-2. 克隆应用仓库到临时目录（`--depth 1`），退出时通过 `trap` 自动清理。
-3. 遍历应用，复制应用级文件，并按版本目录逐个覆盖；随后按两档规则清理：能只读查到 `app_installs` 时跳过已安装版本，否则仅保留最近 `KEEP_VERSIONS` 个。
+1. `check-env.sh` 填默认值、推导目录、校验变量，并准备好仓库：脚本在仓库里就用该仓库，脚本只是仓库外的一份拷贝时克隆到 `TMP_DIR` 并用仓库里的脚本重新执行（`trap` 负责退出时清理）。
+2. 遍历应用，复制应用级文件，并按版本目录逐个覆盖；随后按两档规则清理：能只读查到 `app_installs` 时跳过已安装版本，否则仅保留最近 `KEEP_VERSIONS` 个。
 
 `mirror.sh`（只负责镜像替换）：
 
@@ -747,36 +734,3 @@ bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
 - 时间戳与服务器时间偏差过大会导致鉴权失败，请确认服务器时间已同步。
 - `CurrentNode` 请求头表示操作哪个节点，留空时不发送该头，1Panel 默认将其视为主节点（内部标识为 `local`）。只有多节点环境操作从节点时才需要填写节点名称。
 - API Key 属于敏感信息，不要提交到仓库，建议通过环境变量或服务器的 root-only 文件传入。
-
-### 12.6 定时执行建议
-
-脚本在仓库里，所以任务要先把仓库克隆下来再调用，且不要依赖任务的工作目录：
-
-```bash
-#!/bin/bash
-export PANEL_ROOT=/opt/1panel
-export GIT_REPO=https://github.com/willow-god/appstore
-export ONEPANEL_URL=https://panel.example.com
-export ONEPANEL_APIKEY=xxxx
-
-# 脚本在仓库里，先克隆到临时目录；REPO_DIR 让 sync-apps.sh 复用这份克隆
-# 目录带 tmp- 前缀、和 1Panel 本地应用目录同级，跑完（含失败）自动删除
-TMP_WORK_DIR="$PANEL_ROOT/resource/apps/local/tmp-appstore"
-trap 'rm -rf "$TMP_WORK_DIR"' EXIT
-rm -rf "$TMP_WORK_DIR"
-git clone --depth 1 "$GIT_REPO" "$TMP_WORK_DIR" || exit 1
-export REPO_DIR="$TMP_WORK_DIR"
-
-bash "$TMP_WORK_DIR/scripts/sync-apps.sh" || exit 1
-bash "$TMP_WORK_DIR/scripts/mirror.sh" || exit 1
-bash "$TMP_WORK_DIR/scripts/refresh.sh"
-```
-
-也可以写成 crontab 一行（`crontab -e`）：
-
-```bash
-# 每天凌晨 4 点同步、替换镜像并刷新
-0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash -c 'set -e; TMP_WORK_DIR=/opt/1panel/resource/apps/local/tmp-appstore; trap "rm -rf \"$TMP_WORK_DIR\"" EXIT; rm -rf "$TMP_WORK_DIR"; git clone --depth 1 https://github.com/willow-god/appstore "$TMP_WORK_DIR"; export REPO_DIR="$TMP_WORK_DIR"; bash "$TMP_WORK_DIR/scripts/sync-apps.sh"; bash "$TMP_WORK_DIR/scripts/mirror.sh"; bash "$TMP_WORK_DIR/scripts/refresh.sh"' >> /var/log/appstore-sync.log 2>&1
-```
-
-建议把日志文件加入轮转，避免长期运行占满磁盘。

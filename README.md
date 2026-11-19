@@ -29,19 +29,21 @@
 
 ## 🔄 同步脚本
 
-同步逻辑都放在仓库的 `scripts/` 目录里，克隆下来直接执行即可，不需要再把脚本抄到服务器上改路径。
+同步逻辑都放在仓库的 `scripts/` 目录里。脚本不依赖所在位置：放在仓库里执行就用这份仓库，单独拷到服务器任意目录执行会自动克隆最新仓库到临时目录，用完删掉。所以定时任务里只需要写三个脚本的路径。
 
 | 脚本 | 作用 |
 | --- | --- |
-| `scripts/sync-apps.sh` | 克隆仓库，把应用复制到 1Panel 本地应用目录，并清理超量历史版本 |
+| `scripts/sync-apps.sh` | 准备仓库并把应用复制到 1Panel 本地应用目录，同时清理超量历史版本 |
 | `scripts/mirror.sh` | 对**已部署**的应用目录做镜像源替换，并执行 `adapters/` 下的适配脚本 |
 | `scripts/refresh.sh` | 只调用 1Panel API，刷新本地应用商店列表 |
-| `scripts/check-env.sh` | 校验环境变量并填默认值，被上面几个脚本 `source`，变量不全时不继续执行 |
+| `scripts/check-env.sh` | 校验环境变量、填默认值、准备仓库，被上面几个脚本 `source`，不单独执行 |
 
-三个脚本各做一件事，互不调用。完整链路按顺序串起来执行：
+三个脚本各做一件事，互不调用。定时任务按顺序写三行即可：
 
 ```bash
-bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
+bash /opt/appstore/scripts/sync-apps.sh
+bash /opt/appstore/scripts/mirror.sh
+bash /opt/appstore/scripts/refresh.sh
 ```
 
 镜像替换必须在 `sync-apps.sh` 之后（副本覆盖回未替换的版本，每次同步后都要重新替换）；`refresh.sh` 只刷新列表，不复制文件。
@@ -60,7 +62,6 @@ bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
 | `PANEL_ROOT` | 1Panel 安装根目录 | `/opt/1panel` |
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空表示全部 | 空（全部） |
-| `REPO_DIR` | 已克隆好的仓库目录，设置后 `sync-apps.sh` 不再重复克隆 | 空（现场克隆） |
 | `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
 | `ONEPANEL_URL` | 面板地址，可省略协议（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_APIKEY` | 面板「设置 - 密钥」生成的 API Key（仅 `refresh.sh`） | 必填 |
@@ -76,36 +77,25 @@ PANEL_DB       = $PANEL_ROOT/db/agent.db            # 数据库，只读查询�
 
 ### 1. 同步全部应用
 
+脚本放哪都行，定时任务里只写路径：
+
 ```bash
-# 1Panel 安装根目录；LOCAL_APPS_DIR、TMP_DIR 都由它推导，通常不用改
-export PANEL_ROOT=/opt/1panel
-
-# 应用仓库地址；国内环境换成镜像仓库 https://cnb.cool/Liiiu/appstore 即可
-export GIT_REPO=https://github.com/willow-god/appstore
-
-# 只同步指定应用（应用目录名，逗号或空格分隔）；不设置表示同步全部
-# export APPS="whoami,ech0"
-
-# 每个应用在本机保留的历史版本目录数，默认 10；见下文「历史版本保留」
-# export KEEP_VERSIONS=10
-
-bash scripts/sync-apps.sh
-bash scripts/mirror.sh
+bash /opt/appstore/scripts/sync-apps.sh
+bash /opt/appstore/scripts/mirror.sh
 ```
+
+第一行会自己准备好仓库（脚本在仓库外时自动克隆最新版本并用其中的脚本重新执行）；`/opt/appstore/scripts` 换成你实际放脚本的目录。这两行就是定时任务的全部内容。
 
 同步完成后到面板「应用商店 → 本地应用」点「更新应用列表」；想让脚本自己刷新见第 3 种用法。
 
 ### 2. 同步单独应用
 
 ```bash
-export PANEL_ROOT=/opt/1panel
-export GIT_REPO=https://github.com/willow-god/appstore
-
 # 只同步这几个应用；名字是 apps/ 下的目录名，不是商店里显示的名称
 export APPS="whoami,ech0,moments"
 
-bash scripts/sync-apps.sh
-bash scripts/mirror.sh
+bash /opt/appstore/scripts/sync-apps.sh
+bash /opt/appstore/scripts/mirror.sh
 ```
 
 ### 3. 同步后自动刷新应用商店（API）
@@ -113,9 +103,6 @@ bash scripts/mirror.sh
 不想手动点「更新应用列表」时，在同步和镜像替换之后执行 `refresh.sh`，它只调用 `POST /api/v2/apps/sync/local`：
 
 ```bash
-export PANEL_ROOT=/opt/1panel
-export GIT_REPO=https://github.com/willow-god/appstore
-
 # 面板地址，可省略 http(s)://，但端口要写全
 export ONEPANEL_URL=https://panel.example.com:端口
 
@@ -128,36 +115,12 @@ export ONEPANEL_APIKEY=你的APIKey
 # 同样可以只同步部分应用
 # export APPS="whoami,ech0"
 
-bash scripts/sync-apps.sh
-bash scripts/mirror.sh
-bash scripts/refresh.sh
+bash /opt/appstore/scripts/sync-apps.sh
+bash /opt/appstore/scripts/mirror.sh
+bash /opt/appstore/scripts/refresh.sh
 ```
 
 鉴权方式：`Token = md5("1panel" + APIKey + Timestamp)`，请求携带 `1Panel-Timestamp`、`1Panel-Token` 请求头。请确保服务器时间准确，并把非零退出码接入告警。
-
-### 4. 定时任务
-
-脚本本身就在仓库里，所以定时任务要**先克隆仓库**，再用绝对路径调用脚本（任务的工作目录不一定是仓库）：
-
-```bash
-#!/bin/bash
-export PANEL_ROOT=/opt/1panel
-export GIT_REPO=https://github.com/willow-god/appstore
-export ONEPANEL_URL=https://panel.example.com:端口
-export ONEPANEL_APIKEY=你的APIKey
-
-# 脚本在仓库里，先克隆到临时目录；REPO_DIR 让 sync-apps.sh 复用这份克隆
-# 目录带 tmp- 前缀、和 1Panel 本地应用目录同级，跑完自动删除
-TMP_WORK_DIR="$PANEL_ROOT/resource/apps/local/tmp-appstore"
-trap 'rm -rf "$TMP_WORK_DIR"' EXIT
-rm -rf "$TMP_WORK_DIR"
-git clone --depth 1 "$GIT_REPO" "$TMP_WORK_DIR" || exit 1
-export REPO_DIR="$TMP_WORK_DIR"
-
-bash "$TMP_WORK_DIR/scripts/sync-apps.sh" || exit 1
-bash "$TMP_WORK_DIR/scripts/mirror.sh" || exit 1
-bash "$TMP_WORK_DIR/scripts/refresh.sh"
-```
 
 三个脚本各自独立：想跳过刷新就不写最后一行，只想改镜像就单独跑 `mirror.sh`。
 
