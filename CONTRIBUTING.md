@@ -657,6 +657,7 @@ git push
 | `PANEL_ROOT` | 1Panel 安装根目录 | `/opt/1panel` |
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空为全部 | 空（全部） |
+| `REPO_DIR` | 已克隆好的仓库目录，设置后 `sync-apps.sh` 不再重复克隆 | 空（现场克隆） |
 | `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
 | `ONEPANEL_URL` | 面板地址，可省略协议（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_APIKEY` | 面板 API Key（仅 `refresh.sh`） | 必填 |
@@ -749,9 +750,31 @@ bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
 
 ### 12.6 定时执行建议
 
+脚本在仓库里，所以任务要先把仓库克隆下来再调用，且不要依赖任务的工作目录：
+
 ```bash
-# 每天凌晨 4 点同步、替换镜像并刷新
-0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash -c '/opt/appstore/scripts/sync-apps.sh && /opt/appstore/scripts/mirror.sh && /opt/appstore/scripts/refresh.sh' >> /var/log/appstore-sync.log 2>&1
+#!/bin/bash
+export PANEL_ROOT=/opt/1panel
+export GIT_REPO=https://github.com/willow-god/appstore
+export ONEPANEL_URL=https://panel.example.com
+export ONEPANEL_APIKEY=xxxx
+
+# 脚本在仓库里，先克隆到固定目录；REPO_DIR 让 sync-apps.sh 复用这份克隆
+WORK_DIR=/opt/appstore
+rm -rf "$WORK_DIR"
+git clone --depth 1 "$GIT_REPO" "$WORK_DIR"
+export REPO_DIR="$WORK_DIR"
+
+bash "$WORK_DIR/scripts/sync-apps.sh"
+bash "$WORK_DIR/scripts/mirror.sh"
+bash "$WORK_DIR/scripts/refresh.sh"
 ```
 
-`/opt/appstore` 为服务器上克隆的仓库目录。建议同时把日志文件加入轮转，避免长期运行占满磁盘。
+也可以写成 crontab 一行（`crontab -e`）：
+
+```bash
+# 每天凌晨 4 点同步、替换镜像并刷新
+0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash -c 'export WORK_DIR=/opt/appstore; rm -rf "$WORK_DIR" && git clone --depth 1 https://github.com/willow-god/appstore "$WORK_DIR" && export REPO_DIR="$WORK_DIR" && bash "$WORK_DIR/scripts/sync-apps.sh" && bash "$WORK_DIR/scripts/mirror.sh" && bash "$WORK_DIR/scripts/refresh.sh"' >> /var/log/appstore-sync.log 2>&1
+```
+
+建议把日志文件加入轮转，避免长期运行占满磁盘。

@@ -60,6 +60,7 @@ bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
 | `PANEL_ROOT` | 1Panel 安装根目录 | `/opt/1panel` |
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空表示全部 | 空（全部） |
+| `REPO_DIR` | 已克隆好的仓库目录，设置后 `sync-apps.sh` 不再重复克隆 | 空（现场克隆） |
 | `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
 | `ONEPANEL_URL` | 面板地址，可省略协议（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_APIKEY` | 面板「设置 - 密钥」生成的 API Key（仅 `refresh.sh`） | 必填 |
@@ -133,6 +134,30 @@ bash scripts/refresh.sh
 ```
 
 鉴权方式：`Token = md5("1panel" + APIKey + Timestamp)`，请求携带 `1Panel-Timestamp`、`1Panel-Token` 请求头。请确保服务器时间准确，并把非零退出码接入告警。
+
+### 4. 定时任务
+
+脚本本身就在仓库里，所以定时任务要**先克隆仓库**，再用绝对路径调用脚本（任务的工作目录不一定是仓库）：
+
+```bash
+#!/bin/bash
+export PANEL_ROOT=/opt/1panel
+export GIT_REPO=https://github.com/willow-god/appstore
+export ONEPANEL_URL=https://panel.example.com:端口
+export ONEPANEL_APIKEY=你的APIKey
+
+# 脚本在仓库里，先克隆到固定目录；REPO_DIR 让 sync-apps.sh 复用这份克隆
+WORK_DIR=/opt/appstore
+rm -rf "$WORK_DIR"
+git clone --depth 1 "$GIT_REPO" "$WORK_DIR"
+export REPO_DIR="$WORK_DIR"
+
+bash "$WORK_DIR/scripts/sync-apps.sh"
+bash "$WORK_DIR/scripts/mirror.sh"
+bash "$WORK_DIR/scripts/refresh.sh"
+```
+
+三个脚本各自独立：想跳过刷新就不写最后一行，只想改镜像就单独跑 `mirror.sh`。
 
 ### 历史版本保留
 

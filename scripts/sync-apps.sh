@@ -15,6 +15,8 @@
 #   GIT_REPO       应用仓库地址，默认 https://github.com/willow-god/appstore
 #   APPS           要同步的应用（逗号或空格分隔），留空表示全部
 #   KEEP_VERSIONS  每个应用保留的历史版本目录数量，默认 10
+#   REPO_DIR       已克隆好的仓库目录；设置后不再重复克隆（定时任务外层
+#                  已经 clone 过时用）
 #
 # 版本目录策略：仓库里存在的版本每次覆盖更新，仓库里已经没有的旧版本
 # 继续保留（最多 KEEP_VERSIONS 个）。1Panel 本地应用同步会删除本地已不
@@ -41,18 +43,31 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# ---------- 1. 克隆仓库 ----------
-echo "📥 Cloning appstore repo..."
-rm -rf -- "$TMP_DIR"
-mkdir -p "$(dirname "$TMP_DIR")"
-git clone --depth 1 "$GIT_REPO" "$TMP_DIR"
+# ---------- 1. 准备仓库内容 ----------
+# REPO_DIR 指向已经克隆好的仓库时直接用，不再重复克隆（定时任务外层
+# 已经 clone 过一次的情况）。否则现场克隆到 TMP_DIR，退出时删除。
+if [ -n "${REPO_DIR:-}" ]; then
+    if [ ! -d "$REPO_DIR/apps" ]; then
+        echo "❌ REPO_DIR 不是应用仓库（缺少 apps/ 目录）: $REPO_DIR"
+        exit 1
+    fi
+    SRC_DIR="$(cd "$REPO_DIR" && pwd)"
+    trap - EXIT
+    echo "📂 使用已有仓库目录: $SRC_DIR"
+else
+    echo "📥 Cloning appstore repo..."
+    rm -rf -- "$TMP_DIR"
+    mkdir -p "$(dirname "$TMP_DIR")"
+    git clone --depth 1 "$GIT_REPO" "$TMP_DIR"
+    SRC_DIR="$TMP_DIR"
+fi
 
 # ---------- 2. 应用列表 ----------
 app_list=()
 if [ -n "${APPS:-}" ]; then
     IFS=', ' read -r -a app_list <<<"$APPS"
 else
-    for app_path in "$TMP_DIR/apps/"*/; do
+    for app_path in "$SRC_DIR/apps/"*/; do
         [ -d "$app_path" ] && app_list+=("$(basename "$app_path")")
     done
 fi
@@ -199,7 +214,7 @@ prune_versions() {
 
 sync_app() {
     local app_name="$1"
-    local src="$TMP_DIR/apps/$app_name"
+    local src="$SRC_DIR/apps/$app_name"
     local dst="$LOCAL_APPS_DIR/$app_name"
     local version_dir version
 
