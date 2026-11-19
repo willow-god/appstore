@@ -5,7 +5,7 @@
 - [清羽飞扬：第三方 1Panel 应用商店不完全指北](https://blog.liushen.fun/posts/470abaf8/)
 - [1Panel 官方：How to submit your own application](https://github.com/1Panel-dev/appstore/wiki/How-to-submit-your-own-application)
 
-官方文档描述的是官方 `appstore` 仓库。本仓库是基于同一应用格式维护的第三方仓库，并额外使用了 `mirror.sh`、Renovate 和 GitHub Actions 处理镜像替换与版本目录更新。因此提交时应以本文和仓库现有应用为准。
+官方文档描述的是官方 `appstore` 仓库。本仓库是基于同一应用格式维护的第三方仓库，并额外使用了 `scripts/mirror.sh`、Renovate 和 GitHub Actions 处理镜像替换与版本目录更新。因此提交时应以本文和仓库现有应用为准。
 
 ## 一、应用目录结构
 
@@ -103,7 +103,7 @@ image: ${APP_IMAGE:-ghcr.io/example/example:v0.4.20}
 
 后一种写法虽然是 Docker Compose 支持的变量默认值语法，但不适合本仓库，原因如下：
 
-- 本仓库的 `mirror.sh` 通过匹配 `ghcr.io/`、`quay.io/` 等字面量替换镜像地址。使用变量表达式后，脚本无法识别原始镜像仓库。
+- 本仓库的 `scripts/mirror.sh` 通过匹配 `ghcr.io/`、`quay.io/` 等字面量替换镜像地址。使用变量表达式后，脚本无法识别原始镜像仓库。
 - Renovate 需要从 `image:` 行解析镜像名和版本号。变量表达式会使镜像依赖无法稳定识别。
 - `.github/workflows/renovate-app-version.yml` 会读取 `image:` 行的冒号后内容，并据此重命名版本目录。使用变量表达式时，解析结果可能是变量文本而不是实际版本。
 - 版本级 `data.yml` 中声明的 `envKey` 必须在 Compose 中实际使用。没有实际用途的镜像表单字段会造成配置项和部署行为不一致。
@@ -114,7 +114,7 @@ image: ${APP_IMAGE:-ghcr.io/example/example:v0.4.20}
 image: ghcr.io/volcengine/openviking:v0.4.20
 ```
 
-GHCR、Quay 等镜像的加速替换由仓库根目录的 `mirror.sh` 和服务器上的 `/opt/mirror-config.env` 统一完成，不通过应用安装表单传入镜像地址。
+GHCR、Quay 等镜像的加速替换由仓库里的 `scripts/mirror.sh` 和服务器上的 `/opt/mirror-config.env` 统一完成，不通过应用安装表单传入镜像地址。
 
 ## 三、根目录 `data.yml`
 
@@ -386,7 +386,7 @@ networks:
 
 ## 七、镜像加速与 `.env` 配置
 
-`mirror.sh` 的镜像替换依赖两个文件：
+`scripts/mirror.sh` 的镜像替换依赖两个文件：
 
 | 文件 | 位置 | 作用 | 是否提交 |
 | --- | --- | --- | --- |
@@ -395,13 +395,13 @@ networks:
 
 ### 7.1 根目录 `.env` 的作用
 
-根目录 `.env` **不是给应用安装使用的**，而是 `mirror.sh` 的「应用清单」。脚本会重新 `source` 该文件，然后按镜像源分组遍历应用列表。只有出现在对应列表里的应用，其版本目录下的 `docker-compose.yml` 才会执行该镜像源的替换。
+根目录 `.env` **不是给应用安装使用的**，而是 `scripts/mirror.sh` 的「应用清单」。脚本会重新 `source` 该文件，然后按镜像源分组遍历应用列表。只有出现在对应列表里的应用，其版本目录下的 `docker-compose.yml` 才会执行该镜像源的替换。
 
 本仓库当前内容示例：
 
 ```ini
 # ghcr.io 源的应用列表（逗号分隔）
-GHCR_IO_LIST="moontv,umami-mysql,umami-pgsql,hubproxy,tinyauth,termix,chronoframe,memora,openviking,hindsight,qingyu-pansou"
+GHCR_IO_LIST="moontv,umami-mysql,umami-pgsql,hubproxy,tinyauth,termix,chronoframe,memora,openviking,hindsight,qingyu-pansou,paseo-relay"
 
 # quay.io 源的应用列表
 QUAY_IO_LIST=""
@@ -425,14 +425,14 @@ PRUNE_APPS="axonhub-lite-mysql"
 使用规则：
 
 - 变量值填写**应用目录名**（app-key），使用英文逗号分隔，不要添加空格。
-- 应用使用 `ghcr.io` 镜像时，必须把它的 app-key 加入 `GHCR_IO_LIST`，否则 `mirror.sh` 不会替换该应用。
-- `mirror.sh` 开头会检查 `.env` 是否存在，缺失时直接 `exit 1`，因此不要删除该文件。
+- 应用使用 `ghcr.io` 镜像时，必须把它的 app-key 加入 `GHCR_IO_LIST`，否则 `scripts/mirror.sh` 不会替换该应用。
+- `scripts/mirror.sh` 开头会检查 `.env` 是否存在，缺失时直接 `exit 1`，因此不要删除该文件。
 - 如果 `.env` 中列出的应用目录不存在，脚本会打印「应用目录不存在，跳过」并继续执行，不会中断。
 - 新增应用的 PR 中，如果该应用需要镜像替换，必须同时修改 `.env` 和 `mirror-config.env` 说明。
 - `PRUNE_APPS` 是「要清理掉哪些应用名」的白名单，`adapters/prune-apps.sh` 只按它清理，**不会**因为 `apps/` 下没有对应目录就自动删（清单里可能有来自其他应用商店的应用）。想移除某个已下线应用，把它写进 `PRUNE_APPS`（或直接手动删掉条目）；清理完成后名字留在 `PRUNE_APPS` 里也无害。
-- `PRUNE_APPS` 中对应用户端 1Panel 本地应用目录（默认 `/opt/1panel/resource/apps/local/<应用名>`）里的已部署副本也会被删除：同步脚本只复制、不删除，应用下线后目录会一直留在服务器上。删除有保护（只删 `PRUNE_APPS` 里的名字、要求目标含 `data.yml`、应用仍在 `apps/` 里时跳过、推导出的上级目录必须叫 `local`），且不影响已安装实例。
+- `PRUNE_APPS` 中对应用户端 1Panel 本地应用目录（默认 `/opt/1panel/resource/apps/local/<应用名>`）里的已部署副本也会被删除：同步脚本只复制、不删除，应用下线后目录会一直留在服务器上。删除有保护（只删 `PRUNE_APPS` 里的名字、要求目标含 `data.yml`、应用仍在 `apps/` 里时跳过、目录由 `PANEL_ROOT` 推导并必须指向本地应用目录），且不影响已安装实例。
 
-变量与源的对应关系（`mirror.sh` 中的 `SOURCES`）：一个源可以对应多个清单变量，逐个处理。`k8s.gcr.io` → `K8S_GCR_IO_LIST`；`registry.k8s.io` → `REGISTRY_K8S_IO_LIST` 与 `NON_DOCKER_IO_LIST`。清单为空或含空条目时会被跳过，不会误扫整个 `apps/` 目录。
+变量与源的对应关系（`scripts/mirror.sh` 中的 `SOURCES`）：一个源可以对应多个清单变量，逐个处理。`k8s.gcr.io` → `K8S_GCR_IO_LIST`；`registry.k8s.io` → `REGISTRY_K8S_IO_LIST` 与 `NON_DOCKER_IO_LIST`。清单为空或含空条目时会被跳过，不会误扫整个 `apps/` 目录。
 
 ### 7.2 `.env` 与其他 `.env` 的区别
 
@@ -440,14 +440,14 @@ PRUNE_APPS="axonhub-lite-mysql"
 
 | 文件 | 位置 | 作用 |
 | --- | --- | --- |
-| 仓库根目录 `.env` | 由维护者提交到仓库 | `mirror.sh` 的应用清单，决定哪些应用执行镜像替换 |
+| 仓库根目录 `.env` | 由维护者提交到仓库 | `scripts/mirror.sh` 的应用清单，决定哪些应用执行镜像替换 |
 | 应用目录下的 `.env` | 部署时由 1Panel 自动生成 | 保存安装表单填写的值，供该应用的 Compose 读取 |
 
-不要把这两者混为一谈：应用安装时生成的 `.env` 是被 Compose 消费的；仓库根目录的 `.env` 只服务于 `mirror.sh`。提交应用时不要提交应用目录下的 `.env`。
+不要把这两者混为一谈：应用安装时生成的 `.env` 是被 Compose 消费的；仓库根目录的 `.env` 只服务于 `scripts/mirror.sh`。提交应用时不要提交应用目录下的 `.env`。
 
 ### 7.3 服务器端 `mirror-config.env`
 
-`mirror.sh` 会读取：
+`scripts/mirror.sh` 会读取：
 
 ```text
 /opt/mirror-config.env
@@ -474,7 +474,7 @@ GHCR_MIRROR=ghcr.io.mirror
 image: ghcr.io/volcengine/openviking:v0.4.20
 ```
 
-不要写成 `${OPENVIKING_IMAGE}` 或 `${OPENVIKING_IMAGE:-...}`，否则 `mirror.sh` 无法按仓库前缀替换。
+不要写成 `${OPENVIKING_IMAGE}` 或 `${OPENVIKING_IMAGE:-...}`，否则 `scripts/mirror.sh` 无法按仓库前缀替换。
 
 镜像替换只改变拉取地址，不改变版本目录的版本号，也不影响 1Panel 的升级判断。
 
@@ -610,7 +610,7 @@ git push
 - [ ] Compose 中的镜像包含真实版本号（上游只有 `latest` 时除外）。
 - [ ] 不使用 `${IMAGE:-default}` 形式隐藏镜像地址。
 - [ ] 使用 `latest` 时已确认上游无版本号，且已在 README 中说明需自行更新。
-- [ ] GHCR 等镜像保留字面量仓库地址，便于 `mirror.sh` 替换。
+- [ ] GHCR 等镜像保留字面量仓库地址，便于 `scripts/mirror.sh` 替换。
 - [ ] 使用 `ghcr.io` 等镜像的应用已加入根目录 `.env` 的对应 `*_IO_LIST`。
 - [ ] `container_name` 使用 `${CONTAINER_NAME}`。
 - [ ] HTTP 宿主机端口使用 `${PANEL_APP_PORT_HTTP}`。
@@ -627,81 +627,90 @@ git push
 
 与官方模板相比，本仓库还包含以下行为：
 
-- 根目录 `.env` 维护各镜像源对应的应用清单，供 `mirror.sh` 判断需要替换哪些应用。
-- `mirror.sh` 根据 `/opt/mirror-config.env` 替换 GHCR、Quay、GCR 和 Kubernetes 镜像源。
+- 根目录 `.env` 维护各镜像源对应的应用清单，供 `scripts/mirror.sh` 判断需要替换哪些应用。
+- `scripts/mirror.sh` 根据 `/opt/mirror-config.env` 替换 GHCR、Quay、GCR 和 Kubernetes 镜像源。
 - `renovate.json` 使用 Renovate 自动检测 Docker 镜像更新。
 - `.github/workflows/renovate-app-version.yml` 会根据 Compose 镜像 tag 自动重命名版本目录。
 - 应用同步脚本会把仓库 `apps/` 下的应用复制到 1Panel 的 `/opt/1panel/resource/apps/local/`。
 - `scripts/sync-and-refresh.sh` 在完成同步后调用 1Panel API 刷新本地应用商店，详见第十二节。
 - 新增应用时应优先复用仓库现有应用的格式，不要直接套用与本仓库自动化冲突的官方示例。
 
-## 十二、全量同步并刷新应用商店（API）
+## 十二、同步脚本（`scripts/`）
 
-仓库根目录的 `scripts/sync-and-refresh.sh` 是独立脚本，与 README 中「同步更新脚本」「单应用同步」互相独立、互不替代：
+同步相关的全局脚本都在 `scripts/` 下，克隆仓库后直接执行，不需要再把脚本复制到服务器上改路径。
 
-| 脚本 | 是否复制应用文件 | 是否执行 mirror.sh | 是否调用 1Panel API 刷新 |
-| --- | --- | --- | --- |
-| README 全量同步脚本 | 是 | 是 | 否，需要手动到面板点「更新应用列表」 |
-| README 单应用同步脚本 | 是（部分应用） | 是 | 否 |
-| `scripts/sync-and-refresh.sh` | 是（全部） | 是 | 是 |
+| 脚本 | 作用 |
+| --- | --- |
+| `scripts/sync-apps.sh` | 克隆仓库 → 执行 `scripts/mirror.sh` → 把应用复制到 1Panel 本地应用目录 |
+| `scripts/sync-and-refresh.sh` | 先同步，再调用 1Panel API 刷新本地应用商店 |
+| `scripts/mirror.sh` | 执行 `adapters/` 下的适配脚本，并按 `.env` 完成镜像替换 |
+| `scripts/check-env.sh` | 被上面三个脚本 `source`：填默认值、推导目录、校验必填变量，变量不全时直接退出 |
 
-适用场景：服务器做完全局软件更新、或应用商店内容有变更后，希望一次性把最新应用文件落地并让 1Panel 立即重新扫描，无需手动点击面板按钮。
+`scripts/` 与 `adapters/` 的分工：`scripts/` 是所有应用共用的拉起流程，改动会影响全部应用；`adapters/` 是单个应用的适配钩子（如 `prune-apps.sh`），由 `scripts/mirror.sh` 按文件名顺序自动执行，新增脚本不需要注册。
 
-### 12.1 使用方式
-
-先把脚本放到服务器上，然后设置必要变量执行：
-
-```bash
-ONEPANEL_URL=https://panel.example.com \
-ONEPANEL_APIKEY=你的APIKey \
-bash scripts/sync-and-refresh.sh
-```
-
-`ONEPANEL_NODE` 可留空，默认操作主节点；多节点环境才需要填写从节点名称。
-
-也可以直接编辑脚本开头的变量默认值。
-
-### 12.2 可用变量
+### 12.1 环境变量
 
 | 变量 | 说明 | 默认值 |
 | --- | --- | --- |
+| `PANEL_ROOT` | 1Panel 安装根目录 | `/opt/1panel` |
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
-| `TMP_DIR` | 临时克隆目录 | `/opt/1panel/resource/apps/local/appstore-localApps` |
-| `LOCAL_APPS_DIR` | 1Panel 本地应用目录 | `/opt/1panel/resource/apps/local` |
-| `ONEPANEL_URL` | 面板地址，可省略协议 | 必填 |
-| `ONEPANEL_APIKEY` | 面板 API Key | 必填 |
+| `APPS` | 只同步指定应用，逗号或空格分隔；留空为全部 | 空（全部） |
+| `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
+| `ONEPANEL_URL` | 面板地址，可省略协议（仅 `sync-and-refresh.sh`） | 必填 |
+| `ONEPANEL_APIKEY` | 面板 API Key（仅 `sync-and-refresh.sh`） | 必填 |
 | `ONEPANEL_NODE` | 节点名称，留空为主节点 | 空（主节点） |
 
-### 12.3 脚本流程
-
-1. 克隆应用仓库到临时目录，退出时通过 `trap` 自动清理。
-2. 进入仓库执行 `mirror.sh`，按 `.env` 与 `/opt/mirror-config.env` 完成镜像替换。
-3. 遍历 `apps/`，把每个应用复制到 `/opt/1panel/resource/apps/local/`，覆盖旧版本。
-4. 生成随机 `TASK_ID` 和秒级时间戳。
-5. 计算 `Token = md5("1panel" + APIKey + Timestamp)`。
-6. 调用 `POST /api/v2/apps/sync/local`，携带 `1Panel-Timestamp`、`1Panel-Token`、`CurrentNode` 请求头。
-7. 校验响应中包含 `"code":200`，失败时以非零状态码退出，便于接入定时任务告警。
-
-### 12.4 API 鉴权说明
-
-1Panel v2 的 API 使用时间戳加 MD5 的方式鉴权：
+目录由 `PANEL_ROOT` 推导，一般不需要设置：
 
 ```text
-Token = md5("1panel" + APIKey + Timestamp)
+LOCAL_APPS_DIR = $PANEL_ROOT/resource/apps/local
+TMP_DIR        = $LOCAL_APPS_DIR/appstore-localApps
 ```
+
+必填变量缺失时，`check-env.sh` 会打印缺少的变量名并以非零状态码退出，调用脚本不会继续执行。
+
+### 12.2 使用方法
+
+```bash
+# 同步全部应用
+bash scripts/sync-apps.sh
+
+# 只同步部分应用
+APPS="whoami,ech0" bash scripts/sync-apps.sh
+
+# 同步并自动刷新 1Panel 本地应用商店
+ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=你的APIKey \
+bash scripts/sync-and-refresh.sh
+```
+
+### 12.3 历史版本保留（重要）
+
+`sync-apps.sh` 不会删除本机的旧版本目录：仓库里存在的版本覆盖更新，其余版本保留最近的 `KEEP_VERSIONS` 个（默认 10）。
+
+原因在 1Panel 的本地应用同步逻辑（`SyncAppListFromLocal`）：磁盘上已不存在的版本，其 `app_details` 记录会被删除，且**不检查** `app_installs.app_detail_id` 是否还引用它；已安装应用的详情页和升级随后会报 `unexpected end of json input`。仓库通常只保留最新一个版本目录，整目录替换就会不断制造这种悬挂指针。官方远程商店不删本地目录，所以没有这个问题。
+
+因此修改同步逻辑时不要退回 `rm -rf` 整目录覆盖；确实要清理历史版本，等对应应用都升级完手动删除即可。
+
+### 12.4 脚本流程
+
+1. `check-env.sh` 填默认值、推导目录并校验变量。
+2. 克隆应用仓库到临时目录（`--depth 1`），退出时通过 `trap` 自动清理。
+3. 执行 `scripts/mirror.sh`：先跑完 `adapters/*.sh`，再按 `.env` 与 `/opt/mirror-config.env` 完成镜像替换。
+4. 遍历应用，复制应用级文件，并按版本目录逐个覆盖（不删历史版本），随后清理超出 `KEEP_VERSIONS` 的旧版本。
+5. `sync-and-refresh.sh` 额外生成随机 `TASK_ID` 和秒级时间戳，计算 `Token = md5("1panel" + APIKey + Timestamp)`，调用 `POST /api/v2/apps/sync/local`，校验响应包含 `"code":200`，失败时以非零状态码退出。
+
+### 12.5 API 鉴权说明
 
 - `Timestamp` 为秒级时间戳，与请求头 `1Panel-Timestamp` 保持一致。
 - 时间戳与服务器时间偏差过大会导致鉴权失败，请确认服务器时间已同步。
 - `CurrentNode` 请求头表示操作哪个节点，留空时不发送该头，1Panel 默认将其视为主节点（内部标识为 `local`）。只有多节点环境操作从节点时才需要填写节点名称。
 - API Key 属于敏感信息，不要提交到仓库，建议通过环境变量或服务器的 root-only 文件传入。
 
-### 12.5 定时执行建议
-
-如需自动化，可在服务器上配置定时任务，例如：
+### 12.6 定时执行建议
 
 ```bash
 # 每天凌晨 4 点同步并刷新
-0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash /opt/scripts/sync-and-refresh.sh >> /var/log/appstore-sync.log 2>&1
+0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash /opt/appstore/scripts/sync-and-refresh.sh >> /var/log/appstore-sync.log 2>&1
 ```
 
-建议同时把日志文件加入轮转，避免长期运行占满磁盘。
+`/opt/appstore` 为服务器上克隆的仓库目录。建议同时把日志文件加入轮转，避免长期运行占满磁盘。

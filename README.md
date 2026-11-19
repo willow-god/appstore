@@ -27,122 +27,89 @@
 
 ---
 
-## 🔄 同步更新脚本
+## 🔄 同步脚本
 
-以下是自动同步 App 应用至 1Panel 的脚本，适用于开发或部署用户。
+同步逻辑都放在仓库的 `scripts/` 目录里，克隆下来直接执行即可，不需要再把脚本抄到服务器上改路径。
 
-### 📥 国内同步脚本：
+| 脚本 | 作用 |
+| --- | --- |
+| `scripts/sync-apps.sh` | 克隆仓库 → 镜像替换 → 把应用复制到 1Panel 本地应用目录 |
+| `scripts/sync-and-refresh.sh` | 在 `sync-apps.sh` 之后调用 1Panel API，自动刷新本地应用商店列表 |
+| `scripts/mirror.sh` | 镜像源替换，并执行 `adapters/` 下的应用适配脚本（由同步脚本调用） |
+| `scripts/check-env.sh` | 校验环境变量并填默认值，被上面几个脚本 `source`，变量不全时不继续执行 |
 
-镜像仓库地址：https://cnb.cool/Liiiu/appstore
+### `scripts/` 和 `adapters/` 的区别
 
-使用github action保持同步更新。
+- `scripts/`：所有同步流程共用的**全局脚本**，负责克隆、镜像替换、落盘、刷新这一整套拉起流程，改动会影响全部应用。
+- `adapters/`：针对**单个应用**的适配脚本，比如格式转换、清理已下线应用（`prune-apps.sh`）。`scripts/mirror.sh` 会按文件名顺序执行这里的每个 `.sh`，不需要注册。
 
-```bash
-#!/bin/bash
-set -euo pipefail
-IFS=$'\n\t'
+### 环境变量
 
-GIT_REPO="https://cnb.cool/Liiiu/appstore"
-TMP_DIR="/opt/1panel/resource/apps/local/appstore-localApps"
-LOCAL_APPS_DIR="/opt/1panel/resource/apps/local"
+脚本顶部的变量已收敛为 `PANEL_ROOT` 和 `GIT_REPO`，其余目录由它们推导，不用再逐个填写。
 
-trap 'rm -rf "$TMP_DIR"' EXIT
+| 变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `PANEL_ROOT` | 1Panel 安装根目录 | `/opt/1panel` |
+| `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
+| `APPS` | 只同步指定应用，逗号或空格分隔；留空表示全部 | 空（全部） |
+| `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
+| `ONEPANEL_URL` | 面板地址，可省略协议（仅 `sync-and-refresh.sh`） | 必填 |
+| `ONEPANEL_APIKEY` | 面板「设置 - 密钥」生成的 API Key（仅 `sync-and-refresh.sh`） | 必填 |
+| `ONEPANEL_NODE` | 节点名称，留空操作主节点 | 空（主节点） |
 
-echo "📥 Cloning appstore repo..."
-[ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
-git clone "$GIT_REPO" "$TMP_DIR"
+以下目录自动推导，一般不需要设置：
 
-echo "🔄 Mirroring apps..."
-cd "$TMP_DIR"
-if [[ -f ./mirror.sh ]]; then
-    chmod +x ./mirror.sh
-    ./mirror.sh
-else
-    echo "⚠️ mirror.sh not found, skipping mirroring"
-fi
-cd -
-
-mkdir -p "$LOCAL_APPS_DIR"
-
-for app_path in "$TMP_DIR/apps/"*; do
-    [ -d "$app_path" ] || continue
-    app_name=$(basename "$app_path")
-    local_app_path="$LOCAL_APPS_DIR/$app_name"
-
-    echo "🔁 Updating app: $app_name"
-    [ -d "$local_app_path" ] && rm -rf "$local_app_path"
-    cp -r "$app_path" "$local_app_path"
-done
-
-echo "✅ Sync completed."
+```text
+LOCAL_APPS_DIR = $PANEL_ROOT/resource/apps/local    # 1Panel 本地应用目录
+TMP_DIR        = $LOCAL_APPS_DIR/appstore-localApps # 临时克隆目录，退出时自动删除
 ```
 
-> 💡 上面三个脚本都只负责**复制**应用，上游已下线（或从未出现在仓库里）的应用不会自动从 1Panel 本地应用目录消失。仓库根目录 `.env` 的 `PRUNE_APPS` 就是用来清理它们的：执行同步脚本时 `adapters/prune-apps.sh` 会把这些名字从应用清单里移除，并删除 `/opt/1panel/resource/apps/local/<应用名>` 这份已部署副本（不会卸载已安装实例）。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
-🌍 国外环境请替换为 GitHub 仓库：
+### 1. 同步全部应用
 
 ```bash
-GIT_REPO="https://github.com/willow-god/appstore"
+PANEL_ROOT=/opt/1panel \
+GIT_REPO=https://github.com/willow-god/appstore \
+bash scripts/sync-apps.sh
 ```
 
-------
-
-## 😎 单应用同步
-
-如果你想同步部分应用，可以采用以下脚本：
+国内环境把 `GIT_REPO` 换成镜像仓库即可（内容由 GitHub Action 保持同步）：
 
 ```bash
-#!/bin/bash
-set -euo pipefail
-IFS=$'\n\t'
-
-# ========= 配置：要安装的应用列表 =========
-APPS_TO_INSTALL=(
-    "whoami"
-    "ech0"
-    "moments"
-)
-
-# ========= 常量 =========
-GIT_REPO="https://cnb.cool/Liiiu/appstore"
-TMP_DIR="/opt/1panel/resource/apps/local/appstore-localApps"
-LOCAL_APPS_DIR="/opt/1panel/resource/apps/local"
-
-trap 'rm -rf "$TMP_DIR"' EXIT
-
-echo "📥 Cloning appstore repo..."
-[ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
-git clone "$GIT_REPO" "$TMP_DIR"
-
-echo "🔄 Running mirror.sh (if exists)..."
-cd "$TMP_DIR"
-if [[ -f ./mirror.sh ]]; then
-    chmod +x ./mirror.sh
-    ./mirror.sh || echo "⚠️ mirror.sh 执行失败，继续..."
-else
-    echo "⚠️ mirror.sh not found, skipping mirroring"
-fi
-cd - >/dev/null
-
-mkdir -p "$LOCAL_APPS_DIR"
-
-# ========= 遍历安装列表 =========
-for app_name in "${APPS_TO_INSTALL[@]}"; do
-    app_path="$TMP_DIR/apps/$app_name"
-    local_app_path="$LOCAL_APPS_DIR/$app_name"
-
-    if [[ ! -d "$app_path" ]]; then
-        echo "❌ 应用 $app_name 不存在于仓库，跳过"
-        continue
-    fi
-
-    echo "🔁 Updating app: $app_name"
-    [ -d "$local_app_path" ] && rm -rf "$local_app_path"
-    cp -r "$app_path" "$local_app_path"
-done
-
-echo "✅ Selected apps sync completed."
+GIT_REPO=https://cnb.cool/Liiiu/appstore bash scripts/sync-apps.sh
 ```
+
+同步完成后到面板「应用商店 → 本地应用」点「更新应用列表」；想让脚本自己刷新见下一节。
+
+### 2. 同步单独应用
+
+```bash
+PANEL_ROOT=/opt/1panel \
+APPS="whoami,ech0,moments" \
+bash scripts/sync-apps.sh
+```
+
+### 3. 同步并自动刷新应用商店（API）
+
+不想手动点「更新应用列表」时，用这个脚本，它在同步完成后调用 `POST /api/v2/apps/sync/local`：
+
+```bash
+PANEL_ROOT=/opt/1panel \
+ONEPANEL_URL=https://panel.example.com \
+ONEPANEL_APIKEY=你的APIKey \
+bash scripts/sync-and-refresh.sh
+```
+
+也可以配合 `APPS` 只同步部分应用。`ONEPANEL_URL` 可省略协议，`ONEPANEL_NODE` 只在多节点环境操作从节点时才需要填写。
+
+鉴权方式：`Token = md5("1panel" + APIKey + Timestamp)`，请求携带 `1Panel-Timestamp`、`1Panel-Token` 请求头。请确保服务器时间准确，并把非零退出码接入告警。
+
+### 历史版本保留
+
+`sync-apps.sh` 只覆盖仓库里存在的版本目录，**不会删除**本机上的旧版本，并默认保留最近 10 个（`KEEP_VERSIONS`）。
+
+原因在 1Panel 的本地应用同步逻辑：它会删掉磁盘上已不存在的版本对应的 `app_details` 记录，但 `app_installs.app_detail_id` 仍指向那条记录，于是已安装应用的详情页和升级会报 `unexpected end of json input`。仓库通常只保留最新一个版本目录，直接整目录替换就会不断制造这种悬挂指针；保留历史目录是最不侵入的规避方式，等应用都升级完再手动清理也不迟。
+
+> 💡 脚本只负责复制应用；上游已下线（或从未出现在仓库里）的应用不会自动从 1Panel 本地应用目录消失。仓库根目录 `.env` 的 `PRUNE_APPS` 就是用来清理它们的：执行同步脚本时 `adapters/prune-apps.sh` 会把这些名字从应用清单里移除，并删除 `$LOCAL_APPS_DIR/<应用名>` 这份已部署副本（不会卸载已安装实例）。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 🎡 镜像加速配置
 
@@ -202,7 +169,7 @@ K8S_REG_MIRROR=registry.k8s.io.mirror
 
 > 该部分无需配置，仅供说明脚本的绿色性质，替换脚本开源于非docker.io镜像中如**MoonTV**仓库，有需要请自行查看
 
-在克隆仓库后，按照本仓库的脚本，会在应用目录下执行 `mirror.sh`进行镜像源替换。
+在克隆仓库后，同步脚本会执行 `scripts/mirror.sh` 完成镜像源替换。
 
 这样即使镜像源被墙，也能快速替换为你配置的加速地址。
 
@@ -210,50 +177,6 @@ K8S_REG_MIRROR=registry.k8s.io.mirror
 
 ---
 
-## ⚡ 全量同步并刷新应用商店（API）
-
-如果你希望**同步应用后自动让 1Panel 重新扫描本地应用**，而不必到面板手动点击「更新应用列表」，可以使用仓库中的 [scripts/sync-and-refresh.sh](scripts/sync-and-refresh.sh)。
-
-该脚本与上面的「同步更新脚本」「单应用同步」是**相互独立的**，区别如下：
-
-| 脚本 | 复制应用文件 | 执行 mirror.sh | 调用 1Panel API 刷新 |
-| --- | --- | --- | --- |
-| 同步更新脚本 | ✅ 全部 | ✅ | ❌ 需手动点击 |
-| 单应用同步 | ✅ 部分应用 | ✅ | ❌ 需手动点击 |
-| `scripts/sync-and-refresh.sh` | ✅ 全部 | ✅ | ✅ 自动刷新 |
-
-### 使用方法
-
-```bash
-ONEPANEL_URL=https://panel.example.com \
-ONEPANEL_APIKEY=你的APIKey \
-bash scripts/sync-and-refresh.sh
-```
-
-`ONEPANEL_NODE` 可留空，默认操作主节点；多节点环境才需填写从节点名称。也可直接编辑脚本开头同名变量的默认值。
-
-### 可用变量
-
-| 变量 | 说明 | 默认值 |
-| --- | --- | --- |
-| `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
-| `TMP_DIR` | 临时克隆目录 | `/opt/1panel/resource/apps/local/appstore-localApps` |
-| `LOCAL_APPS_DIR` | 1Panel 本地应用目录 | `/opt/1panel/resource/apps/local` |
-| `ONEPANEL_URL` | 面板地址，可省略协议 | 必填 |
-| `ONEPANEL_APIKEY` | 面板 API Key | 必填 |
-| `ONEPANEL_NODE` | 节点名称，留空为主节点 | 空（主节点） |
-
-### 鉴权方式
-
-1Panel v2 API 使用时间戳加 MD5 鉴权：
-
-```text
-Token = md5("1panel" + APIKey + Timestamp)
-```
-
-请求会携带 `1Panel-Timestamp`、`1Panel-Token` 请求头，调用 `POST /api/v2/apps/sync/local`。`CurrentNode` 留空时不发送，1Panel 默认视为主节点。请确保服务器时间准确，并在脚本以非零状态码退出时接入告警。
-
----
 
 ## 📮 问题反馈
 

@@ -1,44 +1,28 @@
 #!/bin/bash
-set -euo pipefail
-IFS=$'\n\t'
-
 # ============================================================
 # 全量同步应用 + 触发 1Panel 本地应用商店刷新（API 方式）
 # ------------------------------------------------------------
-# 本脚本与 README 中的「全量同步」「单应用同步」脚本相互独立：
-#   - 前两者只负责把仓库中的应用文件复制到本地应用目录
-#   - 本脚本在完成同样的复制后，额外调用 1Panel API 刷新应用商店，
-#     因此不需要再手动到面板点击「更新应用列表」
+# 先执行 scripts/sync-apps.sh 落盘，再调用 1Panel API 让面板重新扫描
+# 本地应用目录，不需要手动到面板点「更新应用列表」。
 #
-# 使用前请设置 1Panel 信息，可直接修改下方变量，
-# 也可以通过同名环境变量传入，例如：
-#   ONEPANEL_URL=https://panel.example.com \
-#   ONEPANEL_APIKEY=xxxxxxxx \
+# 变量（未设置时使用 scripts/check-env.sh 里的默认值）：
+#   PANEL_ROOT       1Panel 安装根目录，默认 /opt/1panel
+#   GIT_REPO         应用仓库地址，默认 https://github.com/willow-god/appstore
+#   APPS             只同步指定应用（逗号或空格分隔），留空表示全部
+#   ONEPANEL_URL     面板地址，可省略协议（必填）
+#   ONEPANEL_APIKEY  面板「设置 - 密钥」中生成的 API Key（必填）
+#   ONEPANEL_NODE    节点名称，留空表示主节点
+#
+# 示例：
+#   ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx \
 #   bash scripts/sync-and-refresh.sh
-#
-# ONEPANEL_NODE 可留空（默认），表示操作主节点；
-# 多节点环境才需要填写从节点名称。
 # ============================================================
+set -euo pipefail
+IFS=$'\n\t'
 
-# ---------- 仓库同步配置 ----------
-GIT_REPO="${GIT_REPO:-https://github.com/willow-god/appstore}"
-TMP_DIR="${TMP_DIR:-/opt/1panel/resource/apps/local/appstore-localApps}"
-LOCAL_APPS_DIR="${LOCAL_APPS_DIR:-/opt/1panel/resource/apps/local}"
-
-# ---------- 1Panel API 配置 ----------
-# 面板站点地址：可带或不带 http(s)://，不要带结尾斜杠
-ONEPANEL_URL="${ONEPANEL_URL:-}"
-# 面板「设置 - 密钥」中生成的 API Key
-ONEPANEL_APIKEY="${ONEPANEL_APIKEY:-}"
-# 节点名称：留空表示主节点（默认），多节点环境填写从节点名称
-ONEPANEL_NODE="${ONEPANEL_NODE:-}"
-
-if [[ -z "$ONEPANEL_URL" || -z "$ONEPANEL_APIKEY" ]]; then
-    echo "❌ 缺少 1Panel API 配置"
-    echo "   请设置 ONEPANEL_URL 与 ONEPANEL_APIKEY 后再执行，例如："
-    echo "   ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx bash $0"
-    exit 1
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=check-env.sh
+. "$SCRIPT_DIR/check-env.sh" sync-and-refresh
 
 # 规范化站点地址：去掉结尾斜杠，缺少协议时补 http://
 ONEPANEL_URL="${ONEPANEL_URL%/}"
@@ -55,50 +39,13 @@ md5_hex() {
     fi
 }
 
-# ============================================================
-# 1. 同步仓库应用文件到本地应用目录
-# ============================================================
+# ---------- 1. 同步应用文件 ----------
+bash "$SCRIPT_DIR/sync-apps.sh"
 
-trap 'rm -rf "$TMP_DIR"' EXIT
-
-echo "📥 Cloning appstore repo..."
-[ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
-git clone "$GIT_REPO" "$TMP_DIR"
-
-echo "🔄 Mirroring apps..."
-# 把本地应用目录传给 mirror.sh 里的 adapters，让 PRUNE_APPS 能清理已部署副本
-export LOCAL_APPS_DIR
-cd "$TMP_DIR"
-if [[ -f ./mirror.sh ]]; then
-    chmod +x ./mirror.sh
-    ./mirror.sh
-else
-    echo "⚠️ mirror.sh not found, skipping mirroring"
-fi
-cd - >/dev/null
-
-mkdir -p "$LOCAL_APPS_DIR"
-
-for app_path in "$TMP_DIR/apps/"*; do
-    [ -d "$app_path" ] || continue
-    app_name=$(basename "$app_path")
-    local_app_path="$LOCAL_APPS_DIR/$app_name"
-
-    echo "🔁 Updating app: $app_name"
-    [ -d "$local_app_path" ] && rm -rf "$local_app_path"
-    cp -r "$app_path" "$local_app_path"
-done
-
-echo "✅ Local app files updated."
-
-# ============================================================
-# 2. 调用 1Panel API 刷新本地应用商店
-# ============================================================
+# ---------- 2. 调用 1Panel API 刷新本地应用商店 ----------
 # 鉴权方式：Token = md5("1panel" + APIKey + Timestamp)
 # 请求头需携带 1Panel-Timestamp / 1Panel-Token
 # CurrentNode 可选：留空时不发送该头，1Panel 将默认为主节点
-# ============================================================
-
 echo "🔄 Refreshing 1Panel local app store..."
 
 TASK_ID=$(cat /proc/sys/kernel/random/uuid)
@@ -106,7 +53,6 @@ TIMESTAMP=$(date +%s)
 
 TOKEN=$(echo -n "1panel${ONEPANEL_APIKEY}${TIMESTAMP}" | md5_hex)
 
-# 节点留空时不发送 CurrentNode 请求头，1Panel 会将其视为主节点
 NODE_HEADER=()
 if [[ -n "$ONEPANEL_NODE" ]]; then
     NODE_HEADER=(-H "CurrentNode: ${ONEPANEL_NODE}")
@@ -120,9 +66,9 @@ RESPONSE=$(curl -ksS \
     -H "1Panel-Token: ${TOKEN}" \
     ${NODE_HEADER[@]+"${NODE_HEADER[@]}"} \
     -d "{\"taskID\":\"${TASK_ID}\"}") || {
-        echo "❌ curl 请求失败，请检查 1Panel 地址与网络连通性。"
-        exit 1
-    }
+    echo "❌ curl 请求失败，请检查 1Panel 地址与网络连通性。"
+    exit 1
+}
 
 echo "1Panel response:"
 echo "$RESPONSE"
