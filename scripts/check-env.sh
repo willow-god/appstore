@@ -44,8 +44,9 @@ export PANEL_ROOT GIT_REPO KEEP_VERSIONS
 export LOCAL_APPS_DIR="${LOCAL_APPS_DIR:-$PANEL_ROOT/resource/apps/local}"
 export TMP_DIR="${TMP_DIR:-$LOCAL_APPS_DIR/appstore-localApps}"
 
-# 1Panel 数据库（只读查询安装记录，用来保护已安装版本的目录）；装在别处或改过路径时覆盖
-export PANEL_DB="${PANEL_DB:-$PANEL_ROOT/db/agent.db}"
+# 1Panel 数据库：固定由 PANEL_ROOT 拼出，不开放覆盖（只读查询已安装版本）
+PANEL_DB="$PANEL_ROOT/db/agent.db"
+export PANEL_DB
 
 # 1Panel API 配置（只有 sync-and-refresh 需要）
 export ONEPANEL_URL="${ONEPANEL_URL:-}"

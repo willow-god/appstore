@@ -20,7 +20,8 @@
 # 存在的版本对应的 app_details 记录，而 app_installs.app_detail_id 仍指
 # 着它，删掉目录就会让已安装应用的详情页和升级报 JSON 错误。
 #
-# 清理前会用只读 sqlite 查询 $PANEL_DB（默认 $PANEL_ROOT/db/agent.db）里的
+# 清理前会用只读 sqlite 查询 $PANEL_DB（由 PANEL_ROOT 拼出，即
+# $PANEL_ROOT/db/agent.db）里的
 # app_installs，已安装的版本永不清理；数据库读不到（没有 sqlite3、文件
 # 不存在、被锁）时退化为纯「保留最近 KEEP_VERSIONS 个」。数据库只读打开，
 # 带 PRAGMA query_only=ON，不会写入任何内容。

@@ -53,7 +53,6 @@
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空表示全部 | 空（全部） |
 | `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
-| `PANEL_DB` | 1Panel 数据库路径，只读查询已安装版本 | `$PANEL_ROOT/db/agent.db` |
 | `ONEPANEL_URL` | 面板地址，可省略协议（仅 `sync-and-refresh.sh`） | 必填 |
 | `ONEPANEL_APIKEY` | 面板「设置 - 密钥」生成的 API Key（仅 `sync-and-refresh.sh`） | 必填 |
 | `ONEPANEL_NODE` | 节点名称，留空操作主节点 | 空（主节点） |
@@ -63,7 +62,7 @@
 ```text
 LOCAL_APPS_DIR = $PANEL_ROOT/resource/apps/local    # 1Panel 本地应用目录
 TMP_DIR        = $LOCAL_APPS_DIR/appstore-localApps # 临时克隆目录，退出时自动删除
-PANEL_DB       = $PANEL_ROOT/db/agent.db            # 只读查询已安装版本，用于保护目录
+PANEL_DB       = $PANEL_ROOT/db/agent.db            # 数据库，只读查询已安装版本
 ```
 
 ### 1. 同步全部应用
@@ -80,9 +79,6 @@ export GIT_REPO=https://github.com/willow-god/appstore
 
 # 每个应用在本机保留的历史版本目录数，默认 10；见下文「历史版本保留」
 # export KEEP_VERSIONS=10
-
-# 1Panel 数据库路径，只用于只读查询已安装版本；不在默认位置时才需要改
-# export PANEL_DB=/opt/1panel/db/agent.db
 
 bash scripts/sync-apps.sh
 ```
@@ -130,7 +126,7 @@ bash scripts/sync-and-refresh.sh
 
 `sync-apps.sh` 只覆盖仓库里存在的版本目录，**不会删除**本机上的旧版本；超出保留数量的旧目录会按两档规则清理：
 
-1. **数据库可读时（推荐）**：以只读方式查询 `$PANEL_DB`（默认 `/opt/1panel/db/agent.db`）里的 `app_installs`，**已安装的版本一律跳过**，其余仍保留最近 `KEEP_VERSIONS` 个。
+1. **数据库可读时（推荐）**：以只读方式查询 `$PANEL_DB`（由 `PANEL_ROOT` 拼出，即 `$PANEL_ROOT/db/agent.db`）里的 `app_installs`，**已安装的版本一律跳过**，其余仍保留最近 `KEEP_VERSIONS` 个。
 2. **数据库不可读时**：没有 `sqlite3`、数据库文件不存在、被占用或存在失效指针，退回纯「保留最近 `KEEP_VERSIONS` 个」的兜底规则。
 
 数据库只用于 `SELECT`，连接带 `-readonly` 参数和 `PRAGMA query_only=ON`，不会写入数据库，也不会创建 `-wal`/`-shm` 文件。

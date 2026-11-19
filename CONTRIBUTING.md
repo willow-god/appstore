@@ -656,7 +656,6 @@ git push
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空为全部 | 空（全部） |
 | `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
-| `PANEL_DB` | 1Panel 数据库路径，只读查询已安装版本 | `$PANEL_ROOT/db/agent.db` |
 | `ONEPANEL_URL` | 面板地址，可省略协议（仅 `sync-and-refresh.sh`） | 必填 |
 | `ONEPANEL_APIKEY` | 面板 API Key（仅 `sync-and-refresh.sh`） | 必填 |
 | `ONEPANEL_NODE` | 节点名称，留空为主节点 | 空（主节点） |
@@ -685,8 +684,6 @@ export GIT_REPO=https://github.com/willow-god/appstore
 # 每个应用在本机保留的历史版本目录数，默认 10
 # export KEEP_VERSIONS=10
 
-# 1Panel 数据库路径，只读查询已安装版本；默认 $PANEL_ROOT/db/agent.db
-# export PANEL_DB=/opt/1panel/db/agent.db
 
 # 仅 sync-and-refresh.sh 需要：面板地址与「设置 → 密钥」生成的 API Key
 # export ONEPANEL_URL=https://panel.example.com:端口
@@ -709,7 +706,7 @@ bash scripts/sync-and-refresh.sh
 
 `sync-apps.sh` 不会删除本机的旧版本目录：仓库里存在的版本覆盖更新，其余版本按两档规则清理：
 
-1. **数据库可读**：以只读方式（`sqlite3 -readonly` + `PRAGMA query_only=ON`）查询 `$PANEL_DB` 的 `app_installs`，`app_detail_id` 对应的版本**永不清理**；其余仍保留最近 `KEEP_VERSIONS` 个（默认 10）。
+1. **数据库可读**：以只读方式（`sqlite3 -readonly` + `PRAGMA query_only=ON`）查询 `$PANEL_DB`（由 `PANEL_ROOT` 拼出）的 `app_installs`，`app_detail_id` 对应的版本**永不清理**；其余仍保留最近 `KEEP_VERSIONS` 个（默认 10）。
 2. **数据库不可读**（没有 `sqlite3`、文件不存在、被锁、该应用有失效指针）：退回纯「保留最近 `KEEP_VERSIONS` 个」的兜底规则，并打印原因。
 
 原因在 1Panel 的本地应用同步逻辑（`SyncAppListFromLocal`）：磁盘上已不存在的版本，其 `app_details` 记录会被删除，且**不检查** `app_installs.app_detail_id` 是否还引用它；已安装应用的详情页和升级随后会报 `unexpected end of json input`。仓库通常只保留最新一个版本目录，整目录替换就会不断制造这种悬挂指针。官方远程商店不删本地目录、也不扫描该目录，所以没有这个问题。
