@@ -658,7 +658,7 @@ git push
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空为全部 | 空（全部） |
 | `REPO_DIR` | 已克隆好的仓库目录，设置后 `sync-apps.sh` 不再重复克隆 | 空（现场克隆） |
-| `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
+| `KEEP_VERSIONS` | 兜底时每个应用保留的历史版本目录数量（能查到数据库时不生效） | `10` |
 | `ONEPANEL_URL` | 面板地址，可省略协议（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_APIKEY` | 面板 API Key（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_NODE` | 节点名称，留空为主节点 | 空（主节点） |
@@ -686,7 +686,7 @@ export GIT_REPO=https://github.com/willow-god/appstore
 # 只同步指定应用（apps/ 下的目录名，逗号或空格分隔）；不设置表示全部
 # export APPS="whoami,ech0"
 
-# 每个应用在本机保留的历史版本目录数，默认 10
+# 读不到数据库时兜底保留的历史版本目录数，默认 10
 # export KEEP_VERSIONS=10
 
 # 仅 refresh.sh 需要：面板地址与「设置 → 密钥」生成的 API Key
@@ -720,10 +720,10 @@ bash "$TMP_WORK_DIR/scripts/refresh.sh"
 
 ### 12.3 历史版本保留（重要）
 
-`sync-apps.sh` 不会删除本机的旧版本目录：仓库里存在的版本覆盖更新，其余版本按两档规则清理：
+`sync-apps.sh` 覆盖仓库里存在的版本目录，其余旧目录按两档规则清理：
 
-1. **数据库可读**：以只读方式（`sqlite3 -readonly` + `PRAGMA query_only=ON`）查询 `$PANEL_DB`（由 `PANEL_ROOT` 拼出）的 `app_installs`，`app_detail_id` 对应的版本**永不清理**；其余仍保留最近 `KEEP_VERSIONS` 个（默认 10）。
-2. **数据库不可读**（没有 `sqlite3`、文件不存在、被锁、该应用有失效指针）：退回纯「保留最近 `KEEP_VERSIONS` 个」的兜底规则，并打印原因。
+1. **能查到准确数据**：以只读方式（`sqlite3 -readonly` + `PRAGMA query_only=ON`）查询 `$PANEL_DB`（由 `PANEL_ROOT` 拼出）的 `app_installs`，**只保留仓库里有的版本和 `app_detail_id` 对应的已安装版本**，其余旧目录全部删除，不受 `KEEP_VERSIONS` 限制——有准确数据就没必要留着用不上的旧版本。
+2. **查不到**（没有 `sqlite3`、文件不存在、被锁、应用未入库、该应用有失效指针）：退回「保留最近 `KEEP_VERSIONS` 个」（默认 10）的兜底规则，并打印原因。
 
 原因在 1Panel 的本地应用同步逻辑（`SyncAppListFromLocal`）：磁盘上已不存在的版本，其 `app_details` 记录会被删除，且**不检查** `app_installs.app_detail_id` 是否还引用它；已安装应用的详情页和升级随后会报 `unexpected end of json input`。仓库通常只保留最新一个版本目录，整目录替换就会不断制造这种悬挂指针。官方远程商店不删本地目录、也不扫描该目录，所以没有这个问题。
 
@@ -739,7 +739,7 @@ bash "$TMP_WORK_DIR/scripts/refresh.sh"
 
 1. `check-env.sh` 填默认值、推导目录并校验变量。
 2. 克隆应用仓库到临时目录（`--depth 1`），退出时通过 `trap` 自动清理。
-3. 遍历应用，复制应用级文件，并按版本目录逐个覆盖；随后按两档规则清理：能只读查到 `app_installs` 时跳过已安装版本，否则仅保留最近 `KEEP_VERSIONS` 个。
+3. 遍历应用，复制应用级文件，并按版本目录逐个覆盖；随后按两档规则清理：能只读查到 `app_installs` 时只保留仓库版本与已安装版本（不受数量限制），否则仅保留最近 `KEEP_VERSIONS` 个。
 
 `mirror.sh`（只负责镜像替换）：
 

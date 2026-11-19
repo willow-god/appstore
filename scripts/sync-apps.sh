@@ -18,16 +18,18 @@
 #   REPO_DIR       已克隆好的仓库目录；设置后不再重复克隆（定时任务外层
 #                  已经 clone 过时用）
 #
-# 版本目录策略：仓库里存在的版本每次覆盖更新，仓库里已经没有的旧版本
-# 继续保留（最多 KEEP_VERSIONS 个）。1Panel 本地应用同步会删除本地已不
-# 存在的版本对应的 app_details 记录，而 app_installs.app_detail_id 仍指
-# 着它，删掉目录就会让已安装应用的详情页和升级报 JSON 错误。
+# 版本目录策略：仓库里存在的版本每次覆盖更新。1Panel 本地应用同步会删除
+# 本地已不存在的版本对应的 app_details 记录，而 app_installs.app_detail_id
+# 仍指着它，删掉目录就会让已安装应用的详情页和升级报 JSON 错误。所以清理
+# 前会用只读 sqlite 查询 $PANEL_DB（由 PANEL_ROOT 拼出，即
+# $PANEL_ROOT/db/agent.db）里的 app_installs：
 #
-# 清理前会用只读 sqlite 查询 $PANEL_DB（由 PANEL_ROOT 拼出，即
-# $PANEL_ROOT/db/agent.db）里的 app_installs，已安装的版本永不清理；数
-# 据库读不到（没有 sqlite3、文件不存在、被锁）时退化为纯「保留最近
-# KEEP_VERSIONS 个」。数据库只读打开，带 PRAGMA query_only=ON，不会写
-# 入任何内容。
+#   能查到准确数据 → 只保留「仓库里有的版本」和「已安装的版本」，其余旧目录
+#     全部删除，不受数量限制（残留越少越好）；
+#   查不到（没有 sqlite3、文件不存在、被锁、应用未入库、指针已失效）→ 兜底
+#     只保留最近 KEEP_VERSIONS 个（默认 10 个）。
+#
+# 数据库只读打开，带 PRAGMA query_only=ON，不会写入任何内容。
 # ============================================================
 set -euo pipefail
 IFS=$'\n\t'
@@ -81,10 +83,10 @@ mkdir -p "$LOCAL_APPS_DIR"
 
 # ---------- 3. 复制应用 ----------
 # 清理规则有两档：
-#   1. 能只读打开 1Panel 数据库时，跳过 app_installs 里已安装的版本，其余
-#      仍按「保留最近 KEEP_VERSIONS 个」清理；
-#   2. 没有 sqlite3、数据库不存在或被锁住时，退化为纯「保留最近
-#      KEEP_VERSIONS 个」，不检查安装记录。
+#   1. 能只读查到 app_installs 时，只保留仓库里有的版本和已安装的版本，
+#      其余旧目录全部删除（不受数量限制）；
+#   2. 读不到准确数据（没有 sqlite3、数据库不存在或被锁、应用未入库、
+#      指针已失效）时，退化为「保留最近 KEEP_VERSIONS 个」。
 # 数据库只用于 SELECT，连接带 -readonly 和 PRAGMA query_only，不会写入。
 DB_STATE="unknown"
 DB_REASON=""
@@ -165,11 +167,7 @@ prune_versions() {
 
     local total=${#versions[@]}
     PRUNE_APPS_TOTAL=$((PRUNE_APPS_TOTAL + 1))
-    # 没超过保留上限就没有可清理的，不逐个应用刷屏，只计入结尾汇总
-    if [ "$total" -le "$KEEP_VERSIONS" ]; then
-        PRUNE_APPS_UNDER_LIMIT=$((PRUNE_APPS_UNDER_LIMIT + 1))
-        return 0
-    fi
+    [ "$total" -eq 0 ] && return 0
 
     local -A protected=()
     local -A protected_by=()
@@ -192,31 +190,53 @@ prune_versions() {
                     ;;
             esac
         done < <(installed_versions "$app_name")
-        if [ "$db_failed" -eq 1 ]; then
-            echo "⚠️ $app_name：${reason:-数据库查询失败}，回退到仅保留最近 $KEEP_VERSIONS 个版本"
-        elif [ "$protected_count" -eq 0 ]; then
-            echo "📋 $app_name：数据库中没有安装记录，仅按保留最近 $KEEP_VERSIONS 个版本清理"
-        fi
-    else
-        echo "⚠️ $app_name：无法读取安装记录（$DB_REASON），回退到仅保留最近 $KEEP_VERSIONS 个版本"
     fi
 
-    local remove=$((total - KEEP_VERSIONS))
-    local i
-    for ((i = 0; i < remove; i++)); do
-        version="${versions[$i]}"
-        if [ -n "${protected[$version]:-}" ]; then
-            echo "🛡 $app_name/$version 已安装（${protected_by[$version]}），跳过清理"
-            continue
+    if [ "$DB_STATE" = "ready" ] && [ "$db_failed" -eq 0 ]; then
+        # 有准确数据：只保留「仓库里有的版本」和「已安装的版本」，其余一律清掉，
+        # 不再受 KEEP_VERSIONS 限制
+        [ "$protected_count" -eq 0 ] && echo "📋 $app_name：没有已安装实例，只保留仓库中的版本"
+        for version in "${versions[@]}"; do
+            if [ -n "${protected[$version]:-}" ]; then
+                echo "🛡 $app_name/$version 已安装（${protected_by[$version]}），保留"
+                kept_count=$((kept_count + 1))
+                continue
+            fi
+            if [ -d "$src/$version" ]; then
+                kept_count=$((kept_count + 1))
+                continue
+            fi
+            rm -rf -- "$dst/$version"
+            removed_count=$((removed_count + 1))
+            echo "🧹 $app_name: 清理历史版本 $version（仓库与安装记录里都没有）"
+        done
+    else
+        # 兜底：读不到准确的安装记录，只能按数量保留最近 KEEP_VERSIONS 个
+        if [ "$DB_STATE" = "ready" ]; then
+            echo "⚠️ $app_name：${reason:-数据库查询失败}，回退到仅保留最近 $KEEP_VERSIONS 个版本"
+        else
+            echo "⚠️ $app_name：无法读取安装记录（$DB_REASON），回退到仅保留最近 $KEEP_VERSIONS 个版本"
         fi
-        if [ -d "$src/$version" ]; then
-            echo "ℹ️  $app_name/$version 仍在仓库中，跳过清理"
-            continue
+
+        # 没超过保留上限就没有可清理的，不逐个应用刷屏，只计入结尾汇总
+        if [ "$total" -le "$KEEP_VERSIONS" ]; then
+            PRUNE_APPS_UNDER_LIMIT=$((PRUNE_APPS_UNDER_LIMIT + 1))
+            return 0
         fi
-        rm -rf -- "$dst/$version"
-        removed_count=$((removed_count + 1))
-        echo "🧹 $app_name: 清理历史版本 $version（保留最近 $KEEP_VERSIONS 个）"
-    done
+
+        local remove=$((total - KEEP_VERSIONS))
+        local i
+        for ((i = 0; i < remove; i++)); do
+            version="${versions[$i]}"
+            if [ -d "$src/$version" ]; then
+                echo "ℹ️  $app_name/$version 仍在仓库中，跳过清理"
+                continue
+            fi
+            rm -rf -- "$dst/$version"
+            removed_count=$((removed_count + 1))
+            echo "🧹 $app_name: 清理历史版本 $version（保留最近 $KEEP_VERSIONS 个）"
+        done
+    fi
 
     kept_count=$((total - removed_count))
     PRUNE_DIRS_REMOVED=$((PRUNE_DIRS_REMOVED + removed_count))

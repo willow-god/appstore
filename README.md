@@ -61,7 +61,7 @@ bash "$TMP_WORK_DIR/scripts/sync-apps.sh" && bash "$TMP_WORK_DIR/scripts/mirror.
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空表示全部 | 空（全部） |
 | `REPO_DIR` | 已克隆好的仓库目录，设置后 `sync-apps.sh` 不再重复克隆 | 空（现场克隆） |
-| `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
+| `KEEP_VERSIONS` | 兜底时每个应用保留的历史版本目录数量（能查到数据库时不生效） | `10` |
 | `ONEPANEL_URL` | 面板地址，可省略协议（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_APIKEY` | 面板「设置 - 密钥」生成的 API Key（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_NODE` | 节点名称，留空操作主节点 | 空（主节点） |
@@ -89,7 +89,7 @@ export GIT_REPO=https://github.com/willow-god/appstore
 # 只同步指定应用（应用目录名，逗号或空格分隔）；不设置表示同步全部
 # export APPS="whoami,ech0"
 
-# 每个应用在本机保留的历史版本目录数，默认 10；见下文「历史版本保留」
+# 读不到数据库时兜底保留的历史版本目录数，默认 10；见下文「历史版本保留」
 # export KEEP_VERSIONS=10
 
 # 脚本在仓库里，先克隆到临时目录；带 tmp- 前缀、和本地应用目录同级，
@@ -168,10 +168,12 @@ bash "$TMP_WORK_DIR/scripts/refresh.sh"
 
 ### 历史版本保留
 
-`sync-apps.sh` 只覆盖仓库里存在的版本目录，**不会删除**本机上的旧版本；超出保留数量的旧目录会按两档规则清理：
+`sync-apps.sh` 覆盖仓库里存在的版本目录，其余旧目录按两档规则清理：
 
-1. **数据库可读时（推荐）**：以只读方式查询 `$PANEL_DB`（由 `PANEL_ROOT` 拼出，即 `$PANEL_ROOT/db/agent.db`）里的 `app_installs`，**已安装的版本一律跳过**，其余仍保留最近 `KEEP_VERSIONS` 个。
-2. **数据库不可读时**：没有 `sqlite3`、数据库文件不存在、被占用或存在失效指针，退回纯「保留最近 `KEEP_VERSIONS` 个」的兜底规则。
+1. **能查到准确数据时（推荐）**：以只读方式查询 `$PANEL_DB`（由 `PANEL_ROOT` 拼出，即 `$PANEL_ROOT/db/agent.db`）里的 `app_installs`，**只保留「仓库里有的版本」和「已安装的版本」**，其余旧目录全部删除，不受 `KEEP_VERSIONS` 限制。
+2. **查不到时**：没有 `sqlite3`、数据库文件不存在、被占用、应用还没入库或存在失效指针，退回「保留最近 `KEEP_VERSIONS` 个」（默认 10）的兜底规则。
+
+`KEEP_VERSIONS` 只在兜底规则里生效；能读到数据库时按实际安装情况清理，残留最少。
 
 数据库只用于 `SELECT`，连接带 `-readonly` 参数和 `PRAGMA query_only=ON`，不会写入数据库，也不会创建 `-wal`/`-shm` 文件。
 
@@ -182,9 +184,10 @@ bash "$TMP_WORK_DIR/scripts/refresh.sh"
 ```text
 🗄 已连接 1Panel 数据库（只读）: /opt/1panel/db/agent.db
 📋 memora/1.5.3 已安装：install #43，实例名 memora
-🛡 memora/1.5.3 已安装（install #43（memora）），跳过清理
-🧹 memora: 清理历史版本 1.4.0（保留最近 10 个）
-📊 memora: 清理完成，目录 13 个 → 保留 11 个，删除 2 个
+🛡 memora/1.5.3 已安装（install #43（memora）），保留
+🧹 memora: 清理历史版本 1.4.0（仓库与安装记录里都没有）
+📊 memora: 清理完成，目录 13 个 → 保留 2 个，删除 11 个
+📊 历史版本清理：检查 43 个应用，0 个版本数不超过 10 个未触发清理，删除 11 个旧版本目录
 ```
 
 出现 `⚠️` 表示该应用退回兜底规则，原因（数据库缺失、被锁、指针失效等）会一并打印。
