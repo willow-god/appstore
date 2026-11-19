@@ -1,6 +1,6 @@
 # 文件夹说明
 
-该文件夹着重于适配特殊项目，该目录下的所有.sh脚本均会执行（由 `scripts/mirror.sh` 在镜像替换前依次运行，不保证调用方工作目录，请用脚本自身路径推导）。
+该文件夹着重于适配特殊项目，该目录下的所有.sh脚本均会执行（由 `scripts/mirror.sh` 在镜像替换前依次运行，不保证调用方工作目录，请用脚本自身路径推导）。执行时机在 `scripts/sync-apps.sh` 之后，作用对象是 1Panel 本地应用目录里已部署的副本。
 
 脚本需满足：
 
@@ -13,21 +13,17 @@
 | 脚本 | 作用 |
 | --- | --- |
 | `hello-world.sh` | 示例脚本 |
-| `prune-apps.sh` | 按 `.env` 里的 `PRUNE_APPS`（逗号分隔的应用名），把这些名字从所有 `*_LIST` / `*_ARRAY` 应用清单里移除，并删除 1Panel 本地应用目录里已经拷贝过去的同名应用；幂等、保留原换行风格，可单独执行 `bash adapters/prune-apps.sh`（支持 `ENV_FILE=` / `PRUNE_APPS=` / `LOCAL_APPS_DIR=` 覆盖以便测试） |
+| `prune-apps.sh` | 按 `.env` 里的 `PRUNE_APPS`（逗号分隔的应用名），删除 1Panel 本地应用目录里已经拷贝过去的同名应用；幂等，可单独执行 `bash adapters/prune-apps.sh`（支持 `ENV_FILE=` / `PRUNE_APPS=` / `LOCAL_APPS_DIR=` 覆盖以便测试） |
 
 ### prune-apps.sh 的清理范围
 
-只删 `PRUNE_APPS` 明确列出的名字，**不**按 `apps/` 目录是否存在来推断：
+只删 `PRUNE_APPS` 明确列出的名字，**不**按 `apps/` 目录是否存在来推断：清单里可能有来自其他应用商店的应用，本仓库没有对应目录并不代表条目失效。
 
-- 使用者的清单里可能有来自其他应用商店的应用，本仓库没有对应目录并不代表条目失效
-- 清单里没有命中时完全不写文件
-- `PRUNE_APPS` 本身不以 `_LIST` 结尾，不会被自己的规则清空
-
-清掉某个应用后，可以把名字从 `PRUNE_APPS` 里删掉；保留也无害（后续不会再命中）。
+清掉某个应用后，可以把名字从 `PRUNE_APPS` 里删掉；保留也无害（后续目录不在就直接跳过）。
 
 #### 为什么要删除已部署副本
 
-同步脚本（`scripts/sync-apps.sh`、`scripts/sync-and-refresh.sh`）只会把 `apps/` 复制到 1Panel 本地应用目录，**不会**删除上游已经下线（或从未出现在仓库里）的应用。只清 `.env` 清单的话，服务器上的目录会一直留着，而且克隆目录退出时就被删了，清单改动也随之消失。所以本脚本在清完清单后，还会删掉 `$LOCAL_APPS_DIR/<应用名>`：同步脚本会用 `PANEL_ROOT` 推导出 `LOCAL_APPS_DIR` 并导出，单独执行时才回退到「克隆目录的上一级」。
+同步脚本 `scripts/sync-apps.sh` 只会把 `apps/` 复制到 1Panel 本地应用目录，**不会**删除上游已经下线（或从未出现在仓库里）的应用，服务器上的目录会一直留着。所以本脚本删除 `$LOCAL_APPS_DIR/<应用名>`：`scripts/mirror.sh` 执行时会用 `PANEL_ROOT` 推导出 `LOCAL_APPS_DIR` 并导出，单独执行时才回退到「仓库目录的上一级」。
 
 删除有这些保护：
 

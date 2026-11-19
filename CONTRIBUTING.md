@@ -429,7 +429,7 @@ PRUNE_APPS="axonhub-lite-mysql"
 - `scripts/mirror.sh` 开头会检查 `.env` 是否存在，缺失时直接 `exit 1`，因此不要删除该文件。
 - 如果 `.env` 中列出的应用目录不存在，脚本会打印「应用目录不存在，跳过」并继续执行，不会中断。
 - 新增应用的 PR 中，如果该应用需要镜像替换，必须同时修改 `.env` 和 `mirror-config.env` 说明。
-- `PRUNE_APPS` 是「要清理掉哪些应用名」的白名单，`adapters/prune-apps.sh` 只按它清理，**不会**因为 `apps/` 下没有对应目录就自动删（清单里可能有来自其他应用商店的应用）。想移除某个已下线应用，把它写进 `PRUNE_APPS`（或直接手动删掉条目）；清理完成后名字留在 `PRUNE_APPS` 里也无害。
+- `PRUNE_APPS` 是「要清理掉哪些应用名」的白名单，`adapters/prune-apps.sh` 只按它清理，**不会**因为 `apps/` 下没有对应目录就自动删（清单里可能有来自其他应用商店的应用）。想移除某个已下线应用，把它写进 `PRUNE_APPS`；清理完成后名字留在 `PRUNE_APPS` 里也无害（目录不在就直接跳过）。
 - `PRUNE_APPS` 中对应用户端 1Panel 本地应用目录（默认 `/opt/1panel/resource/apps/local/<应用名>`）里的已部署副本也会被删除：同步脚本只复制、不删除，应用下线后目录会一直留在服务器上。删除有保护（只删 `PRUNE_APPS` 里的名字、要求目标含 `data.yml`、应用仍在 `apps/` 里时跳过、目录由 `PANEL_ROOT` 推导并必须指向本地应用目录），且不影响已安装实例。
 
 变量与源的对应关系（`scripts/mirror.sh` 中的 `SOURCES`）：一个源可以对应多个清单变量，逐个处理。`k8s.gcr.io` → `K8S_GCR_IO_LIST`；`registry.k8s.io` → `REGISTRY_K8S_IO_LIST` 与 `NON_DOCKER_IO_LIST`。清单为空或含空条目时会被跳过，不会误扫整个 `apps/` 目录。
@@ -632,7 +632,7 @@ git push
 - `renovate.json` 使用 Renovate 自动检测 Docker 镜像更新。
 - `.github/workflows/renovate-app-version.yml` 会根据 Compose 镜像 tag 自动重命名版本目录。
 - 应用同步脚本会把仓库 `apps/` 下的应用复制到 1Panel 的 `/opt/1panel/resource/apps/local/`。
-- `scripts/sync-and-refresh.sh` 在完成同步后调用 1Panel API 刷新本地应用商店，详见第十二节。
+- `scripts/refresh.sh` 只调用 1Panel API 刷新本地应用商店列表，详见第十二节。
 - 新增应用时应优先复用仓库现有应用的格式，不要直接套用与本仓库自动化冲突的官方示例。
 
 ## 十二、同步脚本（`scripts/`）
@@ -641,10 +641,12 @@ git push
 
 | 脚本 | 作用 |
 | --- | --- |
-| `scripts/sync-apps.sh` | 克隆仓库 → 执行 `scripts/mirror.sh` → 把应用复制到 1Panel 本地应用目录 |
-| `scripts/sync-and-refresh.sh` | 先同步，再调用 1Panel API 刷新本地应用商店 |
-| `scripts/mirror.sh` | 执行 `adapters/` 下的适配脚本，并按 `.env` 完成镜像替换 |
+| `scripts/sync-apps.sh` | 克隆仓库，把应用复制到 1Panel 本地应用目录，并清理超量历史版本 |
+| `scripts/refresh.sh` | 只调用 1Panel API 刷新本地应用商店列表 |
+| `scripts/mirror.sh` | 对已部署的应用目录执行 `adapters/` 适配脚本，并按 `.env` 完成镜像替换 |
 | `scripts/check-env.sh` | 被上面三个脚本 `source`：填默认值、推导目录、校验必填变量，变量不全时直接退出 |
+
+三个脚本各做一件事、互不调用，完整链路是 `sync-apps.sh && mirror.sh && refresh.sh`（镜像替换必须在复制之后，刷新只读不写）。
 
 `scripts/` 与 `adapters/` 的分工：`scripts/` 是所有应用共用的拉起流程，改动会影响全部应用；`adapters/` 是单个应用的适配钩子（如 `prune-apps.sh`），由 `scripts/mirror.sh` 按文件名顺序自动执行，新增脚本不需要注册。
 
@@ -656,8 +658,8 @@ git push
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空为全部 | 空（全部） |
 | `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
-| `ONEPANEL_URL` | 面板地址，可省略协议（仅 `sync-and-refresh.sh`） | 必填 |
-| `ONEPANEL_APIKEY` | 面板 API Key（仅 `sync-and-refresh.sh`） | 必填 |
+| `ONEPANEL_URL` | 面板地址，可省略协议（仅 `refresh.sh`） | 必填 |
+| `ONEPANEL_APIKEY` | 面板 API Key（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_NODE` | 节点名称，留空为主节点 | 空（主节点） |
 
 目录由 `PANEL_ROOT` 推导，一般不需要设置：
@@ -685,19 +687,25 @@ export GIT_REPO=https://github.com/willow-god/appstore
 # export KEEP_VERSIONS=10
 
 
-# 仅 sync-and-refresh.sh 需要：面板地址与「设置 → 密钥」生成的 API Key
+# 仅 refresh.sh 需要：面板地址与「设置 → 密钥」生成的 API Key
 # export ONEPANEL_URL=https://panel.example.com:端口
 # export ONEPANEL_APIKEY=你的APIKey
 
-# 仅 sync-and-refresh.sh 需要：多节点环境操作从节点时填节点名，留空为主节点
+# 仅 refresh.sh 需要：多节点环境操作从节点时填节点名，留空为主节点
 # export ONEPANEL_NODE=节点名
 
-# 只同步文件，之后到面板手动点「更新应用列表」
+# 1. 同步文件到 1Panel 本地应用目录
 bash scripts/sync-apps.sh
 
-# 同步后调用 POST /api/v2/apps/sync/local 自动刷新应用商店
+# 2. 对已部署目录做镜像替换（每次同步后都要重跑）
+bash scripts/mirror.sh
+
+# 3. 调用 POST /api/v2/apps/sync/local 刷新应用商店（不需要可跳过）
 ONEPANEL_URL=https://panel.example.com:端口 ONEPANEL_APIKEY=你的APIKey \
-bash scripts/sync-and-refresh.sh
+bash scripts/refresh.sh
+
+# 也可以一行串起来
+bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
 ```
 
 变量缺失时会由 `check-env.sh` 报错并退出，不需要先去读脚本源码确认默认值。
@@ -719,11 +727,18 @@ bash scripts/sync-and-refresh.sh
 
 ### 12.4 脚本流程
 
+`sync-apps.sh`（只负责落盘）：
+
 1. `check-env.sh` 填默认值、推导目录并校验变量。
 2. 克隆应用仓库到临时目录（`--depth 1`），退出时通过 `trap` 自动清理。
-3. 执行 `scripts/mirror.sh`：先跑完 `adapters/*.sh`，再按 `.env` 与 `/opt/mirror-config.env` 完成镜像替换。
-4. 遍历应用，复制应用级文件，并按版本目录逐个覆盖；随后按两档规则清理：能只读查到 `app_installs` 时跳过已安装版本，否则仅保留最近 `KEEP_VERSIONS` 个。
-5. `sync-and-refresh.sh` 额外生成随机 `TASK_ID` 和秒级时间戳，计算 `Token = md5("1panel" + APIKey + Timestamp)`，调用 `POST /api/v2/apps/sync/local`，校验响应包含 `"code":200`，失败时以非零状态码退出。
+3. 遍历应用，复制应用级文件，并按版本目录逐个覆盖；随后按两档规则清理：能只读查到 `app_installs` 时跳过已安装版本，否则仅保留最近 `KEEP_VERSIONS` 个。
+
+`mirror.sh`（只负责镜像替换）：
+
+1. 依次执行 `adapters/*.sh`（如 `prune-apps.sh` 删除 `PRUNE_APPS` 里的已部署副本）。
+2. 按 `.env` 与 `/opt/mirror-config.env`，直接改写 `$LOCAL_APPS_DIR/<应用>/<版本>/docker-compose.yml` 里的镜像前缀；已替换过的跳过，不留 `.bak`。
+
+`refresh.sh`（只负责刷新）：生成随机 `TASK_ID` 和秒级时间戳，计算 `Token = md5("1panel" + APIKey + Timestamp)`，调用 `POST /api/v2/apps/sync/local`，校验响应包含 `"code":200`，失败时以非零状态码退出。
 
 ### 12.5 API 鉴权说明
 
@@ -735,8 +750,8 @@ bash scripts/sync-and-refresh.sh
 ### 12.6 定时执行建议
 
 ```bash
-# 每天凌晨 4 点同步并刷新
-0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash /opt/appstore/scripts/sync-and-refresh.sh >> /var/log/appstore-sync.log 2>&1
+# 每天凌晨 4 点同步、替换镜像并刷新
+0 4 * * * ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx /bin/bash -c '/opt/appstore/scripts/sync-apps.sh && /opt/appstore/scripts/mirror.sh && /opt/appstore/scripts/refresh.sh' >> /var/log/appstore-sync.log 2>&1
 ```
 
 `/opt/appstore` 为服务器上克隆的仓库目录。建议同时把日志文件加入轮转，避免长期运行占满磁盘。

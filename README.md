@@ -33,15 +33,23 @@
 
 | 脚本 | 作用 |
 | --- | --- |
-| `scripts/sync-apps.sh` | 克隆仓库 → 镜像替换 → 把应用复制到 1Panel 本地应用目录 |
-| `scripts/sync-and-refresh.sh` | 在 `sync-apps.sh` 之后调用 1Panel API，自动刷新本地应用商店列表 |
-| `scripts/mirror.sh` | 镜像源替换，并执行 `adapters/` 下的应用适配脚本（由同步脚本调用） |
+| `scripts/sync-apps.sh` | 克隆仓库，把应用复制到 1Panel 本地应用目录，并清理超量历史版本 |
+| `scripts/mirror.sh` | 对**已部署**的应用目录做镜像源替换，并执行 `adapters/` 下的适配脚本 |
+| `scripts/refresh.sh` | 只调用 1Panel API，刷新本地应用商店列表 |
 | `scripts/check-env.sh` | 校验环境变量并填默认值，被上面几个脚本 `source`，变量不全时不继续执行 |
+
+三个脚本各做一件事，互不调用。完整链路按顺序串起来执行：
+
+```bash
+bash scripts/sync-apps.sh && bash scripts/mirror.sh && bash scripts/refresh.sh
+```
+
+镜像替换必须在 `sync-apps.sh` 之后（副本覆盖回未替换的版本，每次同步后都要重新替换）；`refresh.sh` 只刷新列表，不复制文件。
 
 ### `scripts/` 和 `adapters/` 的区别
 
-- `scripts/`：所有同步流程共用的**全局脚本**，负责克隆、镜像替换、落盘、刷新这一整套拉起流程，改动会影响全部应用。
-- `adapters/`：针对**单个应用**的适配脚本，比如格式转换、清理已下线应用（`prune-apps.sh`）。`scripts/mirror.sh` 会按文件名顺序执行这里的每个 `.sh`，不需要注册。
+- `scripts/`：所有同步流程共用的**全局脚本**，负责克隆落盘、镜像替换、刷新这一整套拉起流程，每个脚本只做一件事，改动会影响全部应用。
+- `adapters/`：针对**单个应用**的适配脚本，比如清理已下线应用（`prune-apps.sh`）。`scripts/mirror.sh` 会按文件名顺序执行这里的每个 `.sh`，不需要注册。
 
 ### 环境变量
 
@@ -53,8 +61,8 @@
 | `GIT_REPO` | 应用仓库地址 | `https://github.com/willow-god/appstore` |
 | `APPS` | 只同步指定应用，逗号或空格分隔；留空表示全部 | 空（全部） |
 | `KEEP_VERSIONS` | 每个应用在本机保留的历史版本目录数量 | `10` |
-| `ONEPANEL_URL` | 面板地址，可省略协议（仅 `sync-and-refresh.sh`） | 必填 |
-| `ONEPANEL_APIKEY` | 面板「设置 - 密钥」生成的 API Key（仅 `sync-and-refresh.sh`） | 必填 |
+| `ONEPANEL_URL` | 面板地址，可省略协议（仅 `refresh.sh`） | 必填 |
+| `ONEPANEL_APIKEY` | 面板「设置 - 密钥」生成的 API Key（仅 `refresh.sh`） | 必填 |
 | `ONEPANEL_NODE` | 节点名称，留空操作主节点 | 空（主节点） |
 
 以下目录自动推导，一般不需要设置：
@@ -81,6 +89,7 @@ export GIT_REPO=https://github.com/willow-god/appstore
 # export KEEP_VERSIONS=10
 
 bash scripts/sync-apps.sh
+bash scripts/mirror.sh
 ```
 
 同步完成后到面板「应用商店 → 本地应用」点「更新应用列表」；想让脚本自己刷新见第 3 种用法。
@@ -95,11 +104,12 @@ export GIT_REPO=https://github.com/willow-god/appstore
 export APPS="whoami,ech0,moments"
 
 bash scripts/sync-apps.sh
+bash scripts/mirror.sh
 ```
 
-### 3. 同步并自动刷新应用商店（API）
+### 3. 同步后自动刷新应用商店（API）
 
-不想手动点「更新应用列表」时用这个脚本，它在同步完成后调用 `POST /api/v2/apps/sync/local`：
+不想手动点「更新应用列表」时，在同步和镜像替换之后执行 `refresh.sh`，它只调用 `POST /api/v2/apps/sync/local`：
 
 ```bash
 export PANEL_ROOT=/opt/1panel
@@ -117,7 +127,9 @@ export ONEPANEL_APIKEY=你的APIKey
 # 同样可以只同步部分应用
 # export APPS="whoami,ech0"
 
-bash scripts/sync-and-refresh.sh
+bash scripts/sync-apps.sh
+bash scripts/mirror.sh
+bash scripts/refresh.sh
 ```
 
 鉴权方式：`Token = md5("1panel" + APIKey + Timestamp)`，请求携带 `1Panel-Timestamp`、`1Panel-Token` 请求头。请确保服务器时间准确，并把非零退出码接入告警。
@@ -145,9 +157,7 @@ bash scripts/sync-and-refresh.sh
 
 出现 `⚠️` 表示该应用退回兜底规则，原因（数据库缺失、被锁、指针失效等）会一并打印。
 
-> 💡 脚本只负责复制应用；上游已下线（或从未出现在仓库里）的应用不会自动从 1Panel 本地应用目录消失。仓库根目录 `.env` 的 `PRUNE_APPS` 就是用来清理它们的：执行同步脚本时 `adapters/prune-apps.sh` 会把这些名字从应用清单里移除，并删除 `$LOCAL_APPS_DIR/<应用名>` 这份已部署副本（不会卸载已安装实例）。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
-> 💡 脚本只负责复制应用；上游已下线（或从未出现在仓库里）的应用不会自动从 1Panel 本地应用目录消失。仓库根目录 `.env` 的 `PRUNE_APPS` 就是用来清理它们的：执行同步脚本时 `adapters/prune-apps.sh` 会把这些名字从应用清单里移除，并删除 `$LOCAL_APPS_DIR/<应用名>` 这份已部署副本（不会卸载已安装实例）。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+> 💡 脚本只负责复制应用；上游已下线（或从未出现在仓库里）的应用不会自动从 1Panel 本地应用目录消失。仓库根目录 `.env` 的 `PRUNE_APPS` 就是用来清理它们的：执行 `scripts/mirror.sh` 时 `adapters/prune-apps.sh` 会删除 `$LOCAL_APPS_DIR/<应用名>` 这份已部署副本（不会卸载已安装实例）。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 🎡 镜像加速配置
 
@@ -207,7 +217,7 @@ K8S_REG_MIRROR=registry.k8s.io.mirror
 
 > 该部分无需配置，仅供说明脚本的绿色性质，替换脚本开源于非docker.io镜像中如**MoonTV**仓库，有需要请自行查看
 
-在克隆仓库后，同步脚本会执行 `scripts/mirror.sh` 完成镜像源替换。
+同步完成后执行 `scripts/mirror.sh`，对已部署目录完成镜像源替换。
 
 这样即使镜像源被墙，也能快速替换为你配置的加速地址。
 

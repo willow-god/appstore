@@ -1,28 +1,33 @@
 #!/bin/bash
 # ============================================================
-# 全量同步应用 + 触发 1Panel 本地应用商店刷新（API 方式）
+# 刷新 1Panel 本地应用商店列表（只做这一件事）
 # ------------------------------------------------------------
-# 先执行 scripts/sync-apps.sh 落盘，再调用 1Panel API 让面板重新扫描
-# 本地应用目录，不需要手动到面板点「更新应用列表」。
+# 只调用 1Panel API（POST /api/v2/apps/sync/local）让面板重新扫描本地
+# 应用目录，不复制文件、不执行其他脚本。应用文件请先由
+# scripts/sync-apps.sh 落盘，镜像替换由 scripts/mirror.sh 完成。
 #
-# 变量（未设置时使用 scripts/check-env.sh 里的默认值）：
-#   PANEL_ROOT       1Panel 安装根目录，默认 /opt/1panel
-#   GIT_REPO         应用仓库地址，默认 https://github.com/willow-god/appstore
-#   APPS             只同步指定应用（逗号或空格分隔），留空表示全部
-#   ONEPANEL_URL     面板地址，可省略协议（必填）
-#   ONEPANEL_APIKEY  面板「设置 - 密钥」中生成的 API Key（必填）
+# 用法：
+#   ONEPANEL_URL=https://panel.example.com \
+#   ONEPANEL_APIKEY=你的APIKey \
+#   bash scripts/refresh.sh
+#
+#   # 从节点
+#   ONEPANEL_URL=... ONEPANEL_APIKEY=... ONEPANEL_NODE=节点名 \
+#   bash scripts/refresh.sh
+#
+# 变量：
+#   ONEPANEL_URL     面板地址，可省略 http(s)://（必填）
+#   ONEPANEL_APIKEY  面板「设置 → 密钥」里生成的 API Key（必填）
 #   ONEPANEL_NODE    节点名称，留空表示主节点
 #
-# 示例：
-#   ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=xxxx \
-#   bash scripts/sync-and-refresh.sh
+# 退出码：0 成功；1 请求失败或 1Panel 返回非 200；3/4 环境变量不合法
 # ============================================================
 set -euo pipefail
 IFS=$'\n\t'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=check-env.sh
-. "$SCRIPT_DIR/check-env.sh" sync-and-refresh
+. "$SCRIPT_DIR/check-env.sh" refresh
 
 # 规范化站点地址：去掉结尾斜杠，缺少协议时补 http://
 ONEPANEL_URL="${ONEPANEL_URL%/}"
@@ -39,16 +44,13 @@ md5_hex() {
     fi
 }
 
-# ---------- 1. 同步应用文件 ----------
-bash "$SCRIPT_DIR/sync-apps.sh"
-
-# ---------- 2. 调用 1Panel API 刷新本地应用商店 ----------
 # 鉴权方式：Token = md5("1panel" + APIKey + Timestamp)
 # 请求头需携带 1Panel-Timestamp / 1Panel-Token
 # CurrentNode 可选：留空时不发送该头，1Panel 将默认为主节点
 echo "🔄 Refreshing 1Panel local app store..."
 
-TASK_ID=$(cat /proc/sys/kernel/random/uuid)
+# 任务 ID：优先用内核 UUID，其次 uuidgen，最后用随机数兜底（非 Linux 也能跑）
+TASK_ID="$(cat /proc/sys/kernel/random/uuid 2>/dev/null || uuidgen 2>/dev/null || printf 'task-%s-%s' "$(date +%s)" "$RANDOM")"
 TIMESTAMP=$(date +%s)
 
 TOKEN=$(echo -n "1panel${ONEPANEL_APIKEY}${TIMESTAMP}" | md5_hex)
@@ -80,4 +82,3 @@ fi
 
 echo "✅ 1Panel local app store refresh triggered."
 echo "TaskID: ${TASK_ID}"
-echo "🎉 All done."

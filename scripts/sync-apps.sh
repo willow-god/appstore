@@ -1,19 +1,20 @@
 #!/bin/bash
 # ============================================================
-# 同步应用文件到 1Panel 本地应用目录
+# 同步应用文件到 1Panel 本地应用目录（只做这一件事）
 # ------------------------------------------------------------
-# 只负责落盘，不调用 1Panel API；需要同步后自动刷新列表时用
-# scripts/sync-and-refresh.sh。
+# 克隆仓库，把 apps/<应用>/ 复制到 $LOCAL_APPS_DIR，并清理超出保留数量的
+# 历史版本目录。不执行镜像替换（scripts/mirror.sh），也不调用 1Panel API
+# （scripts/refresh.sh）——完整链路按 README 的顺序依次执行。
 #
-# 变量（未设置时使用 scripts/check-env.sh 里的默认值）：
+# 用法：
+#   bash scripts/sync-apps.sh
+#   APPS="whoami,ech0" bash scripts/sync-apps.sh
+#
+# 变量：
 #   PANEL_ROOT     1Panel 安装根目录，默认 /opt/1panel
 #   GIT_REPO       应用仓库地址，默认 https://github.com/willow-god/appstore
 #   APPS           要同步的应用（逗号或空格分隔），留空表示全部
 #   KEEP_VERSIONS  每个应用保留的历史版本目录数量，默认 10
-#
-# 示例：
-#   bash scripts/sync-apps.sh
-#   APPS="whoami,ech0" bash scripts/sync-apps.sh
 #
 # 版本目录策略：仓库里存在的版本每次覆盖更新，仓库里已经没有的旧版本
 # 继续保留（最多 KEEP_VERSIONS 个）。1Panel 本地应用同步会删除本地已不
@@ -21,10 +22,10 @@
 # 着它，删掉目录就会让已安装应用的详情页和升级报 JSON 错误。
 #
 # 清理前会用只读 sqlite 查询 $PANEL_DB（由 PANEL_ROOT 拼出，即
-# $PANEL_ROOT/db/agent.db）里的
-# app_installs，已安装的版本永不清理；数据库读不到（没有 sqlite3、文件
-# 不存在、被锁）时退化为纯「保留最近 KEEP_VERSIONS 个」。数据库只读打开，
-# 带 PRAGMA query_only=ON，不会写入任何内容。
+# $PANEL_ROOT/db/agent.db）里的 app_installs，已安装的版本永不清理；数
+# 据库读不到（没有 sqlite3、文件不存在、被锁）时退化为纯「保留最近
+# KEEP_VERSIONS 个」。数据库只读打开，带 PRAGMA query_only=ON，不会写
+# 入任何内容。
 # ============================================================
 set -euo pipefail
 IFS=$'\n\t'
@@ -46,15 +47,7 @@ rm -rf -- "$TMP_DIR"
 mkdir -p "$(dirname "$TMP_DIR")"
 git clone --depth 1 "$GIT_REPO" "$TMP_DIR"
 
-# ---------- 2. 镜像替换 + 适配脚本 ----------
-echo "🔄 Mirroring apps..."
-if [ -f "$TMP_DIR/scripts/mirror.sh" ]; then
-    bash "$TMP_DIR/scripts/mirror.sh"
-else
-    echo "⚠️ scripts/mirror.sh 不存在，跳过镜像替换"
-fi
-
-# ---------- 3. 应用列表 ----------
+# ---------- 2. 应用列表 ----------
 app_list=()
 if [ -n "${APPS:-}" ]; then
     IFS=', ' read -r -a app_list <<<"$APPS"
@@ -71,7 +64,7 @@ fi
 
 mkdir -p "$LOCAL_APPS_DIR"
 
-# ---------- 4. 复制应用 ----------
+# ---------- 3. 复制应用 ----------
 # 清理规则有两档：
 #   1. 能只读打开 1Panel 数据库时，跳过 app_installs 里已安装的版本，其余
 #      仍按「保留最近 KEEP_VERSIONS 个」清理；

@@ -16,14 +16,14 @@
 # ============================================================
 
 _check_env_script="${1:-}"
-_check_env_allowed="mirror sync-apps sync-and-refresh"
+_check_env_allowed="mirror sync-apps refresh"
 
 case "$_check_env_script" in
     "")
         echo "❌ check-env.sh 需要传入脚本名（可选: $_check_env_allowed）" >&2
         exit 2
         ;;
-    mirror | sync-apps | sync-and-refresh) ;;
+    mirror | sync-apps | refresh) ;;
     *)
         echo "❌ 未知脚本名: $_check_env_script（可选: $_check_env_allowed）" >&2
         exit 2
@@ -48,7 +48,7 @@ export TMP_DIR="${TMP_DIR:-$LOCAL_APPS_DIR/appstore-localApps}"
 PANEL_DB="$PANEL_ROOT/db/agent.db"
 export PANEL_DB
 
-# 1Panel API 配置（只有 sync-and-refresh 需要）
+# 1Panel API 配置（只有 refresh 需要）
 export ONEPANEL_URL="${ONEPANEL_URL:-}"
 export ONEPANEL_APIKEY="${ONEPANEL_APIKEY:-}"
 export ONEPANEL_NODE="${ONEPANEL_NODE:-}"
@@ -56,7 +56,7 @@ export ONEPANEL_NODE="${ONEPANEL_NODE:-}"
 # ---------- 必填校验 ----------
 _missing=()
 case "$_check_env_script" in
-    sync-and-refresh)
+    refresh)
         [ -n "$ONEPANEL_URL" ] || _missing+=("ONEPANEL_URL")
         [ -n "$ONEPANEL_APIKEY" ] || _missing+=("ONEPANEL_APIKEY")
         ;;
@@ -67,7 +67,7 @@ if [ "${#_missing[@]}" -gt 0 ]; then
     echo "❌ 缺少必填环境变量: ${_missing_text}" >&2
     echo "   示例：" >&2
     echo "   ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=你的APIKey \\" >&2
-    echo "   bash scripts/sync-and-refresh.sh" >&2
+    echo "   bash scripts/refresh.sh" >&2
     exit 3
 fi
 
@@ -77,7 +77,7 @@ if ! [[ "$KEEP_VERSIONS" =~ ^[0-9]+$ ]] || [ "$KEEP_VERSIONS" -lt 1 ]; then
     exit 4
 fi
 
-if [ "$_check_env_script" = "sync-and-refresh" ] && [ -z "$PANEL_ROOT" ]; then
+if [ "$_check_env_script" = "refresh" ] && [ -z "$PANEL_ROOT" ]; then
     echo "❌ PANEL_ROOT 不能为空" >&2
     exit 4
 fi
