@@ -90,6 +90,11 @@ DB_STATE="unknown"
 DB_REASON=""
 DB_APP_REASON=""
 
+# 清理统计，脚本结束时汇总输出（多数应用只有 1~2 个版本目录，不会触发清理细节）
+PRUNE_APPS_TOTAL=0
+PRUNE_APPS_UNDER_LIMIT=0
+PRUNE_DIRS_REMOVED=0
+
 init_installed_db() {
     if ! command -v sqlite3 >/dev/null 2>&1; then
         DB_STATE="unavailable"
@@ -159,7 +164,12 @@ prune_versions() {
     done < <(find "$dst" -mindepth 1 -maxdepth 1 -type d | sed 's#.*/##' | sort -V)
 
     local total=${#versions[@]}
-    [ "$total" -le "$KEEP_VERSIONS" ] && return 0
+    PRUNE_APPS_TOTAL=$((PRUNE_APPS_TOTAL + 1))
+    # 没超过保留上限就没有可清理的，不逐个应用刷屏，只计入结尾汇总
+    if [ "$total" -le "$KEEP_VERSIONS" ]; then
+        PRUNE_APPS_UNDER_LIMIT=$((PRUNE_APPS_UNDER_LIMIT + 1))
+        return 0
+    fi
 
     local -A protected=()
     local -A protected_by=()
@@ -209,6 +219,7 @@ prune_versions() {
     done
 
     kept_count=$((total - removed_count))
+    PRUNE_DIRS_REMOVED=$((PRUNE_DIRS_REMOVED + removed_count))
     echo "📊 $app_name: 清理完成，目录 $total 个 → 保留 $kept_count 个，删除 $removed_count 个"
 }
 
@@ -241,6 +252,9 @@ sync_app() {
 }
 
 init_installed_db
+if [ "$DB_STATE" != "ready" ]; then
+    echo "⚠️ 未启用已安装版本保护：$DB_REASON（历史版本只按数量清理）"
+fi
 
 failed=()
 for app_name in "${app_list[@]}"; do
@@ -249,6 +263,7 @@ for app_name in "${app_list[@]}"; do
 done
 
 echo "✅ Local app files updated: $LOCAL_APPS_DIR"
+echo "📊 历史版本清理：检查 $PRUNE_APPS_TOTAL 个应用，$PRUNE_APPS_UNDER_LIMIT 个版本数不超过 $KEEP_VERSIONS 个未触发清理，删除 $PRUNE_DIRS_REMOVED 个旧版本目录"
 
 if [ "${#failed[@]}" -gt 0 ]; then
     echo "⚠️ 以下应用未同步: ${failed[*]}"
