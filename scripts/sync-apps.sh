@@ -2,10 +2,9 @@
 # ============================================================
 # 同步应用文件到 1Panel 本地应用目录（只做这一件事）
 # ------------------------------------------------------------
-# 准备仓库（check-env.sh 负责：脚本在仓库里就用本仓库，仓库外则临时克隆到
-# TMP_DIR 并用仓库里的脚本重跑），把 apps/<应用>/ 复制到 $LOCAL_APPS_DIR，
-# 并清理超出保留数量的历史版本目录。不执行镜像替换（scripts/mirror.sh），
-# 也不调用 1Panel API（scripts/refresh.sh）——完整链路按 README 的顺序依次执行。
+# 克隆仓库，把 apps/<应用>/ 复制到 $LOCAL_APPS_DIR，并清理超出保留数量的
+# 历史版本目录。不执行镜像替换（scripts/mirror.sh），也不调用 1Panel API
+# （scripts/refresh.sh）——完整链路按 README 的顺序依次执行。
 #
 # 用法：
 #   bash scripts/sync-apps.sh
@@ -16,8 +15,8 @@
 #   GIT_REPO       应用仓库地址，默认 https://github.com/willow-god/appstore
 #   APPS           要同步的应用（逗号或空格分隔），留空表示全部
 #   KEEP_VERSIONS  每个应用保留的历史版本目录数量，默认 10
-#   REPO_DIR       已准备好的仓库目录，由 check-env.sh 填好（仓库内执行就是
-#                  脚本所在仓库，仓库外执行则自动克隆到 TMP_DIR 并清理）
+#   REPO_DIR       已克隆好的仓库目录；设置后不再重复克隆（定时任务外层
+#                  已经 clone 过时用）
 #
 # 版本目录策略：仓库里存在的版本每次覆盖更新，仓库里已经没有的旧版本
 # 继续保留（最多 KEEP_VERSIONS 个）。1Panel 本地应用同步会删除本地已不
@@ -38,20 +37,30 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/check-env.sh" sync-apps
 
 cleanup() {
-    if [ -n "${_check_env_cloned:-}" ] && [ -d "${TMP_DIR:-}" ]; then
+    if [ -n "${TMP_DIR:-}" ] && [ -d "$TMP_DIR" ]; then
         rm -rf -- "$TMP_DIR"
     fi
 }
 trap cleanup EXIT
 
 # ---------- 1. 准备仓库内容 ----------
-# 仓库目录由 check-env.sh 准备好：脚本在仓库里就用该仓库，只是仓库外的一
-# 份拷贝时它会克隆到 TMP_DIR（退出时由 cleanup 删除）。
-if [ ! -d "$REPO_DIR/apps" ]; then
-    echo "❌ 仓库目录缺少 apps/ 目录: $REPO_DIR"
-    exit 1
+# REPO_DIR 指向已经克隆好的仓库时直接用，不再重复克隆（定时任务外层
+# 已经 clone 过一次的情况）。否则现场克隆到 TMP_DIR，退出时删除。
+if [ -n "${REPO_DIR:-}" ]; then
+    if [ ! -d "$REPO_DIR/apps" ]; then
+        echo "❌ REPO_DIR 不是应用仓库（缺少 apps/ 目录）: $REPO_DIR"
+        exit 1
+    fi
+    SRC_DIR="$(cd "$REPO_DIR" && pwd)"
+    trap - EXIT
+    echo "📂 使用已有仓库目录: $SRC_DIR"
+else
+    echo "📥 Cloning appstore repo..."
+    rm -rf -- "$TMP_DIR"
+    mkdir -p "$(dirname "$TMP_DIR")"
+    git clone --depth 1 "$GIT_REPO" "$TMP_DIR"
+    SRC_DIR="$TMP_DIR"
 fi
-SRC_DIR="$REPO_DIR"
 
 # ---------- 2. 应用列表 ----------
 app_list=()

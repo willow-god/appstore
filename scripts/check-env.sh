@@ -8,8 +8,6 @@
 # 作用：
 #   1. 按脚本名列出必填变量，缺任何一个就退出，调用方不会继续执行
 #   2. 填好带默认值的变量，并统一推导目录，避免每个脚本各拼一份路径
-#   3. 准备仓库：脚本在仓库里就用该仓库；只是仓库外的一份拷贝时克隆到
-#      TMP_DIR，退出时删除，并用仓库里的同名脚本重新执行
 #
 # 变量全在这里定义，调用方只需要：
 #   . "$SCRIPT_DIR/check-env.sh" sync-apps
@@ -54,40 +52,6 @@ export PANEL_DB
 export ONEPANEL_URL="${ONEPANEL_URL:-}"
 export ONEPANEL_APIKEY="${ONEPANEL_APIKEY:-}"
 export ONEPANEL_NODE="${ONEPANEL_NODE:-}"
-
-# ---------- 仓库定位（克隆也在这里完成） ----------
-# 脚本平时就放在仓库里，直接用所在仓库；如果只是仓库外的一份拷贝（1Panel
-# 定时任务里的固定路径），就临时克隆一份最新仓库到 TMP_DIR，供镜像替换读
-# .env/adapters、同步读 apps/。克隆目录退出时删除，调用方不用管。
-if [ -z "${REPO_DIR:-}" ]; then
-    if [ -d "$SCRIPT_DIR/../apps" ]; then
-        REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-    else
-        if ! command -v git >/dev/null 2>&1; then
-            echo "❌ 找不到 git，无法克隆应用仓库" >&2
-            exit 1
-        fi
-        echo "📥 Cloning appstore repo..."
-        rm -rf -- "$TMP_DIR"
-        mkdir -p "$(dirname "$TMP_DIR")"
-        if ! git clone --depth 1 "$GIT_REPO" "$TMP_DIR"; then
-            echo "❌ 克隆应用仓库失败: $GIT_REPO" >&2
-            exit 1
-        fi
-        REPO_DIR="$TMP_DIR"
-        _check_env_cloned=1
-        trap 'rm -rf -- "$TMP_DIR"' EXIT
-    fi
-fi
-export REPO_DIR
-
-# 脚本只是拷贝时，改用仓库里最新的脚本执行（REPO_DIR 已导出，不会重复克隆）
-if [ "$REPO_DIR" != "$(cd "$SCRIPT_DIR/.." && pwd)" ] && [ -f "$REPO_DIR/scripts/$(basename "$0")" ]; then
-    echo "🔄 使用仓库内脚本: $REPO_DIR/scripts/$(basename "$0")"
-    unset _check_env_script _check_env_allowed _missing _missing_text
-    bash "$REPO_DIR/scripts/$(basename "$0")" "$@" || exit $?
-    exit 0
-fi
 
 # ---------- 必填校验 ----------
 _missing=()
