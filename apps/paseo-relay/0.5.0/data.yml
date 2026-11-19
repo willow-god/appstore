@@ -1,0 +1,19 @@
+additionalProperties:
+  formFields:
+    - default: 8411
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: Relay Port
+      labelZh: 中继端口
+      label:
+        en: Relay Port
+        ja: リレーポート
+        ms: Port Relai
+        pt-br: Porta do Relay
+        ru: Порт релея
+        ko: 릴레이 포트
+        zh: 中继端口
+        zh-Hant: 中繼連接埠
+      required: true
+      rule: paramPort
+      type: number

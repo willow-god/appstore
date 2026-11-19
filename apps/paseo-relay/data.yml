@@ -1,0 +1,33 @@
+name: Paseo-Relay
+tags:
+  - 网络
+  - 工具
+  - 自托管
+title: Paseo 的自托管中继服务器
+description: 端到端加密的 WebSocket 中继，用于在 Paseo 守护进程与移动端无法直连时转发加密数据
+additionalProperties:
+  key: paseo-relay
+  name: Paseo-Relay
+  tags:
+    - Tool
+    - Proxy
+  shortDescZh: Paseo 守护进程与移动端之间的零知识中继服务器
+  shortDescEn: A zero-knowledge relay server between the Paseo daemon and the mobile app
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  website: https://github.com/zenghongtu/paseo-relay
+  github: https://github.com/zenghongtu/paseo-relay
+  document: https://github.com/zenghongtu/paseo-relay#readme
+  description:
+    en: A lightweight self-hosted relay for Paseo. It forwards end-to-end encrypted WebSocket traffic between the Paseo daemon and the mobile app, and cannot read the messages.
+    zh: Paseo 的轻量自托管中继。Paseo 守护进程与移动端无法直连时，由它转发已端到端加密的 WebSocket 流量，中继本身读不到消息内容。
+    zh-Hant: Paseo 的輕量自託管中繼。Paseo 守護進程與行動端無法直連時，由它轉發已端到端加密的 WebSocket 流量，中繼本身讀不到訊息內容。
+    ja: Paseo 用の軽量セルフホスト型リレー。デーモンとモバイルアプリが直接接続できない場合に、エンドツーエンド暗号化済みの WebSocket 通信を転送します。
+    ms: Relai kendiri ringan untuk Paseo. Ia memajukan trafik WebSocket yang disulitkan hujung ke hujung antara daemon dan aplikasi mudah alih.
+    pt-br: Relay auto-hospedado leve para o Paseo. Encaminha tráfego WebSocket criptografado de ponta a ponta entre o daemon e o aplicativo móvel, sem conseguir ler as mensagens.
+    ru: Легкий самостоятельно размещаемый релей для Paseo. Пересылает зашифрованный сквозным шифрованием WebSocket-трафик между демоном и мобильным приложением.
+    ko: Paseo용 경량 셀프 호스팅 릴레이입니다. 데몬과 모바일 앱이 직접 연결할 수 없을 때 종단 간 암호화된 WebSocket 트래픽을 전달합니다.
+  architectures:
+    - amd64
+    - arm64

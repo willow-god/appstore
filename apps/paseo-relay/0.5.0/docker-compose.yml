@@ -1,0 +1,19 @@
+services:
+  paseo-relay:
+    image: ghcr.io/zenghongtu/paseo-relay:0.5.0
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:8411"
+    environment:
+      # 中继只在内存里转发已加密的数据帧，没有需要持久化的数据，
+      # 因此不挂载目录。日志格式固定为 text，便于面板直接查看。
+      - LOG_FORMAT=text
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true
