@@ -133,7 +133,7 @@ bash scripts/sync-and-refresh.sh
 1. **数据库可读时（推荐）**：以只读方式查询 `$PANEL_DB`（默认 `/opt/1panel/db/agent.db`）里的 `app_installs`，**已安装的版本一律跳过**，其余仍保留最近 `KEEP_VERSIONS` 个。
 2. **数据库不可读时**：没有 `sqlite3`、数据库文件不存在、被占用或存在失效指针，退回纯「保留最近 `KEEP_VERSIONS` 个」的兜底规则。
 
-数据库只用于 `SELECT`，连接带 `-readonly` 参数和 `PRAGMA query_only=ON`，不会写入、不会创建 `-wal`/`-shm` 文件；脚本前后校验数据库文件哈希一致。
+数据库只用于 `SELECT`，连接带 `-readonly` 参数和 `PRAGMA query_only=ON`，不会写入数据库，也不会创建 `-wal`/`-shm` 文件。
 
 原因在 1Panel 的本地应用同步逻辑：它会删掉磁盘上已不存在的版本对应的 `app_details` 记录，但 `app_installs.app_detail_id` 仍指向那条记录，于是已安装应用的详情页和升级会报 `unexpected end of json input`。仓库通常只保留最新一个版本目录，直接整目录替换就会不断制造这种悬挂指针；保留已安装版本的目录是避免这个问题的关键。
 
