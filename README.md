@@ -67,39 +67,57 @@ TMP_DIR        = $LOCAL_APPS_DIR/appstore-localApps # 临时克隆目录，退�
 ### 1. 同步全部应用
 
 ```bash
-PANEL_ROOT=/opt/1panel \
-GIT_REPO=https://github.com/willow-god/appstore \
+# 1Panel 安装根目录；LOCAL_APPS_DIR、TMP_DIR 都由它推导，通常不用改
+export PANEL_ROOT=/opt/1panel
+
+# 应用仓库地址；国内环境换成镜像仓库 https://cnb.cool/Liiiu/appstore 即可
+export GIT_REPO=https://github.com/willow-god/appstore
+
+# 只同步指定应用（应用目录名，逗号或空格分隔）；不设置表示同步全部
+# export APPS="whoami,ech0"
+
+# 每个应用在本机保留的历史版本目录数，默认 10；见下文「历史版本保留」
+# export KEEP_VERSIONS=10
+
 bash scripts/sync-apps.sh
 ```
 
-国内环境把 `GIT_REPO` 换成镜像仓库即可（内容由 GitHub Action 保持同步）：
-
-```bash
-GIT_REPO=https://cnb.cool/Liiiu/appstore bash scripts/sync-apps.sh
-```
-
-同步完成后到面板「应用商店 → 本地应用」点「更新应用列表」；想让脚本自己刷新见下一节。
+同步完成后到面板「应用商店 → 本地应用」点「更新应用列表」；想让脚本自己刷新见第 3 种用法。
 
 ### 2. 同步单独应用
 
 ```bash
-PANEL_ROOT=/opt/1panel \
-APPS="whoami,ech0,moments" \
+export PANEL_ROOT=/opt/1panel
+export GIT_REPO=https://github.com/willow-god/appstore
+
+# 只同步这几个应用；名字是 apps/ 下的目录名，不是商店里显示的名称
+export APPS="whoami,ech0,moments"
+
 bash scripts/sync-apps.sh
 ```
 
 ### 3. 同步并自动刷新应用商店（API）
 
-不想手动点「更新应用列表」时，用这个脚本，它在同步完成后调用 `POST /api/v2/apps/sync/local`：
+不想手动点「更新应用列表」时用这个脚本，它在同步完成后调用 `POST /api/v2/apps/sync/local`：
 
 ```bash
-PANEL_ROOT=/opt/1panel \
-ONEPANEL_URL=https://panel.example.com \
-ONEPANEL_APIKEY=你的APIKey \
+export PANEL_ROOT=/opt/1panel
+export GIT_REPO=https://github.com/willow-god/appstore
+
+# 面板地址，可省略 http(s)://，但端口要写全
+export ONEPANEL_URL=https://panel.example.com:端口
+
+# 面板「设置 → 密钥」里生成的 API Key，属于敏感信息，不要提交到仓库
+export ONEPANEL_APIKEY=你的APIKey
+
+# 多节点环境操作从节点时填写节点名称；留空或注释掉表示主节点
+# export ONEPANEL_NODE=节点名
+
+# 同样可以只同步部分应用
+# export APPS="whoami,ech0"
+
 bash scripts/sync-and-refresh.sh
 ```
-
-也可以配合 `APPS` 只同步部分应用。`ONEPANEL_URL` 可省略协议，`ONEPANEL_NODE` 只在多节点环境操作从节点时才需要填写。
 
 鉴权方式：`Token = md5("1panel" + APIKey + Timestamp)`，请求携带 `1Panel-Timestamp`、`1Panel-Token` 请求头。请确保服务器时间准确，并把非零退出码接入告警。
 

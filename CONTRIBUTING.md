@@ -672,16 +672,34 @@ TMP_DIR        = $LOCAL_APPS_DIR/appstore-localApps
 ### 12.2 使用方法
 
 ```bash
-# 同步全部应用
+# 1Panel 安装根目录；LOCAL_APPS_DIR、TMP_DIR 都由它推导
+export PANEL_ROOT=/opt/1panel
+
+# 应用仓库地址；国内环境换成 https://cnb.cool/Liiiu/appstore
+export GIT_REPO=https://github.com/willow-god/appstore
+
+# 只同步指定应用（apps/ 下的目录名，逗号或空格分隔）；不设置表示全部
+# export APPS="whoami,ech0"
+
+# 每个应用在本机保留的历史版本目录数，默认 10
+# export KEEP_VERSIONS=10
+
+# 仅 sync-and-refresh.sh 需要：面板地址与「设置 → 密钥」生成的 API Key
+# export ONEPANEL_URL=https://panel.example.com:端口
+# export ONEPANEL_APIKEY=你的APIKey
+
+# 仅 sync-and-refresh.sh 需要：多节点环境操作从节点时填节点名，留空为主节点
+# export ONEPANEL_NODE=节点名
+
+# 只同步文件，之后到面板手动点「更新应用列表」
 bash scripts/sync-apps.sh
 
-# 只同步部分应用
-APPS="whoami,ech0" bash scripts/sync-apps.sh
-
-# 同步并自动刷新 1Panel 本地应用商店
-ONEPANEL_URL=https://panel.example.com ONEPANEL_APIKEY=你的APIKey \
+# 同步后调用 POST /api/v2/apps/sync/local 自动刷新应用商店
+ONEPANEL_URL=https://panel.example.com:端口 ONEPANEL_APIKEY=你的APIKey \
 bash scripts/sync-and-refresh.sh
 ```
+
+变量缺失时会由 `check-env.sh` 报错并退出，不需要先去读脚本源码确认默认值。
 
 ### 12.3 历史版本保留（重要）
 
