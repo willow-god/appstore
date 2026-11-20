@@ -1,0 +1,33 @@
+name: QingyuGist
+tags:
+  - 代码片段
+  - Git
+  - 自托管
+title: 轻量的自托管 Gist
+description: OpenGist 的独立分支，每个 Gist 都是一份真实的 Git 仓库，可以在网页里写，也可以 clone 下来推送
+additionalProperties:
+  key: qingyugist
+  name: QingyuGist
+  tags:
+    - Tool
+    - DevOps
+  shortDescZh: 自托管的代码片段之家，每个 Gist 都是一份真实的 Git 仓库
+  shortDescEn: A quiet self-hosted home for snippets where every Gist is a real Git repository.
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  website: https://github.com/LiuShen-Fork/QingyuGist
+  github: https://github.com/LiuShen-Fork/QingyuGist
+  document: https://github.com/LiuShen-Fork/QingyuGist/tree/master/docs
+  description:
+    en: A self-hosted pastebin built on Git. Every Gist is a real repository that can be cloned and pushed like any other project.
+    zh: 基于 Git 的自托管代码片段服务。每个 Gist 都是一份真实的仓库，可以像普通项目一样 clone 和推送。
+    zh-Hant: 基於 Git 的自託管程式碼片段服務。每個 Gist 都是一份真實的倉庫，可以像一般專案一樣 clone 和推送。
+    ja: Git ベースのセルフホスト型コードスニペットサービス。各 Gist は実際のリポジトリで、通常のプロジェクトと同じように clone や push ができます。
+    ms: Perkhidmatan coretan kod kendiri berasaskan Git. Setiap Gist ialah repositori sebenar yang boleh di-clone dan di-push seperti projek biasa.
+    pt-br: Um serviço de snippets auto-hospedado baseado em Git. Cada Gist é um repositório real que pode ser clonado e enviado como qualquer projeto.
+    ru: Самостоятельно размещаемый сервис сниппетов на основе Git. Каждый Gist — настоящий репозиторий, который можно клонировать и пушить как обычный проект.
+    ko: Git 기반의 셀프 호스팅 코드 스니펫 서비스입니다. 각 Gist는 실제 저장소이며 일반 프로젝트처럼 clone하고 push할 수 있습니다.
+  architectures:
+    - amd64
+    - arm64

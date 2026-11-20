@@ -1,0 +1,27 @@
+services:
+  qingyugist:
+    image: ghcr.io/liushen-fork/qingyugist:1.1.0
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:6157"
+      - "${PANEL_APP_PORT_SSH}:2222"
+    environment:
+      - TZ=Asia/Shanghai
+      # 对外地址，用于 clone 链接和第三方登录回调；留空时按请求域名推断。
+      - QYG_EXTERNAL_URL=${QYG_EXTERNAL_URL}
+      # 数据目录、数据库、会话密钥都放在数据卷里，其余启动项保持默认：
+      # 端口 6157、SQLite、bleve 搜索索引。注册方式、上传限制、审核、
+      # 第三方登录和品牌设置都在后台 /admin/settings 里改，即时生效。
+    volumes:
+      # 仓库、SQLite 数据库、日志和密钥都在这个目录；容器内的路径名固定为
+      # /qingyugist（镜像入口脚本会把它设为 QYG_HOME），从 OpenGist 迁移时就挂到原来的数据目录。
+      - ./data:/qingyugist
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:6157/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
