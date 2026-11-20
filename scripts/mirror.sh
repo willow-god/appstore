@@ -39,12 +39,24 @@ MIRROR_CONFIG="${MIRROR_CONFIG:-/opt/mirror-config.env}"
 ADAPTERS_DIR="$ROOT_DIR/adapters"
 
 if [ -d "$ADAPTERS_DIR" ]; then
+    adapter_scripts=()
     for script in "$ADAPTERS_DIR"/*.sh; do
-        [ -f "$script" ] || { echo "目录 $ADAPTERS_DIR 下没有找到 .sh 文件"; break; }
-        echo "执行 adapters 脚本: $script"
-        chmod +x "$script"
-        "$script"
+        [ -f "$script" ] && adapter_scripts+=("$script")
     done
+    if [ "${#adapter_scripts[@]}" -eq 0 ]; then
+        echo "目录 $ADAPTERS_DIR 下没有找到 .sh 文件"
+    else
+        # 只报一条汇总，各适配脚本自己的输出照常打印
+        adapter_names=""
+        for script in "${adapter_scripts[@]}"; do
+            adapter_names="${adapter_names:+$adapter_names、}$(basename "$script")"
+        done
+        echo "🔧 执行 adapters: $adapter_names"
+        for script in "${adapter_scripts[@]}"; do
+            chmod +x "$script"
+            "$script"
+        done
+    fi
 else
     echo "目录不存在: $ADAPTERS_DIR，跳过 adapters 脚本执行"
 fi
@@ -68,15 +80,20 @@ fi
 # shellcheck disable=SC1090
 source "$ENV_FILE"
 
+REPLACED_FILES=0
+declare -A REPLACED_BY_SOURCE=()
+
 replace_image() {
     local file="$1"
     local src_registry="$2"
     local target_registry="$3"
+    local pair="${src_registry} → ${target_registry}"
 
     # 已经替换过的文件不会再有源前缀，直接跳过（幂等，也不产生备份文件）
     grep -qE "\b${src_registry}/" "$file" || return 0
     sed -i -E "s#\b${src_registry}/#${target_registry}/#g" "$file"
-    echo "已替换 $file: $src_registry -> $target_registry"
+    REPLACED_FILES=$((REPLACED_FILES + 1))
+    REPLACED_BY_SOURCE["$pair"]=$(( ${REPLACED_BY_SOURCE["$pair"]:-0} + 1 ))
 }
 
 if [[ ! -d "$LOCAL_APPS_DIR" ]]; then
@@ -111,10 +128,8 @@ for key in "${!SOURCES[@]}"; do
             [ -z "$app" ] && continue
 
             app_dir="$LOCAL_APPS_DIR/$app"
-            if [ ! -d "$app_dir" ]; then
-                echo "应用目录不存在，跳过: $app_dir"
-                continue
-            fi
+            # 清单里有、本机没部署的应用（没安装或已被 PRUNE_APPS 清掉）直接跳过，不刷屏
+            [ -d "$app_dir" ] || continue
 
             files=$(find "$app_dir" -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" \))
             for file in $files; do
@@ -124,4 +139,11 @@ for key in "${!SOURCES[@]}"; do
     done
 done
 
-echo "镜像替换完成。"
+if [ "$REPLACED_FILES" -gt 0 ]; then
+    for pair in "${!REPLACED_BY_SOURCE[@]}"; do
+        echo "✅ 镜像替换 $pair：${REPLACED_BY_SOURCE[$pair]} 个文件"
+    done
+    echo "✅ 镜像替换完成，共 $REPLACED_FILES 个文件"
+else
+    echo "ℹ️ 没有需要替换的镜像（清单为空、应用未部署或已经替换过）"
+fi

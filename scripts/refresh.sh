@@ -47,7 +47,7 @@ md5_hex() {
 # 鉴权方式：Token = md5("1panel" + APIKey + Timestamp)
 # 请求头需携带 1Panel-Timestamp / 1Panel-Token
 # CurrentNode 可选：留空时不发送该头，1Panel 将默认为主节点
-echo "🔄 Refreshing 1Panel local app store..."
+echo "🔄 刷新 1Panel 本地应用列表..."
 
 # 任务 ID：优先用内核 UUID，其次 uuidgen，最后用随机数兜底（非 Linux 也能跑）
 TASK_ID="$(cat /proc/sys/kernel/random/uuid 2>/dev/null || uuidgen 2>/dev/null || printf 'task-%s-%s' "$(date +%s)" "$RANDOM")"
@@ -72,13 +72,9 @@ RESPONSE=$(curl -ksS \
     exit 1
 }
 
-echo "1Panel response:"
-echo "$RESPONSE"
-
 if ! echo "$RESPONSE" | grep -q '"code":200'; then
-    echo "❌ Failed to trigger 1Panel app store refresh."
+    echo "❌ 刷新失败，1Panel 返回: $RESPONSE"
     exit 1
 fi
 
-echo "✅ 1Panel local app store refresh triggered."
-echo "TaskID: ${TASK_ID}"
+echo "✅ 已触发 1Panel 本地应用列表刷新（TaskID: ${TASK_ID}）"

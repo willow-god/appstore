@@ -57,7 +57,7 @@ if [ -n "${REPO_DIR:-}" ]; then
     trap - EXIT
     echo "📂 使用已有仓库目录: $SRC_DIR"
 else
-    echo "📥 Cloning appstore repo..."
+    echo "📥 克隆仓库到 $TMP_DIR ..."
     rm -rf -- "$TMP_DIR"
     mkdir -p "$(dirname "$TMP_DIR")"
     git clone --depth 1 "$GIT_REPO" "$TMP_DIR"
@@ -94,7 +94,7 @@ DB_APP_REASON=""
 
 # 清理统计，脚本结束时汇总输出（多数应用只有 1~2 个版本目录，不会触发清理细节）
 PRUNE_APPS_TOTAL=0
-PRUNE_APPS_UNDER_LIMIT=0
+PRUNE_APPS_QUIET=0
 PRUNE_DIRS_REMOVED=0
 
 init_installed_db() {
@@ -170,9 +170,8 @@ prune_versions() {
     [ "$total" -eq 0 ] && return 0
 
     local -A protected=()
-    local -A protected_by=()
-    local tag iid iname iver reason=""
-    local protected_count=0 removed_count=0 kept_count=0 db_failed=0
+    local -a installed=() removed=()
+    local tag iid iname iver reason="" db_failed=0 fallback=0
 
     if [ "$DB_STATE" = "ready" ]; then
         while IFS='|' read -r tag iid iname iver; do
@@ -184,9 +183,7 @@ prune_versions() {
                 OK)
                     [ -n "$iver" ] || continue
                     protected["$iver"]=1
-                    protected_by["$iver"]="install #$iid（$iname）"
-                    protected_count=$((protected_count + 1))
-                    echo "📋 $app_name/$iver 已安装：install #$iid，实例名 $iname"
+                    installed+=("$iver")
                     ;;
             esac
         done < <(installed_versions "$app_name")
@@ -195,52 +192,68 @@ prune_versions() {
     if [ "$DB_STATE" = "ready" ] && [ "$db_failed" -eq 0 ]; then
         # 有准确数据：只保留「仓库里有的版本」和「已安装的版本」，其余一律清掉，
         # 不再受 KEEP_VERSIONS 限制
-        [ "$protected_count" -eq 0 ] && echo "📋 $app_name：没有已安装实例，只保留仓库中的版本"
         for version in "${versions[@]}"; do
-            if [ -n "${protected[$version]:-}" ]; then
-                echo "🛡 $app_name/$version 已安装（${protected_by[$version]}），保留"
-                kept_count=$((kept_count + 1))
-                continue
-            fi
-            if [ -d "$src/$version" ]; then
-                kept_count=$((kept_count + 1))
+            if [ -n "${protected[$version]:-}" ] || [ -d "$src/$version" ]; then
                 continue
             fi
             rm -rf -- "$dst/$version"
-            removed_count=$((removed_count + 1))
-            echo "🧹 $app_name: 清理历史版本 $version（仓库与安装记录里都没有）"
+            removed+=("$version")
         done
     else
         # 兜底：读不到准确的安装记录，只能按数量保留最近 KEEP_VERSIONS 个
-        if [ "$DB_STATE" = "ready" ]; then
-            echo "⚠️ $app_name：${reason:-数据库查询失败}，回退到仅保留最近 $KEEP_VERSIONS 个版本"
-        else
-            echo "⚠️ $app_name：无法读取安装记录（$DB_REASON），回退到仅保留最近 $KEEP_VERSIONS 个版本"
+        fallback=1
+        if [ "$total" -gt "$KEEP_VERSIONS" ]; then
+            local remove=$((total - KEEP_VERSIONS)) i
+            for ((i = 0; i < remove; i++)); do
+                version="${versions[$i]}"
+                if [ -d "$src/$version" ]; then
+                    continue
+                fi
+                rm -rf -- "$dst/$version"
+                removed+=("$version")
+            done
         fi
-
-        # 没超过保留上限就没有可清理的，不逐个应用刷屏，只计入结尾汇总
-        if [ "$total" -le "$KEEP_VERSIONS" ]; then
-            PRUNE_APPS_UNDER_LIMIT=$((PRUNE_APPS_UNDER_LIMIT + 1))
-            return 0
-        fi
-
-        local remove=$((total - KEEP_VERSIONS))
-        local i
-        for ((i = 0; i < remove; i++)); do
-            version="${versions[$i]}"
-            if [ -d "$src/$version" ]; then
-                echo "ℹ️  $app_name/$version 仍在仓库中，跳过清理"
-                continue
-            fi
-            rm -rf -- "$dst/$version"
-            removed_count=$((removed_count + 1))
-            echo "🧹 $app_name: 清理历史版本 $version（保留最近 $KEEP_VERSIONS 个）"
-        done
     fi
 
-    kept_count=$((total - removed_count))
-    PRUNE_DIRS_REMOVED=$((PRUNE_DIRS_REMOVED + removed_count))
-    echo "📊 $app_name: 清理完成，目录 $total 个 → 保留 $kept_count 个，删除 $removed_count 个"
+    # 每个应用只输出一行，细节（已安装版本、删掉的版本）都在这一行里
+    local status="无安装实例" line
+    if [ "${#installed[@]}" -gt 0 ]; then
+        local joined="" v
+        for v in "${installed[@]}"; do
+            joined="${joined:+$joined、}$v"
+        done
+        status="已安装 $joined"
+    fi
+    if [ "$fallback" -eq 1 ]; then
+        # 数据库整体读不到时原因已经在开头统一说过一次，这里只写结果；
+        # 单个应用自身的原因（指针失效、未入库）才写在这一行
+        if [ -n "$reason" ]; then
+            status="读不到安装记录（$reason），按数量保留最近 $KEEP_VERSIONS 个"
+        else
+            status="按数量保留最近 $KEEP_VERSIONS 个"
+        fi
+    fi
+
+    PRUNE_DIRS_REMOVED=$((PRUNE_DIRS_REMOVED + ${#removed[@]}))
+    kept_count=$((total - ${#removed[@]}))
+    line="✅ $app_name：$status；目录 $total 个 → 保留 $kept_count 个，删除 ${#removed[@]} 个"
+    if [ "${#removed[@]}" -gt 0 ]; then
+        local detail="" n=0
+        for v in "${removed[@]}"; do
+            n=$((n + 1))
+            [ "$n" -gt 5 ] && { detail="$detail、等"; break; }
+            detail="${detail:+$detail、}$v"
+        done
+        [ "$fallback" -eq 1 ] && line="⚠️ ${line#✅ }"
+        line="$line（$detail）"
+    fi
+    # 没有安装实例、没删东西、也没出问题：不单独刷一行，只在结尾汇总里计数
+    if [ "${#removed[@]}" -eq 0 ] && [ "${#installed[@]}" -eq 0 ] && [ -z "$reason" ]; then
+        PRUNE_APPS_QUIET=$((PRUNE_APPS_QUIET + 1))
+        return 0
+    fi
+
+    echo "$line"
 }
 
 sync_app() {
@@ -254,7 +267,6 @@ sync_app() {
         return 1
     fi
 
-    echo "🔁 Updating app: $app_name"
     mkdir -p "$dst"
 
     # 应用级文件（data.yml、logo.png、README.md 等）直接覆盖
@@ -282,8 +294,7 @@ for app_name in "${app_list[@]}"; do
     sync_app "$app_name" || failed+=("$app_name")
 done
 
-echo "✅ Local app files updated: $LOCAL_APPS_DIR"
-echo "📊 历史版本清理：检查 $PRUNE_APPS_TOTAL 个应用，$PRUNE_APPS_UNDER_LIMIT 个版本数不超过 $KEEP_VERSIONS 个未触发清理，删除 $PRUNE_DIRS_REMOVED 个旧版本目录"
+echo "✅ 已同步 ${#app_list[@]} 个应用到 $LOCAL_APPS_DIR：检查 $PRUNE_APPS_TOTAL 个，$PRUNE_APPS_QUIET 个无变化，删除 $PRUNE_DIRS_REMOVED 个旧版本目录"
 
 if [ "${#failed[@]}" -gt 0 ]; then
     echo "⚠️ 以下应用未同步: ${failed[*]}"
