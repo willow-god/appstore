@@ -24,9 +24,10 @@
 
 ## 数据与升级
 
-- `./data` 映射到容器内的 `/data`，保存设备凭据和状态文件；升级、重建容器时请保留该目录。
+- 设备凭据和状态文件保存在命名为 `server-data` 的 Docker 卷中，挂载到容器内的 `/data`，对应状态文件 `/data/state.json`。
+- 升级、重建容器时请保留该卷；不要执行 `docker compose down -v`。
+- 镜像内以非 root 用户 `node`（uid 1000）运行，所以使用命名卷而不是 `./data` 绑定目录：绑定目录会被 Docker 以 root 创建，容器内写入 `state.json` 时会报 `EACCES`。如果确实要改回绑定目录，请先执行 `mkdir -p ./data && chown -R 1000:1000 ./data`，否则同样无法启动。
 - 修改登录密码后，已授权设备需要重新授权。
-- 不要执行 `docker compose down -v`，也不要删除数据目录。
 
 ## 环境变量
 
