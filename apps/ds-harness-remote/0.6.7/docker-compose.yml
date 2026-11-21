@@ -1,0 +1,35 @@
+services:
+  ds-harness-remote:
+    image: ghcr.io/liguobao/ds-harness-remote/server:0.6.7
+    container_name: ${CONTAINER_NAME}
+    restart: unless-stopped
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:8080"
+    volumes:
+      # 设备凭据与状态都保存在这里；升级、重建容器都不要删除该目录
+      - ./data:/data
+    environment:
+      # 容器内固定监听所有地址，端口映射才能访问；不开放给用户配置
+      DSH_SERVER_HOST: 0.0.0.0
+      DSH_SERVER_PORT: "8080"
+      # 与镜像内 VOLUME /data 对应
+      DSH_SERVER_DATA_FILE: /data/state.json
+      DSH_SERVER_ACCOUNT: ${DSH_SERVER_ACCOUNT}
+      DSH_SERVER_PASSWORD: ${DSH_SERVER_PASSWORD}
+      # 必须与浏览器实际访问的 origin 一致，否则首页能开但 JS/CSS 返回 403
+      DSH_SERVER_PUBLIC_URL: ${DSH_SERVER_PUBLIC_URL}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    init: true
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

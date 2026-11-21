@@ -1,0 +1,87 @@
+additionalProperties:
+  formFields:
+    # 对外端口
+    - default: 8080
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      label:
+        en: HTTP Port
+        ja: HTTPポート
+        ms: Port HTTP
+        pt-br: Porta HTTP
+        ru: HTTP порт
+        ko: HTTP 포트
+        zh: HTTP 端口
+        zh-Hant: HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    # 登录账号：Host 与客户端共用同一个
+    - default: ""
+      description:
+        en: The same account is used by the Host and all clients. An email address is recommended.
+        zh: Host 与所有客户端使用同一个账号，建议填写邮箱格式。
+        zh-Hant: Host 與所有用戶端使用同一個帳號，建議填寫電子郵件格式。
+      edit: true
+      envKey: DSH_SERVER_ACCOUNT
+      labelEn: Login Account
+      labelZh: 登录账号
+      label:
+        en: Login Account
+        ja: ログインアカウント
+        ms: Akaun Log Masuk
+        pt-br: Conta de acesso
+        ru: Учетная запись
+        ko: 로그인 계정
+        zh: 登录账号
+        zh-Hant: 登入帳號
+      required: true
+      type: text
+
+    # 登录密码：上游要求至少 12 个字符
+    - default: ""
+      description:
+        en: At least 12 characters. Changing it later requires devices to authorize again.
+        zh: 至少 12 个字符。修改密码后，已授权设备需要重新授权。
+        zh-Hant: 至少 12 個字元。修改密碼後，已授權裝置需要重新授權。
+      edit: true
+      envKey: DSH_SERVER_PASSWORD
+      labelEn: Login Password
+      labelZh: 登录密码
+      label:
+        en: Login Password
+        ja: ログインパスワード
+        ms: Kata Laluan Log Masuk
+        pt-br: Senha de acesso
+        ru: Пароль
+        ko: 로그인 비밀번호
+        zh: 登录密码
+        zh-Hant: 登入密碼
+      random: true
+      required: true
+      type: password
+
+    # 浏览器实际访问地址：必须与 Origin 完全一致，否则静态资源返回 403
+    - default: http://localhost:8080
+      description:
+        en: Must match the browser origin, including scheme, domain and non-default port (for example https://remote.example.com). Change it when using a domain or a different port.
+        zh: 必须与浏览器实际访问的 origin 完全一致，包括协议、域名和非默认端口（例如 https://remote.example.com）。使用域名或改过端口时请同步修改。
+        zh-Hant: 必須與瀏覽器實際存取的 origin 完全一致，包括協定、網域和非預設連接埠（例如 https://remote.example.com）。使用網域或改過連接埠時請同步修改。
+      edit: true
+      envKey: DSH_SERVER_PUBLIC_URL
+      labelEn: Public URL
+      labelZh: 访问地址
+      label:
+        en: Public URL
+        ja: 公開 URL
+        ms: URL Awam
+        pt-br: URL pública
+        ru: Публичный URL
+        ko: 공개 URL
+        zh: 访问地址
+        zh-Hant: 存取位址
+      required: true
+      type: text

@@ -1,0 +1,35 @@
+name: DS Harness Remote
+tags:
+  - 远程访问
+  - AI
+  - 工具
+title: DS Harness 远程接入服务器
+description: 单账号远程设备接入服务器，为 Host 与客户端提供设备注册、WebRTC 协商和端到端加密 Relay
+additionalProperties:
+  key: ds-harness-remote
+  name: DS Harness Remote
+  tags:
+    - Remote
+    - AI
+    - Tool
+  shortDescZh: 为 DS Harness Host 与客户端提供远程接入的单账号服务器
+  shortDescEn: Single-account remote access server for DS Harness hosts and clients
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://github.com/liguobao/ds-harness-remote
+  github: https://github.com/liguobao/ds-harness-remote
+  document: https://github.com/liguobao/ds-harness-remote/blob/main/apps/server/README.zh.md
+  description:
+    en: A single-account remote access server for DS Harness. It registers devices, refreshes credentials, coordinates WebRTC (LAN / P2P / TURN), and relays end-to-end encrypted traffic when direct connections are unavailable, with a web console for authorized devices.
+    zh: DS Harness 的单账号远程接入服务器。负责设备注册与凭据刷新，协调 WebRTC（LAN / P2P / TURN）连接，在无法直连时转发端到端加密流量，并提供已授权设备的 Web 管理页面。
+    zh-Hant: DS Harness 的單帳號遠端存取伺服器。負責裝置註冊與憑證更新，協調 WebRTC（LAN / P2P / TURN）連線，在無法直連時轉發端對端加密流量，並提供已授權裝置的 Web 管理頁面。
+    ja: DS Harness 用のシングルアカウント遠隔アクセスサーバーです。デバイス登録と認証情報の更新、WebRTC（LAN / P2P / TURN）の調整、直接接続できない場合のエンドツーエンド暗号化トラフィックの中継を行い、認可済みデバイスを Web で管理できます。
+    ms: Pelayan akses jauh satu akaun untuk DS Harness. Ia mendaftarkan peranti, memperbaharui kelayakan, menyelaraskan WebRTC (LAN / P2P / TURN), dan memajukan trafik yang disulitkan hujung ke hujung apabila sambungan langsung tidak tersedia, dengan konsol web untuk peranti yang dibenarkan.
+    pt-br: Servidor de acesso remoto de conta única para o DS Harness. Registra dispositivos, renova credenciais, coordena WebRTC (LAN / P2P / TURN) e encaminha tráfego criptografado de ponta a ponta quando não há conexão direta, com um console web para os dispositivos autorizados.
+    ru: Сервер удаленного доступа с одной учетной записью для DS Harness. Регистрирует устройства, обновляет учетные данные, координирует WebRTC (LAN / P2P / TURN) и пересылает зашифрованный сквозным шифрованием трафик при отсутствии прямого соединения; авторизованными устройствами можно управлять через веб-интерфейс.
+    ko: DS Harness용 단일 계정 원격 액세스 서버입니다. 기기 등록과 자격 증명 갱신, WebRTC(LAN / P2P / TURN) 조정을 담당하고, 직접 연결이 불가능할 때 종단 간 암호화 트래픽을 중계하며, 승인된 기기를 웹에서 관리할 수 있습니다.
+  architectures:
+    - amd64
+    - arm64
