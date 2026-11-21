@@ -24,9 +24,16 @@
 
 ## 数据与升级
 
-- 设备凭据和状态文件保存在命名为 `server-data` 的 Docker 卷中，挂载到容器内的 `/data`，对应状态文件 `/data/state.json`。
-- 升级、重建容器时请保留该卷；不要执行 `docker compose down -v`。
-- 镜像内以非 root 用户 `node`（uid 1000）运行，所以使用命名卷而不是 `./data` 绑定目录：绑定目录会被 Docker 以 root 创建，容器内写入 `state.json` 时会报 `EACCES`。如果确实要改回绑定目录，请先执行 `mkdir -p ./data && chown -R 1000:1000 ./data`，否则同样无法启动。
+- 设备凭据和状态文件保存在安装目录下的 `./data` 中（挂载到容器 `/data`，状态文件为 `/data/state.json`）。
+- 镜像以非 root 用户 `node`（uid/gid 1000）运行，而 `./data` 首次由 Docker 以 root 创建，容器会因无写权限报 `EACCES: /data/state.json.tmp`。
+- 仓库的 `adapters/ds-harness-remote.sh` 会在每次执行 `scripts/mirror.sh` 时自动把已安装实例的 `data` 目录属主修正为 `1000:1000`，容器下一次自动重启即可恢复。也可以手动执行一次：
+
+  ```bash
+  PANEL_ROOT=/opt/1panel bash adapters/ds-harness-remote.sh
+  ```
+
+- 如果首次安装后立即启动报 `EACCES`，等下一次定时任务，或手动执行一次 `scripts/mirror.sh` / 上面的命令即可。
+- 升级、重建容器时请保留 `./data`，不要执行 `docker compose down -v`。
 - 修改登录密码后，已授权设备需要重新授权。
 
 ## 环境变量

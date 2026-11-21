@@ -8,10 +8,10 @@ services:
     ports:
       - "${PANEL_APP_PORT_HTTP}:8080"
     volumes:
-      # 镜像内以 node(uid 1000) 运行。绑定 ./data 时目录由 Docker 以 root 创建，
-      # 容器内无写权限（EACCES: /data/state.json.tmp）；命名卷会继承镜像中
-      # /data 的 node 属主，开箱即用。升级、重建容器都不要删除该卷。
-      - server-data:/data
+      # 镜像内以 node(uid 1000) 运行，绑定目录由 Docker 以 root 创建时容器
+      # 无法写入 /data/state.json（EACCES）；adapters/ds-harness-remote.sh
+      # 会在同步时把该目录属主修正为 1000:1000，容器随后自动重启恢复。
+      - ./data:/data
     environment:
       # 容器内固定监听所有地址，端口映射才能访问；不开放给用户配置
       DSH_SERVER_HOST: 0.0.0.0
@@ -35,7 +35,3 @@ services:
 networks:
   1panel-network:
     external: true
-
-volumes:
-  # 由 Docker 管理，数据在 /var/lib/docker/volumes/ 下，不要手动删除
-  server-data:
