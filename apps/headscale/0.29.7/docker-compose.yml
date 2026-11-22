@@ -34,9 +34,8 @@ services:
       HEADSCALE_DERP_SERVER_IPV4: "${HEADSCALE_DERP_SERVER_IPV4}"
       HEADSCALE_DERP_SERVER_IPV6: "${HEADSCALE_DERP_SERVER_IPV6}"
       HEADSCALE_DERP_SERVER_PRIVATE_KEY_PATH: "/var/lib/headscale/derp_server_private.key"
-      # 只使用自建 DERP；留空上游 DERP 地图，避免服务器无法访问
-      # controlplane.tailscale.com 时启动失败
-      HEADSCALE_DERP_URLS: '[]'
+      # 不要设置 HEADSCALE_DERP_URLS：v0.29.7 的环境变量切片不会解析 JSON 数组，
+      # 设成 '[]' 会被当成一个 URL "[]" 而启动失败；留空即只使用内置 DERP
       # 分配 Tailscale 标准网段
       HEADSCALE_PREFIXES_V4: "100.64.0.0/10"
       HEADSCALE_PREFIXES_V6: "fd7a:115c:a1e0::/48"

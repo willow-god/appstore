@@ -163,13 +163,13 @@ Headscale 本身没有内置 Web UI，本应用通过命令行管理。需要图
 
 **可以只使用自建中继，不连 Tailscale 官方 DERP 吗？**
 
-可以，而且默认就是这样。应用把 `HEADSCALE_DERP_URLS` 设为 `[]`，只使用内置 DERP，这样即使服务器访问不了 `controlplane.tailscale.com` 也能正常启动。如果想让 Tailscale 官方 DERP 作为兜底，在 `docker-compose.yml` 的 `environment:` 中改成：
+可以，而且默认就是这样。应用默认不设置 `HEADSCALE_DERP_URLS`，只使用内置 DERP，这样即使服务器访问不了 `controlplane.tailscale.com` 也能正常启动。如果想让 Tailscale 官方 DERP 作为兜底，在 `docker-compose.yml` 的 `environment:` 中改成：
 
 ```yaml
-HEADSCALE_DERP_URLS: '["https://controlplane.tailscale.com/derpmap/default"]'
+HEADSCALE_DERP_URLS: "https://controlplane.tailscale.com/derpmap/default"
 ```
 
-然后重建容器。注意：服务器无法访问该地址时，Headscale 会在启动阶段报错。
+然后重建容器。注意：v0.29.7 的环境变量列表只接受单个字符串，不要写成 `[]` 或 JSON 数组；写成 `[]` 会被当成一个 URL，启动时报 `unsupported protocol scheme`。服务器无法访问该地址时，Headscale 也会在启动阶段报错。
 
 ## 项目地址
 
