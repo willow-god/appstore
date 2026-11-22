@@ -146,6 +146,8 @@ tailscale debug derp-map
 - 如果 DERP 不可达，优先检查 UDP `3478` 是否放行、`server_url` 是否为 HTTPS、反向代理是否透传 `Upgrade`；
 - 内置 DERP 适合个人和小团队，不追求大流量吞吐。
 
+> Headscale 的内置 STUN 不是通用 STUN 服务器：它只响应 Tailscale 客户端的请求。用 Python、`stunclient` 等工具直接发 RFC 5389 Binding Request 会超时，这是正常的，不代表 STUN 坏了。请用真实 Tailscale 客户端的 `tailscale netcheck` / `tailscale debug derp-map` 验证。
+
 ## 数据与升级
 
 - 数据库、Noise 私钥、DERP 私钥、证书缓存都在 `./data`，挂载到容器 `/var/lib/headscale`。
