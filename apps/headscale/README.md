@@ -66,6 +66,8 @@ ports:
 
 如果你不想在宿主机上暴露 `8080`，也可以删掉 `8080` 的端口映射，让 1Panel OpenResty 通过 `1panel-network` 直接用容器名访问 `http://<容器名>:8080`。
 
+> Docker 发布的端口由 Docker 自己的 iptables 规则转发，删除 1Panel/UFW 里对应的 ALLOW 规则不一定能关闭端口；要限制来源请使用云安全组或 Docker 的 `DOCKER-USER` 链。
+
 ## 反向代理（必须）
 
 需要用 1Panel 的 OpenResty 把域名反代到 Headscale 的 HTTP 端口。关键是 **透传 `Upgrade` / `Connection` 头并关闭缓冲**：
