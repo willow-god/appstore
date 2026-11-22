@@ -8,9 +8,8 @@ services:
     ports:
       - "${PANEL_APP_PORT_HTTP}:8080"
     volumes:
-      # 镜像内以 node(uid 1000) 运行，绑定目录由 Docker 以 root 创建时容器
-      # 无法写入 /data/state.json（EACCES）；adapters/ds-harness-remote.sh
-      # 会在同步时把该目录属主修正为 1000:1000，容器随后自动重启恢复。
+      # 镜像内以 node(uid 1000) 运行；scripts/init.sh 会在安装时、容器启动前
+      # 预创建该目录并把属主设为 1000:1000，避免写 state.json 时报 EACCES
       - ./data:/data
     environment:
       # 容器内固定监听所有地址，端口映射才能访问；不开放给用户配置

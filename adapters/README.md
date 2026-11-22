@@ -13,7 +13,6 @@
 | 脚本 | 作用 |
 | --- | --- |
 | `hello-world.sh` | 示例脚本 |
-| `ds-harness-remote.sh` | 修正 `ds-harness-remote` 已安装实例的 `data` 目录属主为 `1000:1000`，解决镜像以 node 用户运行、绑定目录却由 root 创建导致的 `EACCES`；幂等，可单独执行 `PANEL_ROOT=/opt/1panel bash adapters/ds-harness-remote.sh` |
 | `prune-apps.sh` | 按 `.env` 里的 `PRUNE_APPS`（逗号分隔的应用名），删除 1Panel 本地应用目录里已经拷贝过去的同名应用；幂等，可单独执行 `bash adapters/prune-apps.sh`（支持 `ENV_FILE=` / `PRUNE_APPS=` / `LOCAL_APPS_DIR=` 覆盖以便测试） |
 
 ### prune-apps.sh 的清理范围
