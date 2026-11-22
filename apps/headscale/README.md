@@ -15,7 +15,7 @@ Headscale 自带嵌入式 DERP，个人和小团队直接用内置中继即可�
 - 中继流量很大，需要独立扩容；
 - 需要多个 DERP 区域做容灾。
 
-本应用不依赖单独的中继容器，也不需要你再写额外的 `derp.yaml`。默认只使用内置 DERP，不会在启动时拉取 Tailscale 官方 DERP 地图，因此服务器访问不了外网 DERP 地址也能正常启动。以后确实需要独立 derper 时，再单独部署并在 Headscale 中登记即可。
+本应用不依赖单独的中继容器，也不需要你再写额外的 `derp.yaml`。默认会同时使用内置 DERP 和 Tailscale 官方 DERP：内置 DERP 优先，官方 DERP 作为兜底，两者由 Headscale 自动合并。如果服务器访问不了 `controlplane.tailscale.com`，删掉 `docker-compose.yml` 里的 `HEADSCALE_DERP_URLS` 即可只用内置 DERP。以后确实需要独立 derper 时，再单独部署并在 Headscale 中登记即可。
 
 ## 安装前准备
 
@@ -118,7 +118,7 @@ tailscale netcheck
 tailscale debug derp-map
 ```
 
-- `netcheck` 中应能看到 `Headscale Embedded DERP` 区域；
+- `netcheck` 中应能看到 `Headscale Embedded DERP` 区域；如果保留了官方兜底，还会看到 Tailscale 官方 DERP 区域；
 - 如果 DERP 不可达，优先检查 UDP `3478` 是否放行、`server_url` 是否为 HTTPS、反向代理是否透传 `Upgrade`；
 - 内置 DERP 适合个人和小团队，不追求大流量吞吐。
 
@@ -163,13 +163,15 @@ Headscale 本身没有内置 Web UI，本应用通过命令行管理。需要图
 
 **可以只使用自建中继，不连 Tailscale 官方 DERP 吗？**
 
-可以，而且默认就是这样。应用默认不设置 `HEADSCALE_DERP_URLS`，只使用内置 DERP，这样即使服务器访问不了 `controlplane.tailscale.com` 也能正常启动。如果想让 Tailscale 官方 DERP 作为兜底，在 `docker-compose.yml` 的 `environment:` 中改成：
+可以。默认是“自建 + 官方兜底”两者都用；如果只想使用自建中继，把 `docker-compose.yml` 里的 `HEADSCALE_DERP_URLS` 删掉或设为空即可。
+
+默认值：
 
 ```yaml
 HEADSCALE_DERP_URLS: "https://controlplane.tailscale.com/derpmap/default"
 ```
 
-然后重建容器。注意：v0.29.7 的环境变量列表只接受单个字符串，不要写成 `[]` 或 JSON 数组；写成 `[]` 会被当成一个 URL，启动时报 `unsupported protocol scheme`。服务器无法访问该地址时，Headscale 也会在启动阶段报错。
+注意：v0.29.7 只接受单个 URL 字符串，不要写成 `[]` 或 JSON 数组；写成 `[]` 会被当成一个 URL，启动时报 `unsupported protocol scheme`。服务器无法访问官方地址时，Headscale 也会在启动阶段报错。
 
 ## 项目地址
 
