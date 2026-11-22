@@ -64,6 +64,28 @@ additionalProperties:
       required: false
       type: text
 
+    # 可选：公网 IPv6，双栈服务器填写后客户端可以不经 DNS 直接连接 DERP
+    - default: ""
+      description:
+        en: Optional. Public IPv6 address of this server. Filling it in lets clients reach the embedded DERP relay without resolving DNS; leave empty to use the AAAA record of the public URL domain.
+        zh: 可选。服务器公网 IPv6，填写后客户端可以不依赖 DNS 直接连接内置 DERP；留空则使用对外访问地址域名的 AAAA 记录。
+        zh-Hant: 選填。伺服器公網 IPv6，填寫後用戶端可以不依賴 DNS 直接連線內建 DERP；留空則使用對外存取位址網域的 AAAA 記錄。
+      edit: true
+      envKey: HEADSCALE_DERP_SERVER_IPV6
+      labelEn: Public IPv6
+      labelZh: 公网 IPv6
+      label:
+        en: Public IPv6
+        ja: パブリック IPv6
+        ms: IPv6 Awam
+        pt-br: IPv6 pública
+        ru: Публичный IPv6
+        ko: 공인 IPv6
+        zh: 公网 IPv6
+        zh-Hant: 公網 IPv6
+      required: false
+      type: text
+
     # STUN：UDP 端口必须公网可达，宿主机与容器使用同一端口
     - default: 3478
       description:

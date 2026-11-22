@@ -32,6 +32,7 @@ services:
       HEADSCALE_DERP_SERVER_AUTOMATICALLY_ADD_EMBEDDED_DERP_REGION: "true"
       HEADSCALE_DERP_SERVER_STUN_LISTEN_ADDR: "0.0.0.0:${PANEL_APP_PORT_STUN}"
       HEADSCALE_DERP_SERVER_IPV4: "${HEADSCALE_DERP_SERVER_IPV4}"
+      HEADSCALE_DERP_SERVER_IPV6: "${HEADSCALE_DERP_SERVER_IPV6}"
       HEADSCALE_DERP_SERVER_PRIVATE_KEY_PATH: "/var/lib/headscale/derp_server_private.key"
       # 只使用自建 DERP；留空上游 DERP 地图，避免服务器无法访问
       # controlplane.tailscale.com 时启动失败
