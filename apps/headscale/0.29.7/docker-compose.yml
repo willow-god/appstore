@@ -1,0 +1,74 @@
+services:
+  headscale:
+    image: headscale/headscale:0.29.7
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    command: serve
+    labels:
+      createdBy: "Apps"
+    ports:
+      # 控制面 HTTP：由 1Panel 反向代理访问，不建议直接暴露到公网
+      - "${PANEL_APP_PORT_HTTP}:8080"
+      # 内置 DERP 的 STUN：UDP 必须可以从公网访问
+      - "${PANEL_APP_PORT_STUN}:${PANEL_APP_PORT_STUN}/udp"
+    volumes:
+      # SQLite、Noise/DERP 私钥等全部持久化在这里，升级时保留
+      - ./data:/var/lib/headscale
+    environment:
+      # 对外地址必须是 https，内置 DERP 中继依赖 TLS
+      HEADSCALE_SERVER_URL: "${HEADSCALE_SERVER_URL}"
+      HEADSCALE_LISTEN_ADDR: "0.0.0.0:8080"
+      # 指标默认不监听；gRPC 只监听容器内
+      HEADSCALE_GRPC_LISTEN_ADDR: "127.0.0.1:50443"
+      # TLS 由 1Panel OpenResty 终止
+      HEADSCALE_TLS_CERT_PATH: ""
+      HEADSCALE_TLS_KEY_PATH: ""
+      # 开启内置 DERP：与控制面共用 server_url 的域名和 443
+      HEADSCALE_DERP_SERVER_ENABLED: "true"
+      HEADSCALE_DERP_SERVER_REGION_ID: "999"
+      HEADSCALE_DERP_SERVER_REGION_CODE: "headscale"
+      HEADSCALE_DERP_SERVER_REGION_NAME: "Headscale Embedded DERP"
+      HEADSCALE_DERP_SERVER_VERIFY_CLIENTS: "true"
+      HEADSCALE_DERP_SERVER_AUTOMATICALLY_ADD_EMBEDDED_DERP_REGION: "true"
+      HEADSCALE_DERP_SERVER_STUN_LISTEN_ADDR: "0.0.0.0:${PANEL_APP_PORT_STUN}"
+      HEADSCALE_DERP_SERVER_IPV4: "${HEADSCALE_DERP_SERVER_IPV4}"
+      HEADSCALE_DERP_SERVER_PRIVATE_KEY_PATH: "/var/lib/headscale/derp_server_private.key"
+      # 只使用自建 DERP；留空上游 DERP 地图，避免服务器无法访问
+      # controlplane.tailscale.com 时启动失败
+      HEADSCALE_DERP_URLS: '[]'
+      # 分配 Tailscale 标准网段
+      HEADSCALE_PREFIXES_V4: "100.64.0.0/10"
+      HEADSCALE_PREFIXES_V6: "fd7a:115c:a1e0::/48"
+      # 数据库与 Noise 私钥固定在数据目录
+      HEADSCALE_DATABASE_TYPE: "sqlite"
+      HEADSCALE_DATABASE_SQLITE_PATH: "/var/lib/headscale/db.sqlite"
+      HEADSCALE_NOISE_PRIVATE_KEY_PATH: "/var/lib/headscale/noise_private.key"
+      # MagicDNS：设备得到 设备名.<基础域名> 的内部域名，无需公网 DNS
+      HEADSCALE_DNS_MAGIC_DNS: "true"
+      HEADSCALE_DNS_BASE_DOMAIN: "${HEADSCALE_DNS_BASE_DOMAIN}"
+      # 不强制覆盖客户端本地 DNS，避免顶掉局域网/公司 DNS；MagicDNS 仍然生效
+      HEADSCALE_DNS_OVERRIDE_LOCAL_DNS: "false"
+      # 不在启动时请求 GitHub 检查新版本
+      HEADSCALE_DISABLE_CHECK_UPDATES: "true"
+      HEADSCALE_LOG_LEVEL: "info"
+      TZ: "Asia/Shanghai"
+    healthcheck:
+      test: ["CMD", "headscale", "health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    read_only: true
+    tmpfs:
+      - /var/run/headscale
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

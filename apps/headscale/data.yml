@@ -1,0 +1,35 @@
+name: Headscale
+tags:
+  - 网络
+  - 组网
+  - 工具
+  - 自托管
+title: Tailscale 自建控制服务器（内置 DERP 中继）
+description: 基于 Headscale 的自托管 Tailscale 控制服务器，内置 DERP 中继与 STUN，实现异地组网
+additionalProperties:
+  key: headscale
+  name: Headscale
+  tags:
+    - Tool
+    - Proxy
+  shortDescZh: 自托管 Tailscale 控制服务器，内置 DERP 中继与 STUN
+  shortDescEn: Self-hosted Tailscale control server with built-in DERP relay and STUN
+  type: tool
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://headscale.net/
+  github: https://github.com/juanfont/headscale
+  document: https://headscale.net/stable/
+  description:
+    en: Headscale is an open-source, self-hosted implementation of the Tailscale control server. This app enables the embedded DERP relay and STUN, so a single container provides both the control plane and relay for a private Tailscale network. Devices keep using the official Tailscale clients.
+    zh: Headscale 是 Tailscale 控制服务器的开源自托管实现。本应用已开启内置 DERP 中继与 STUN，一个容器即可同时提供控制面和中继，把手机、电脑、NAS 等设备组成私有 Tailscale 网络；客户端仍使用官方 Tailscale 客户端。
+    zh-Hant: Headscale 是 Tailscale 控制伺服器的開源自架構實作。本應用已啟用內建 DERP 中繼與 STUN，一個容器即可同時提供控制面與中繼，將手機、電腦、NAS 等裝置組成私有 Tailscale 網路；用戶端仍使用官方 Tailscale 用戶端。
+    ja: Headscale は Tailscale コントロールサーバーのオープンソースなセルフホスト実装です。本アプリは組み込み DERP リレーと STUN を有効にしており、1 つのコンテナでコントロールプレーンとリレーの両方を提供します。デバイスは公式 Tailscale クライアントをそのまま利用できます。
+    ms: Headscale ialah pelaksanaan sumber terbuka bagi pelayan kawalan Tailscale yang dihoskan sendiri. Aplikasi ini mengaktifkan relai DERP terbina dalam dan STUN, jadi satu kontena menyediakan satah kawalan dan relai untuk rangkaian Tailscale persendirian; peranti terus menggunakan klien Tailscale rasmi.
+    pt-br: Headscale é uma implementação open-source e auto-hospedada do servidor de controle do Tailscale. Este aplicativo habilita o relay DERP integrado e o STUN, de modo que um único contêiner fornece o plano de controle e o relay para uma rede Tailscale privada; os dispositivos continuam usando os clientes oficiais do Tailscale.
+    ru: Headscale — открытая самостоятельно размещаемая реализация сервера управления Tailscale. В этом приложении включены встроенный релей DERP и STUN, поэтому один контейнер одновременно выполняет роль сервера управления и релея для частной сети Tailscale; устройства продолжают использовать официальные клиенты Tailscale.
+    ko: Headscale는 Tailscale 컨트롤 서버의 오픈 소스 셀프 호스팅 구현입니다. 이 앱은 내장 DERP 릴레이와 STUN을 활성화하여 하나의 컨테이너가 컨트롤 플레인과 릴레이를 함께 제공합니다. 기기는 공식 Tailscale 클라이언트를 그대로 사용합니다.
+  architectures:
+    - amd64
+    - arm64

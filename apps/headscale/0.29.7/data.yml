@@ -1,0 +1,111 @@
+additionalProperties:
+  formFields:
+    # 控制面 HTTP 端口：给 1Panel 反向代理使用，不建议直接暴露到公网
+    - default: 8080
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: Control HTTP Port
+      labelZh: 控制面 HTTP 端口
+      label:
+        en: Control HTTP Port
+        ja: コントロール HTTP ポート
+        ms: Port HTTP Kawalan
+        pt-br: Porta HTTP de controle
+        ru: HTTP-порт управления
+        ko: 컨트롤 HTTP 포트
+        zh: 控制面 HTTP 端口
+        zh-Hant: 控制面 HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    # 对外访问地址：必须与反向代理域名一致，内置 DERP 要求 HTTPS
+    - default: ""
+      description:
+        en: Public HTTPS address of this server, for example https://hs.example.com. It must match the reverse-proxy domain and start with https://; the embedded DERP relay requires TLS.
+        zh: 本服务器的对外 HTTPS 地址，例如 https://hs.example.com。必须与反向代理域名一致并以 https:// 开头；内置 DERP 中继依赖 TLS。
+        zh-Hant: 本伺服器的對外 HTTPS 位址，例如 https://hs.example.com。必須與反向代理網域一致並以 https:// 開頭；內建 DERP 中繼依賴 TLS。
+      edit: true
+      envKey: HEADSCALE_SERVER_URL
+      labelEn: Public URL
+      labelZh: 对外访问地址
+      label:
+        en: Public URL
+        ja: 公開 URL
+        ms: URL Awam
+        pt-br: URL pública
+        ru: Публичный URL
+        ko: 공개 URL
+        zh: 对外访问地址
+        zh-Hant: 對外存取位址
+      required: true
+      rule: paramExtUrl
+      type: text
+
+    # 可选：公网 IPv4，用于嵌入式 DERP 区域，填写后连接更稳定
+    - default: ""
+      description:
+        en: Optional. Public IPv4 address of this server. Filling it in makes the embedded DERP relay more stable; leave empty to use only the domain name.
+        zh: 可选。服务器公网 IPv4，填写后内置 DERP 中继更稳定；留空则只使用域名。
+        zh-Hant: 選填。伺服器公網 IPv4，填寫後內建 DERP 中繼更穩定；留空則只使用網域。
+      edit: true
+      envKey: HEADSCALE_DERP_SERVER_IPV4
+      labelEn: Public IPv4
+      labelZh: 公网 IPv4
+      label:
+        en: Public IPv4
+        ja: パブリック IPv4
+        ms: IPv4 Awam
+        pt-br: IPv4 pública
+        ru: Публичный IPv4
+        ko: 공인 IPv4
+        zh: 公网 IPv4
+        zh-Hant: 公網 IPv4
+      required: false
+      type: text
+
+    # STUN：UDP 端口必须公网可达，宿主机与容器使用同一端口
+    - default: 3478
+      description:
+        en: UDP port used by STUN. It must be reachable from the internet; the host and the container use the same port.
+        zh: STUN 使用的 UDP 端口，必须能从公网访问；宿主机与容器使用同一端口。
+        zh-Hant: STUN 使用的 UDP 連接埠，必須能從公網存取；主機與容器使用同一個連接埠。
+      edit: true
+      envKey: PANEL_APP_PORT_STUN
+      labelEn: STUN Port (UDP)
+      labelZh: STUN 端口（UDP）
+      label:
+        en: STUN Port (UDP)
+        ja: STUN ポート（UDP）
+        ms: Port STUN (UDP)
+        pt-br: Porta STUN (UDP)
+        ru: Порт STUN (UDP)
+        ko: STUN 포트(UDP)
+        zh: STUN 端口（UDP）
+        zh-Hant: STUN 連接埠（UDP）
+      required: true
+      rule: paramPort
+      type: number
+
+    # MagicDNS：默认开启，使用内部域名，不需要公网 DNS 记录
+    - default: ts.internal
+      description:
+        en: Base domain for MagicDNS names, for example nas.ts.internal. It must differ from the public URL domain, must not be a parent domain of it, and does not need a public DNS record.
+        zh: MagicDNS 名称的基础域名，例如 nas.ts.internal。必须与对外访问地址的域名不同，也不能是它的父域名，且无需添加公网 DNS 记录。
+        zh-Hant: MagicDNS 名稱的基礎網域，例如 nas.ts.internal。必須與對外存取位址的網域不同，也不能是它的父網域，且無需新增公網 DNS 記錄。
+      edit: true
+      envKey: HEADSCALE_DNS_BASE_DOMAIN
+      labelEn: MagicDNS Base Domain
+      labelZh: MagicDNS 基础域名
+      label:
+        en: MagicDNS Base Domain
+        ja: MagicDNS ベースドメイン
+        ms: Domain Asas MagicDNS
+        pt-br: Domínio base do MagicDNS
+        ru: Базовый домен MagicDNS
+        ko: MagicDNS 기본 도메인
+        zh: MagicDNS 基础域名
+        zh-Hant: MagicDNS 基礎網域
+      required: true
+      rule: paramCommon
+      type: text
