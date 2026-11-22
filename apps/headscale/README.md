@@ -173,6 +173,18 @@ environment:
 
 ## 常见问题
 
+**打开 `https://你的域名/` 是空白页，正常吗？**
+
+正常。Headscale 没有内置 Web 管理界面，根路径 `/` 返回空内容。可以用下面的接口确认服务是否正常：
+
+```bash
+curl https://hs.example.com/health      # {"status":"pass"}
+curl https://hs.example.com/version     # 版本信息
+curl -i https://hs.example.com/derp     # 426 DERP requires connection upgrade，正常
+```
+
+`/derp` 返回 `426` 说明反向代理已经正确转发到 Headscale；如果返回 `404` 或 `502`，检查反向代理。
+
 **控制面能打开，但设备一直显示正在连接？**
 
 检查反向代理是否透传 `Upgrade: tailscale-control-protocol`，并确认 `proxy_buffering off`。Tailscale 控制协议不是普通 WebSocket，代理必须允许 HTTP 101 协议切换。
