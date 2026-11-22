@@ -15,7 +15,7 @@ Headscale 自带嵌入式 DERP，个人和小团队直接用内置中继即可�
 - 中继流量很大，需要独立扩容；
 - 需要多个 DERP 区域做容灾。
 
-本应用不依赖单独的中继容器，也不需要你再写额外的 `derp.yaml`。默认会同时使用内置 DERP 和 Tailscale 官方 DERP：内置 DERP 优先，官方 DERP 作为兜底，两者由 Headscale 自动合并。如果服务器访问不了 `controlplane.tailscale.com`，删掉 `docker-compose.yml` 里的 `HEADSCALE_DERP_URLS` 即可只用内置 DERP。以后确实需要独立 derper 时，再单独部署并在 Headscale 中登记即可。
+本应用不依赖单独的中继容器，也不需要你再写额外的 `derp.yaml`。默认会同时使用内置 DERP 和 Tailscale 官方 DERP：内置 DERP 始终在列表中，官方 DERP 提供额外区域作为兜底，两者由 Headscale 自动合并。客户端会按延迟和可达性自动选择 DERP，不会强制固定顺序；自建中继通常更近，所以实际使用中一般会优先选中它。如果服务器访问不了 `controlplane.tailscale.com`，删掉 `docker-compose.yml` 里的 `HEADSCALE_DERP_URLS` 即可只用内置 DERP。以后确实需要独立 derper 时，再单独部署并在 Headscale 中登记即可。
 
 ## 安装前准备
 
