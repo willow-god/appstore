@@ -15,8 +15,8 @@
 # 删除保护：
 #   - 只认 PRUNE_APPS 里明确写出的名字
 #   - 该应用仍在仓库 apps/ 里时跳过（下个同步周期又会被复制回来）
-#   - 该应用在 1Panel 里还有已安装实例时跳过：删掉商店定义会让已安装应用的
-#     详情、参数和升级信息失去依据
+#   - 该应用在 1Panel 里还有已安装实例时保留应用定义，只删除不是已安装版本的
+#     版本目录：删掉整个定义会让已安装应用的详情、参数和升级信息失去依据
 #   - 无法确认是否已安装（没有 sqlite3、数据库不存在或被占用）时也跳过，
 #     宁可留下旧定义，也不动可能有实例在用的应用
 #   - 目标是普通目录且含 data.yml，符号链接不删
@@ -118,13 +118,15 @@ sqlite_ro() {
     sqlite3 -readonly -batch -noheader -cmd "PRAGMA query_only=ON;" "$PANEL_DB" "$1" 2>/dev/null
 }
 
-# 设置 INSTALL_STATE（none | installed | unknown）与 INSTALL_INFO。
-# 1Panel 本地应用的 key 是 "local" + 应用目录名。
+# 设置 INSTALL_STATE（none | installed | unknown）、INSTALL_INFO 和
+# INSTALL_VERSIONS（已安装的版本目录名）。1Panel 本地应用的 key 是 "local" + 应用目录名。
 check_installed() {
-    local app_name="$1" key app_id row count names
+    local app_name="$1" key app_id dangling out name version joined=""
+    local -a names=()
 
     INSTALL_STATE="unknown"
     INSTALL_INFO="$DB_REASON"
+    INSTALL_VERSIONS=()
 
     [[ "$DB_STATE" == "ready" ]] || return 0
 
@@ -140,19 +142,75 @@ check_installed() {
         return 0
     fi
 
-    if ! row="$(sqlite_ro "SELECT count(*) || '|' || COALESCE(group_concat(i.name || ' (' || COALESCE(d.version, '?') || ')', ', '), '') FROM app_installs i LEFT JOIN app_details d ON d.id = i.app_detail_id WHERE i.app_id=$app_id;")"; then
+    # 安装记录指向的版本已经不在 app_details 里时，无法把实例对应到具体版本目录
+    if ! dangling="$(sqlite_ro "SELECT count(*) FROM app_installs WHERE app_id=$app_id AND app_detail_id NOT IN (SELECT id FROM app_details WHERE app_id=$app_id);")"; then
         INSTALL_INFO="数据库查询失败"
         return 0
     fi
-    count="${row%%|*}"
-    names="${row#*|}"
-    if [[ -z "$count" || "$count" == "0" ]]; then
+    if [[ -n "$dangling" && "$dangling" != "0" ]]; then
+        INSTALL_INFO="有 $dangling 条安装记录的版本指针已经失效，无法判断安装版本"
+        return 0
+    fi
+
+    if ! out="$(sqlite_ro "SELECT i.name || '|' || d.version FROM app_installs i JOIN app_details d ON d.id = i.app_detail_id WHERE i.app_id=$app_id;")"; then
+        INSTALL_INFO="数据库查询失败"
+        return 0
+    fi
+    if [[ -z "$out" ]]; then
         INSTALL_STATE="none"
         INSTALL_INFO="没有已安装实例"
         return 0
     fi
+
+    while IFS='|' read -r name version; do
+        [[ -n "$version" ]] && INSTALL_VERSIONS+=("$version")
+        names+=("$name ($version)")
+    done <<<"$out"
+    for name in "${names[@]}"; do
+        joined="${joined:+$joined, }$name"
+    done
     INSTALL_STATE="installed"
-    INSTALL_INFO="$count 个已安装实例${names:+：$names}"
+    INSTALL_INFO="${#names[@]} 个已安装实例：$joined"
+}
+
+# 应用仍需保留时，只留下已安装的版本目录，清掉同步脚本早先复制进来的其他版本。
+# 找不到任何已安装版本目录时保持原样，避免删掉可能还在用的文件。
+prune_uninstalled_versions() {
+    local item="$1" target="$2" dir version matched=0 removed=0
+    local -A keep=()
+    local -a stale=()
+
+    for version in "${INSTALL_VERSIONS[@]}"; do
+        keep["$version"]=1
+    done
+
+    for dir in "$target"/*/; do
+        [[ -d "$dir" && ! -L "$dir" ]] || continue
+        [[ -f "$dir/data.yml" ]] || continue
+        version="$(basename "$dir")"
+        if [[ -n "${keep[$version]:-}" ]]; then
+            matched=$((matched + 1))
+        else
+            stale+=("$dir")
+        fi
+    done
+
+    echo "🛡️  应用 $item 仍有 $INSTALL_INFO，保留应用定义: $target"
+    if [[ $matched -eq 0 ]]; then
+        echo "⚠️  没找到已安装的版本目录，跳过版本清理（保留全部版本，避免误删）"
+        skipped_hit=$((skipped_hit + 1))
+        return 0
+    fi
+    for dir in "${stale[@]}"; do
+        if rm -rf -- "$dir"; then
+            echo "🧹 应用 $item 删除未安装的版本 $(basename "$dir"): $dir"
+            removed=$((removed + 1))
+        else
+            echo "⚠️  删除失败，请手动清理: $dir"
+        fi
+    done
+    echo "   已保留 $matched 个已安装版本，清理 $removed 个未安装版本"
+    skipped_hit=$((skipped_hit + 1))
 }
 
 init_installed_db
@@ -183,8 +241,7 @@ for item in "${prune_items[@]}"; do
     check_installed "$item"
     case "$INSTALL_STATE" in
         installed)
-            echo "🛡️  应用 $item 仍有 $INSTALL_INFO，保留应用定义: $target"
-            skipped_hit=$((skipped_hit + 1))
+            prune_uninstalled_versions "$item" "$target"
             continue
             ;;
         unknown)
