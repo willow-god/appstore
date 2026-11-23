@@ -5,8 +5,8 @@ QingyuGist 是 [OpenGist](https://github.com/thomiceli/opengist) 的独立分支
 每个 Gist **就是**一份真实的 Git 仓库，既能 `git clone` 下来用本地编辑器改完推回去，也能在网页编辑器和 Markdown 预览里直接改。公开、不公开、私有三种可见性，喜欢、派生、主题和全文搜索都自带。
 
 - 默认端口：`6157`（网页与 HTTP Git）、`2222`（SSH Git）
-- 上游仓库：<https://github.com/LiuShen-Fork/QingyuGist>
-- 文档：<https://github.com/LiuShen-Fork/QingyuGist/tree/master/docs>
+- 上游仓库：<https://github.com/qingyu-org/Gist>
+- 文档：<https://github.com/qingyu-org/Gist/tree/master/docs>
 - 数据格式与 OpenGist 一致，可以直接接着老数据使用
 
 ## 首次启动

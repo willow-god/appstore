@@ -16,9 +16,9 @@ additionalProperties:
   type: website
   crossVersionUpdate: true
   limit: 0
-  website: https://github.com/LiuShen-Fork/QingyuGist
-  github: https://github.com/LiuShen-Fork/QingyuGist
-  document: https://github.com/LiuShen-Fork/QingyuGist/tree/master/docs
+  website: https://github.com/qingyu-org/Gist
+  github: https://github.com/qingyu-org/Gist
+  document: https://github.com/qingyu-org/Gist/tree/master/docs
   description:
     en: A self-hosted pastebin built on Git. Every Gist is a real repository that can be cloned and pushed like any other project.
     zh: 基于 Git 的自托管代码片段服务。每个 Gist 都是一份真实的仓库，可以像普通项目一样 clone 和推送。
