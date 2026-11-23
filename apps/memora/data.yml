@@ -16,9 +16,9 @@ additionalProperties:
   type: website
   crossVersionUpdate: true
   limit: 0
-  website: https://github.com/LiuShen-Fork/Memora
-  github: https://github.com/LiuShen-Fork/Memora
-  document: https://github.com/LiuShen-Fork/Memora/tree/main/docs
+  website: https://github.com/qingyu-org/Album
+  github: https://github.com/qingyu-org/Album
+  document: https://github.com/qingyu-org/Album/tree/main/docs
   description:
     en: A self-hosted photo album hard-forked from ChronoFrame, rebuilt with a Go backend while keeping the data directory compatible.
     zh: 从 ChronoFrame 硬分叉而来的自托管相册，改用 Go 后端，数据目录与 ChronoFrame 兼容。

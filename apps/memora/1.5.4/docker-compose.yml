@@ -1,6 +1,6 @@
 services:
   memora:
-    image: ghcr.io/liushen-fork/memora:1.5.4
+    image: ghcr.io/qingyu-org/album:latest
     container_name: ${CONTAINER_NAME}
     restart: always
     labels:

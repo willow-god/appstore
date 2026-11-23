@@ -5,8 +5,8 @@ Memora 是可自托管的个人相册，用于浏览、整理和在地图上探�
 它从 [ChronoFrame](https://github.com/HoshinoSuzumi/chronoframe) 硬分叉而来，界面与使用方式基本一致，但后端换成了 Go，数据库结构和 `/app/data` 挂载保持兼容。
 
 - 默认端口：`6232`（容器内 `3000`）
-- 当前维护仓库：<https://github.com/LiuShen-Fork/Memora>
-- 中文文档：<https://github.com/LiuShen-Fork/Memora/tree/main/docs>
+- 当前维护仓库：<https://github.com/qingyu-org/Album>
+- 中文文档：<https://github.com/qingyu-org/Album/tree/main/docs>
 
 ## 与 ChronoFrame 的区别
 
