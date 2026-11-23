@@ -17,9 +17,9 @@ additionalProperties:
   crossVersionUpdate: true
   limit: 0
   recommend: 0
-  website: https://github.com/LiuShen-Fork/pansou-web
-  github: https://github.com/LiuShen-Fork/pansou-web
-  document: https://github.com/LiuShen-Fork/pansou-web
+  website: https://github.com/qingyu-org/Pansou
+  github: https://github.com/qingyu-org/Pansou
+  document: https://github.com/qingyu-org/Pansou
   description:
     en: Qingyu PanSou is a PanSou-derived cloud drive search service (Vue 3 frontend + Go backend built into one image). It keeps the upstream search API compatible and adds user accounts, daily quotas, OAuth2 sign-in and a full admin backend.
     zh: 清羽盘搜是 PanSou 的二开版本（Vue 3 前端 + Go 后端同仓构建），在保留上游搜索 API 的基础上补齐了账户体系、每日配额、OAuth2 登录与完整管理后台。

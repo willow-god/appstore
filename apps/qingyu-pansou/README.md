@@ -2,8 +2,8 @@
 
 清羽盘搜是基于 [PanSou](https://github.com/fish2018/pansou) 的二开版本：Vue 3 前端 + Go 后端同仓构建成一个镜像，在保留上游搜索 API 的基础上，补齐了**账户体系、每日配额、OAuth2 登录和完整的管理后台**。
 
-- 项目地址：[LiuShen-Fork/pansou-web](https://github.com/LiuShen-Fork/pansou-web)
-- 本应用使用的镜像：`ghcr.io/liushen-fork/pansou-web:v1.3.1`（amd64 / arm64）
+- 项目地址：[qingyu-org/Pansou](https://github.com/qingyu-org/Pansou)
+- 本应用使用的镜像：`ghcr.io/liushen-fork/pansou-web:v2.2.0`（amd64 / arm64）
 - 上游：清羽盘搜的后端以 subtree 方式跟随 [fish2018/pansou](https://github.com/fish2018/pansou)
 
 > 本仓库另有 `pansou` 应用，那是上游官方的前后端一体镜像；清羽盘搜是它的二开版本，多了账号与后台，两者不要混装在同一端口上。

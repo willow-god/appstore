@@ -1,5 +1,7 @@
 services:
   qingyu-pansou:
+    # 新仓库的 ghcr.io/qingyu-org/pansou:v2.2.0 目前无法匿名拉取（GHCR 返回
+    # 403），先继续用仍公开的旧包；新包公开后把这里换成新地址即可。
     image: ghcr.io/liushen-fork/pansou-web:v2.2.0
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
