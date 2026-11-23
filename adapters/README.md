@@ -13,7 +13,7 @@
 | 脚本 | 作用 |
 | --- | --- |
 | `hello-world.sh` | 示例脚本 |
-| `prune-apps.sh` | 按 `.env` 里的 `PRUNE_APPS`（逗号分隔的应用名），删除 1Panel 本地应用目录里已经拷贝过去的同名应用；幂等，可单独执行 `bash adapters/prune-apps.sh`（支持 `ENV_FILE=` / `PRUNE_APPS=` / `LOCAL_APPS_DIR=` 覆盖以便测试） |
+| `prune-apps.sh` | 按 `.env` 里的 `PRUNE_APPS`（逗号分隔的应用名），删除 1Panel 本地应用目录里已经拷贝过去、且没有已安装实例的同名应用；幂等，可单独执行 `bash adapters/prune-apps.sh`（支持 `ENV_FILE=` / `PRUNE_APPS=` / `LOCAL_APPS_DIR=` / `PANEL_DB=` 覆盖以便测试） |
 
 ### prune-apps.sh 的清理范围
 
@@ -25,11 +25,20 @@
 
 同步脚本 `scripts/sync-apps.sh` 只会把 `apps/` 复制到 1Panel 本地应用目录，**不会**删除上游已经下线（或从未出现在仓库里）的应用，服务器上的目录会一直留着。所以本脚本删除 `$LOCAL_APPS_DIR/<应用名>`：`scripts/mirror.sh` 执行时会用 `PANEL_ROOT` 推导出 `LOCAL_APPS_DIR` 并导出，单独执行时才回退到「仓库目录的上一级」。
 
+删除前会以只读方式查询 1Panel 数据库（默认 `$PANEL_ROOT/db/agent.db`，可用 `PANEL_DB=` 覆盖）的 `apps` / `app_installs` / `app_details`：
+
+- 应用在 `app_installs` 里还有记录 → **保留整个应用定义**，并在输出里列出实例名和版本；等实例卸载后，下次同步再清理
+- 数据库查不到该应用 → 没有实例，按原规则删除
+- 没有 `sqlite3`、数据库不存在、被占用或查询失败 → **无法确认，保守跳过删除**，并打印原因
+
+数据库只通过 `sqlite3 -readonly` 和 `PRAGMA query_only=ON` 打开，只做 `SELECT`，不会写入。
+
 删除有这些保护：
 
 - 只删 `PRUNE_APPS` 里写出的名字，其余目录一律不动
 - 目标必须是 1Panel 应用目录（含 `data.yml`）的普通目录，符号链接、文件一律跳过
 - 应用仍在 `apps/` 里时跳过（删了也会被复制回来）
+- 应用仍有已安装实例、或无法确认是否已安装时跳过
 - 回退到「克隆目录的上一级」时，那个目录必须叫 `local`，避免在普通开发检出里误删兄弟目录
 
-删除只影响「应用商店列表」，不会卸载已安装实例。
+脚本只影响「应用商店列表」，不会卸载已安装实例；有实例在用时连商店定义一起保留。

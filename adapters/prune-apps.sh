@@ -15,10 +15,15 @@
 # 删除保护：
 #   - 只认 PRUNE_APPS 里明确写出的名字
 #   - 该应用仍在仓库 apps/ 里时跳过（下个同步周期又会被复制回来）
+#   - 该应用在 1Panel 里还有已安装实例时跳过：删掉商店定义会让已安装应用的
+#     详情、参数和升级信息失去依据
+#   - 无法确认是否已安装（没有 sqlite3、数据库不存在或被占用）时也跳过，
+#     宁可留下旧定义，也不动可能有实例在用的应用
 #   - 目标是普通目录且含 data.yml，符号链接不删
 #   - LOCAL_APPS_DIR 未显式传参时，由脚本位置推导，且上级目录必须叫 local，
 #     避免在普通开发检出里误删兄弟目录
 #
+# 数据库只读打开（-readonly + PRAGMA query_only），只做 SELECT，不写入。
 # 幂等：没有要删的内容时静默通过。
 # 退出码：0 完成（含跳过）；非零只有 rm 之外的环境问题
 # ============================================================
@@ -78,7 +83,82 @@ if [[ $DEPLOYED_DIR_EXPLICIT -eq 0 && "$(basename "$LOCAL_APPS_DIR")" != "local"
     exit 0
 fi
 
+# ---------- 1Panel 数据库（只读） ----------
+# app_installs 里存在该应用的记录，就说明商店定义还在被一个已安装实例使用。
+PANEL_DB="${PANEL_DB:-}"
+if [[ -z "$PANEL_DB" ]]; then
+    if [[ -n "${PANEL_ROOT:-}" ]]; then
+        PANEL_DB="$PANEL_ROOT/db/agent.db"
+    elif [[ -n "$LOCAL_APPS_DIR" && "$(basename "$LOCAL_APPS_DIR")" == "local" ]]; then
+        PANEL_DB="$(cd "$LOCAL_APPS_DIR/../.." && pwd)/db/agent.db"
+    fi
+fi
+
+DB_STATE="unavailable"
+DB_REASON="未找到 1Panel 数据库路径"
+
+init_installed_db() {
+    if ! command -v sqlite3 >/dev/null 2>&1; then
+        DB_REASON="未找到 sqlite3 命令"
+        return
+    fi
+    if [[ -z "$PANEL_DB" || ! -f "$PANEL_DB" ]]; then
+        DB_REASON="数据库不存在: ${PANEL_DB:-<未推导出>}"
+        return
+    fi
+    if ! sqlite3 -readonly -batch "$PANEL_DB" "PRAGMA query_only=ON; SELECT 1;" >/dev/null 2>&1; then
+        DB_REASON="数据库只读打开失败（被占用或权限不足）: $PANEL_DB"
+        return
+    fi
+    DB_STATE="ready"
+}
+
+# 只读查询；失败时返回非零，调用方按「无法确认」处理
+sqlite_ro() {
+    sqlite3 -readonly -batch -noheader -cmd "PRAGMA query_only=ON;" "$PANEL_DB" "$1" 2>/dev/null
+}
+
+# 设置 INSTALL_STATE（none | installed | unknown）与 INSTALL_INFO。
+# 1Panel 本地应用的 key 是 "local" + 应用目录名。
+check_installed() {
+    local app_name="$1" key app_id row count names
+
+    INSTALL_STATE="unknown"
+    INSTALL_INFO="$DB_REASON"
+
+    [[ "$DB_STATE" == "ready" ]] || return 0
+
+    key="local$app_name"
+    key="${key//\'/\'\'}"
+    if ! app_id="$(sqlite_ro "SELECT id FROM apps WHERE resource='local' AND key='$key' LIMIT 1;")"; then
+        INSTALL_INFO="数据库查询失败"
+        return 0
+    fi
+    if [[ -z "$app_id" ]]; then
+        INSTALL_STATE="none"
+        INSTALL_INFO="1Panel 中没有该应用记录"
+        return 0
+    fi
+
+    if ! row="$(sqlite_ro "SELECT count(*) || '|' || COALESCE(group_concat(i.name || ' (' || COALESCE(d.version, '?') || ')', ', '), '') FROM app_installs i LEFT JOIN app_details d ON d.id = i.app_detail_id WHERE i.app_id=$app_id;")"; then
+        INSTALL_INFO="数据库查询失败"
+        return 0
+    fi
+    count="${row%%|*}"
+    names="${row#*|}"
+    if [[ -z "$count" || "$count" == "0" ]]; then
+        INSTALL_STATE="none"
+        INSTALL_INFO="没有已安装实例"
+        return 0
+    fi
+    INSTALL_STATE="installed"
+    INSTALL_INFO="$count 个已安装实例${names:+：$names}"
+}
+
+init_installed_db
+
 deployed_hit=0
+skipped_hit=0
 for item in "${prune_items[@]}"; do
     target="$LOCAL_APPS_DIR/$item"
 
@@ -100,6 +180,20 @@ for item in "${prune_items[@]}"; do
         continue
     fi
 
+    check_installed "$item"
+    case "$INSTALL_STATE" in
+        installed)
+            echo "🛡️  应用 $item 仍有 $INSTALL_INFO，保留应用定义: $target"
+            skipped_hit=$((skipped_hit + 1))
+            continue
+            ;;
+        unknown)
+            echo "⚠️  无法确认 $item 是否已安装（$INSTALL_INFO），保守跳过删除: $target"
+            skipped_hit=$((skipped_hit + 1))
+            continue
+            ;;
+    esac
+
     if rm -rf -- "$target"; then
         echo "🗑️  已删除已部署应用: $target"
         deployed_hit=1
@@ -110,5 +204,9 @@ for item in "${prune_items[@]}"; do
 done
 
 if [[ $deployed_hit -eq 0 ]]; then
-    echo "✅ 已部署应用目录无需清理（$PRUNE_VAR 中的应用不在 $LOCAL_APPS_DIR 中）"
+    if [[ $skipped_hit -eq 0 ]]; then
+        echo "✅ 已部署应用目录无需清理（$PRUNE_VAR 中的应用不在 $LOCAL_APPS_DIR 中）"
+    else
+        echo "✅ 已部署应用目录无需清理（有 $skipped_hit 个应用因已安装或无法确认而保留）"
+    fi
 fi

@@ -430,7 +430,7 @@ PRUNE_APPS="axonhub-lite-mysql"
 - 如果 `.env` 中列出的应用在本机没有部署，脚本会直接跳过它（不打印日志、不中断），结尾统一汇总替换了多少个文件。
 - 新增应用的 PR 中，如果该应用需要镜像替换，必须同时修改 `.env` 和 `mirror-config.env` 说明。
 - `PRUNE_APPS` 是「要清理掉哪些应用名」的白名单，`adapters/prune-apps.sh` 只按它清理，**不会**因为 `apps/` 下没有对应目录就自动删（清单里可能有来自其他应用商店的应用）。想移除某个已下线应用，把它写进 `PRUNE_APPS`；清理完成后名字留在 `PRUNE_APPS` 里也无害（目录不在就直接跳过）。
-- `PRUNE_APPS` 中对应用户端 1Panel 本地应用目录（默认 `/opt/1panel/resource/apps/local/<应用名>`）里的已部署副本也会被删除：同步脚本只复制、不删除，应用下线后目录会一直留在服务器上。删除有保护（只删 `PRUNE_APPS` 里的名字、要求目标含 `data.yml`、应用仍在 `apps/` 里时跳过、目录由 `PANEL_ROOT` 推导并必须指向本地应用目录），且不影响已安装实例。
+- `PRUNE_APPS` 中对应用户端 1Panel 本地应用目录（默认 `/opt/1panel/resource/apps/local/<应用名>`）里的已部署副本也会被删除：同步脚本只复制、不删除，应用下线后目录会一直留在服务器上。删除有保护（只删 `PRUNE_APPS` 里的名字、要求目标含 `data.yml`、应用仍在 `apps/` 里时跳过、目录由 `PANEL_ROOT` 推导并必须指向本地应用目录），且不影响已安装实例。脚本会以只读方式查询 1Panel 数据库的 `app_installs`：应用仍有已安装实例时保留整个应用定义，等实例卸载后再清理；没有 `sqlite3` 或数据库不可读时按「无法确认」保守跳过，不会误删。
 
 变量与源的对应关系（`scripts/mirror.sh` 中的 `SOURCES`）：一个源可以对应多个清单变量，逐个处理。`k8s.gcr.io` → `K8S_GCR_IO_LIST`；`registry.k8s.io` → `REGISTRY_K8S_IO_LIST` 与 `NON_DOCKER_IO_LIST`。清单为空或含空条目时会被跳过，不会误扫整个 `apps/` 目录。
 
@@ -743,7 +743,7 @@ bash "$TMP_WORK_DIR/scripts/refresh.sh"
 
 `mirror.sh`（只负责镜像替换）：
 
-1. 依次执行 `adapters/*.sh`（如 `prune-apps.sh` 删除 `PRUNE_APPS` 里的已部署副本）。
+1. 依次执行 `adapters/*.sh`（如 `prune-apps.sh` 删除 `PRUNE_APPS` 里的已部署副本；应用仍有已安装实例时保留定义）。
 2. 按 `.env` 与 `/opt/mirror-config.env`，直接改写 `$LOCAL_APPS_DIR/<应用>/<版本>/docker-compose.yml` 里的镜像前缀；已替换过的跳过，不留 `.bak`。
 
 `refresh.sh`（只负责刷新）：生成随机 `TASK_ID` 和秒级时间戳，计算 `Token = md5("1panel" + APIKey + Timestamp)`，调用 `POST /api/v2/apps/sync/local`，校验响应包含 `"code":200`，失败时以非零状态码退出。
