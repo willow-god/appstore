@@ -89,6 +89,33 @@ additionalProperties:
       type: password
 
     - default: ""
+      edit: true
+      envKey: PANEL_REDIS_HOST
+      key: redis
+      labelEn: Redis Service
+      labelZh: Redis 服务
+      label:
+        en: Redis Service
+        zh: Redis 服务
+        zh-Hant: Redis 服務
+      # 安装时是服务选择器；保留 edit 是为了旧实例升级后能在「参数 → 编辑」里
+      # 补填服务名（1Panel 会把 service 类型退化成普通文本框）。
+      required: true
+      type: service
+
+    - default: ""
+      edit: true
+      envKey: PANEL_REDIS_ROOT_PASSWORD
+      labelEn: Redis Service Password
+      labelZh: Redis 服务密码
+      label:
+        en: Redis Service Password
+        zh: Redis 服务密码
+        zh-Hant: Redis 服務密碼
+      required: false
+      type: password
+
+    - default: ""
       envKey: PANEL_QINGYU_MASTER_KEY
       labelEn: Master Key
       labelZh: 主密钥
