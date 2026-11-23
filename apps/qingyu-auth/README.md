@@ -17,7 +17,7 @@ Qingyu Auth（清羽通行证）是面向**单站点部署**的 OAuth 2.0 / OIDC
 | HTTP 端口 | 宿主机端口，默认 `8000`；反向代理指向这个端口 |
 | 对外访问地址（Issuer） | 必须是反向代理对外提供的 HTTPS 地址，例如 `https://auth.example.com`，OIDC 客户端会把它当作 issuer |
 | 数据库服务 | 选择 1Panel 里已经装好的 MySQL 或 MariaDB 应用 |
-| 数据库名 / 用户 / 密码 | 首次安装会随机生成；升级或迁移时保持与原实例一致即可连回原库 |
+| 数据库名 / 用户 / 密码 | 默认都是 `qingyu_auth`，可改；和已有实例共用数据库时要填成原来的值 |
 | Redis 服务 / 密码 | 选择 1Panel 已安装的 Redis 应用，用于登录失败保护的封禁缓存；Redis 未启用时密码留空 |
 | 主密钥 | 加密 Provider Secret、SMTP 密码、TOTP 密钥、OIDC 签名私钥和 S3 凭据 |
 | 邮箱验证码密钥 / CSRF 密钥 | 分别用于邮箱验证码签名和 CSRF 校验 |

@@ -50,7 +50,7 @@ additionalProperties:
         - label: MariaDB
           value: mariadb
 
-    - default: qingyu_sso
+    - default: qingyu_auth
       envKey: PANEL_DB_NAME
       labelEn: Database Name
       labelZh: 数据库名
@@ -63,7 +63,7 @@ additionalProperties:
       rule: paramCommon
       type: text
 
-    - default: ""
+    - default: qingyu_auth
       envKey: PANEL_DB_USER
       labelEn: Database User
       labelZh: 数据库用户
@@ -76,7 +76,7 @@ additionalProperties:
       rule: paramCommon
       type: text
 
-    - default: ""
+    - default: qingyu_auth
       envKey: PANEL_DB_USER_PASSWORD
       labelEn: Database User Password
       labelZh: 数据库用户密码
