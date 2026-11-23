@@ -6,7 +6,7 @@ tags:
 title: 面向单站点部署的 OAuth 2.0 / OIDC 单点登录服务
 description: Qingyu Auth（清羽通行证）是自托管的统一登录与账号中心，支持密码、邮箱验证码、Passkey、TOTP 和上游 OAuth 登录，并提供完整的 OAuth 2.0 / OIDC 授权、Token、Consent 与注销端点。
 additionalProperties:
-  key: qingyu-sso
+  key: qingyu-auth
   name: Qingyu Auth
   tags:
     - WebSite
