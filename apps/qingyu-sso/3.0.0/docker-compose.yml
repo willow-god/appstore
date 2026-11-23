@@ -1,0 +1,45 @@
+services:
+  qingyu-auth:
+    # v3.0.0 起项目更名为 Qingyu Auth，可执行文件与 Compose 服务名从 qingyu-sso
+    # 改为 qingyu-auth；QINGYU_ 前缀的环境变量和数据库名 qingyu_sso 都不变。
+    image: ghcr.io/qingyu-org/auth:v3.0.0
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    labels:
+      createdBy: "Apps"
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:8000"
+    environment:
+      TZ: Asia/Shanghai
+      QINGYU_ENV: production
+      QINGYU_DEBUG: "false"
+      # 对外 OIDC Issuer，必须与反向代理暴露的 HTTPS 地址一致
+      QINGYU_ISSUER: ${PANEL_QINGYU_ISSUER}
+      QINGYU_DATABASE_DSN: ${PANEL_DB_USER}:${PANEL_DB_USER_PASSWORD}@tcp(${PANEL_DB_HOST}:${PANEL_DB_PORT})/${PANEL_DB_NAME}?parseTime=true
+      QINGYU_MASTER_KEY: ${PANEL_QINGYU_MASTER_KEY}
+      QINGYU_EMAIL_CODE_KEY: ${PANEL_QINGYU_EMAIL_CODE_KEY}
+      QINGYU_CSRF_KEY: ${PANEL_QINGYU_CSRF_KEY}
+      QINGYU_COOKIE_SECURE: ${PANEL_QINGYU_COOKIE_SECURE}
+      QINGYU_AUTO_MIGRATE: ${PANEL_QINGYU_AUTO_MIGRATE}
+      # 不用 Redis：它只是登录失败保护的封禁缓存，MySQL 始终是权威数据源，
+      # Redis 不可用时服务会记 WARN 并自动回退。需要时在已安装应用的
+      # docker-compose.yml 里补一条 QINGYU_REDIS_URL（redis://:密码@宿主:6379/0）即可。
+      # 来源地区解析：把 ip2region.xdb / ip2region_v6.xdb 放进数据目录后生效；
+      # 文件不存在时只跳过地区解析，不影响登录。
+      QINGYU_IP_REGION_DB: /var/lib/qingyu/data/ip2region.xdb
+      QINGYU_IP_REGION_V6_DB: /var/lib/qingyu/data/ip2region_v6.xdb
+    volumes:
+      # 本地文件存储与可选的 ip2region 地区库；账号、应用、Provider 等业务数据都在外置数据库里。
+      - ./data:/var/lib/qingyu/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

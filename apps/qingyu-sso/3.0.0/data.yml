@@ -1,0 +1,168 @@
+additionalProperties:
+  formFields:
+    - default: 8000
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: HTTP Port
+      labelZh: HTTP 端口
+      label:
+        en: HTTP Port
+        zh: HTTP 端口
+        zh-Hant: HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    - default: "https://sso.example.com"
+      edit: true
+      envKey: PANEL_QINGYU_ISSUER
+      labelEn: Issuer URL
+      labelZh: 对外访问地址（Issuer）
+      label:
+        en: Issuer URL
+        zh: 对外访问地址（Issuer）
+        zh-Hant: 對外存取位址（Issuer）
+      description:
+        en: Must match the HTTPS address exposed by the reverse proxy; OIDC clients use it as the issuer.
+        zh: 必须与反向代理对外提供的 HTTPS 地址完全一致，OIDC 客户端会把它当作 issuer。
+      required: true
+      rule: paramExtUrl
+      type: text
+
+    - default: mysql
+      envKey: PANEL_DB_TYPE
+      labelEn: Database Service
+      labelZh: 数据库服务
+      label:
+        en: Database Service
+        zh: 数据库服务
+        zh-Hant: 資料庫服務
+      child:
+        default: ""
+        envKey: PANEL_DB_HOST
+        required: true
+        type: service
+      required: true
+      type: apps
+      values:
+        - label: MySQL
+          value: mysql
+        - label: MariaDB
+          value: mariadb
+
+    - default: qingyu_sso
+      envKey: PANEL_DB_NAME
+      labelEn: Database Name
+      labelZh: 数据库名
+      label:
+        en: Database Name
+        zh: 数据库名
+        zh-Hant: 資料庫名
+      random: true
+      required: true
+      rule: paramCommon
+      type: text
+
+    - default: ""
+      envKey: PANEL_DB_USER
+      labelEn: Database User
+      labelZh: 数据库用户
+      label:
+        en: Database User
+        zh: 数据库用户
+        zh-Hant: 資料庫使用者
+      random: true
+      required: true
+      rule: paramCommon
+      type: text
+
+    - default: ""
+      envKey: PANEL_DB_USER_PASSWORD
+      labelEn: Database User Password
+      labelZh: 数据库用户密码
+      label:
+        en: Database User Password
+        zh: 数据库用户密码
+        zh-Hant: 資料庫使用者密碼
+      random: true
+      required: true
+      type: password
+
+    - default: ""
+      envKey: PANEL_QINGYU_MASTER_KEY
+      labelEn: Master Key
+      labelZh: 主密钥
+      label:
+        en: Master Key
+        zh: 主密钥
+        zh-Hant: 主密鑰
+      description:
+        en: Encrypts provider secrets, SMTP password, TOTP keys, OIDC signing key and S3 credentials. Back it up separately; losing or changing it makes existing ciphertext unreadable.
+        zh: 用于加密第三方登录 Secret、SMTP 密码、TOTP 密钥、OIDC 签名私钥和 S3 凭据。请单独备份；丢失或更换后已有密文将无法解开。
+      random: true
+      required: true
+      type: password
+
+    - default: ""
+      envKey: PANEL_QINGYU_EMAIL_CODE_KEY
+      labelEn: Email Code Key
+      labelZh: 邮箱验证码密钥
+      label:
+        en: Email Code Key
+        zh: 邮箱验证码密钥
+        zh-Hant: 電子郵件驗證碼密鑰
+      random: true
+      required: true
+      type: password
+
+    - default: ""
+      envKey: PANEL_QINGYU_CSRF_KEY
+      labelEn: CSRF Key
+      labelZh: CSRF 密钥
+      label:
+        en: CSRF Key
+        zh: CSRF 密钥
+        zh-Hant: CSRF 密鑰
+      random: true
+      required: true
+      type: password
+
+    - default: "true"
+      edit: true
+      envKey: PANEL_QINGYU_COOKIE_SECURE
+      labelEn: Secure Cookies
+      labelZh: 仅使用安全 Cookie
+      label:
+        en: Secure Cookies
+        zh: 仅使用安全 Cookie
+        zh-Hant: 僅使用安全 Cookie
+      description:
+        en: Keep enabled for HTTPS. Disable only for a plain-HTTP deployment.
+        zh: HTTPS 下保持启用；纯 HTTP 部署时才关闭。
+      required: true
+      type: select
+      values:
+        - label: "启用"
+          value: "true"
+        - label: "禁用"
+          value: "false"
+
+    - default: "true"
+      edit: true
+      envKey: PANEL_QINGYU_AUTO_MIGRATE
+      labelEn: Auto Migrate
+      labelZh: 自动迁移数据库
+      label:
+        en: Auto Migrate
+        zh: 自动迁移数据库
+        zh-Hant: 自動遷移資料庫
+      description:
+        en: Apply pending schema migrations on startup. The database user needs DDL permission.
+        zh: 启动时自动应用待执行的 schema 迁移，数据库用户需要有建表和变更权限。
+      required: true
+      type: select
+      values:
+        - label: "启用"
+          value: "true"
+        - label: "禁用"
+          value: "false"

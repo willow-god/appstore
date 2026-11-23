@@ -1,0 +1,29 @@
+name: Qingyu Auth
+tags:
+  - 单点登录
+  - 认证
+  - 自托管
+title: 面向单站点部署的 OAuth 2.0 / OIDC 单点登录服务
+description: Qingyu Auth（清羽通行证）是自托管的统一登录与账号中心，支持密码、邮箱验证码、Passkey、TOTP 和上游 OAuth 登录，并提供完整的 OAuth 2.0 / OIDC 授权、Token、Consent 与注销端点。
+additionalProperties:
+  key: qingyu-sso
+  name: Qingyu Auth
+  tags:
+    - WebSite
+    - Tool
+  shortDescZh: 自托管的 OAuth 2.0 / OIDC 单点登录与统一账号中心
+  shortDescEn: A self-hosted OAuth 2.0 / OIDC single sign-on and account center.
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://github.com/qingyu-org/Auth
+  github: https://github.com/qingyu-org/Auth
+  document: https://github.com/qingyu-org/Auth/blob/main/docs/DEPLOYMENT.md
+  description:
+    en: Qingyu Auth is a self-hosted sign-in and account center for single-site deployments. It supports password, email code, Passkey, TOTP and upstream OAuth login, and serves OAuth 2.0 / OIDC authorization, token, consent and logout endpoints.
+    zh: 清羽通行证是面向单站点部署的自托管统一登录与账号中心。支持密码、邮箱验证码、Passkey、TOTP 和上游 OAuth 登录，并提供 OAuth 2.0 / OIDC 的授权、Token、Consent 和注销端点。
+    zh-Hant: 清羽通行證是面向單站點部署的自託管統一登入與帳號中心。支援密碼、電子郵件驗證碼、Passkey、TOTP 與上游 OAuth 登入，並提供 OAuth 2.0 / OIDC 的授權、Token、Consent 與登出端點。
+  architectures:
+    - amd64
+    - arm64
