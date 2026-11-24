@@ -2,7 +2,7 @@ services:
   qingyu-auth:
     # v3.0.0 起项目更名为 Qingyu Auth，可执行文件与 Compose 服务名从 qingyu-sso
     # 改为 qingyu-auth；QINGYU_ 前缀的环境变量和数据库名 qingyu_sso 都不变。
-    image: ghcr.io/qingyu-org/auth:v3.0.0
+    image: ghcr.io/qingyu-org/auth:v3.1.0
     container_name: ${CONTAINER_NAME}
     restart: always
     labels:
