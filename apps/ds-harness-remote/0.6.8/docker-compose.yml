@@ -1,6 +1,6 @@
 services:
   ds-harness-remote:
-    image: ghcr.io/liguobao/ds-harness-remote/server:0.6.7
+    image: ghcr.io/liguobao/ds-harness-remote/server:0.6.8
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
     labels:
