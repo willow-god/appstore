@@ -1,6 +1,6 @@
 services:
   headscale:
-    image: headscale/headscale:0.29.7
+    image: headscale/headscale:v0.29.8
     container_name: ${CONTAINER_NAME}
     restart: always
     command: serve
