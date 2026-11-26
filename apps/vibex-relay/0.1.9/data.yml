@@ -1,0 +1,24 @@
+additionalProperties:
+  formFields:
+    # 宿主机端口；容器内固定监听 9700，默认只绑定 127.0.0.1
+    - default: 9700
+      description:
+        en: Published on 127.0.0.1 only. Expose it through an HTTPS reverse proxy or Tailscale Serve, not directly to the internet.
+        zh: 只监听 127.0.0.1，请通过 HTTPS 反向代理或 Tailscale Serve 对外提供，不要直接暴露到公网。
+        zh-Hant: 只監聽 127.0.0.1，請透過 HTTPS 反向代理或 Tailscale Serve 對外提供，不要直接暴露到公網。
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: Relay Port
+      labelZh: 中继端口
+      label:
+        en: Relay Port
+        ja: リレーポート
+        ms: Port Relai
+        pt-br: Porta do Relay
+        ru: Порт релея
+        ko: 릴레이 포트
+        zh: 中继端口
+        zh-Hant: 中繼連接埠
+      required: true
+      rule: paramPort
+      type: number

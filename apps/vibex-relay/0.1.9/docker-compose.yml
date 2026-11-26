@@ -1,0 +1,32 @@
+services:
+  vibex-relay:
+    # 官方发布名是 vibex-relay（不是文档里仍残留的 vibex-relay-server）
+    image: ghcr.io/vibex-ai/vibex-relay:0.1.9
+    container_name: ${CONTAINER_NAME}
+    restart: unless-stopped
+    labels:
+      createdBy: "Apps"
+    ports:
+      # 默认只绑定宿主机回环地址；对外访问请走 HTTPS 反向代理或 Tailscale Serve
+      - "127.0.0.1:${PANEL_APP_PORT_HTTP}:9700"
+    environment:
+      # 容器内必须监听所有地址，否则端口映射进不来；固定写死，不开放配置
+      VIBEX_RELAY_BIND_ADDR: 0.0.0.0:9700
+      # 房间与连接上限使用上游默认值；需要调整时在 1Panel 的
+      # docker-compose.yml 里追加对应的 VIBEX_RELAY_* 变量
+      VIBEX_RELAY_ROOM_TTL_MS: "3600000"
+      VIBEX_RELAY_MAX_ROOMS: "1024"
+      VIBEX_RELAY_MAX_TOTAL_CONNECTIONS: "4096"
+      VIBEX_RELAY_MAX_DEVICES_PER_ROOM: "8"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9700/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

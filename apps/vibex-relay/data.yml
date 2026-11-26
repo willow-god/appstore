@@ -1,0 +1,37 @@
+name: Vibex Relay
+tags:
+  - 网络
+  - 中继
+  - 自托管
+  - AI
+title: Vibex 的可选加密中继
+description: 电脑与手机无法直连时，由它转发端到端加密的 WebSocket 帧，中继本身不保存业务数据，也无法解密
+additionalProperties:
+  key: vibex-relay
+  name: Vibex Relay
+  tags:
+    - Network
+    - Relay
+    - Tool
+    - AI
+  shortDescZh: Vibex 的零知识加密中继，只转发端到端加密的 WebSocket 帧
+  shortDescEn: Zero-knowledge relay for Vibex that forwards end-to-end encrypted WebSocket frames
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://vibex.peatboy.com
+  github: https://github.com/vibex-ai/vibex
+  document: https://vibex.peatboy.com/docs/en/relay
+  description:
+    en: An optional self-hosted relay for Vibex. When a computer and phone cannot connect directly, both sides forward end-to-end encrypted WebSocket frames through it. The relay stores no sessions, files, or model settings and cannot decrypt business data.
+    zh: Vibex 的可选自托管中继。电脑与手机无法直连时，双方通过它转发端到端加密的 WebSocket 帧；中继不保存会话、文件或模型配置，也无法解密业务数据。
+    zh-Hant: Vibex 的可選自託管中繼。電腦與手機無法直連時，雙方透過它轉發端對端加密的 WebSocket 幀；中繼不儲存工作階段、檔案或模型設定，也無法解密業務資料。
+    ja: Vibex 用のオプションのセルフホストリレーです。PC とスマートフォンが直接接続できない場合、両者はエンドツーエンド暗号化された WebSocket フレームをリレー経由で転送します。リレーはセッション、ファイル、モデル設定を保存せず、業務データを復号できません。
+    ms: Relai kendiri pilihan untuk Vibex. Apabila komputer dan telefon tidak dapat bersambung secara langsung, kedua-dua pihak memajukan bingkai WebSocket yang disulitkan hujung ke hujung melaluinya. Relai tidak menyimpan sesi, fail atau tetapan model dan tidak dapat menyahsulit data perniagaan.
+    pt-br: Relay auto-hospedado opcional para o Vibex. Quando um computador e um telefone não conseguem se conectar diretamente, ambos encaminham frames WebSocket criptografados de ponta a ponta por ele. O relay não armazena sessões, arquivos ou configurações de modelo e não consegue descriptografar os dados.
+    ru: Необязательный самостоятельно размещаемый релей для Vibex. Если компьютер и телефон не могут подключиться напрямую, обе стороны передают зашифрованные сквозным шифрованием WebSocket-кадры через него. Релей не хранит сеансы, файлы или настройки моделей и не может расшифровать данные.
+    ko: Vibex용 선택적 셀프 호스팅 릴레이입니다. 컴퓨터와 휴대폰이 직접 연결할 수 없을 때 양쪽이 종단 간 암호화된 WebSocket 프레임을 릴레이를 통해 전달합니다. 릴레이는 세션, 파일, 모델 설정을 저장하지 않으며 업무 데이터를 복호화할 수 없습니다.
+  architectures:
+    - amd64
+    - arm64
