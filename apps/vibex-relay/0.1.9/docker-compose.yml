@@ -1,7 +1,7 @@
 services:
   vibex-relay:
     # 官方发布名是 vibex-relay（不是文档里仍残留的 vibex-relay-server）
-    image: ghcr.io/vibex-ai/vibex-relay:0.1.9
+    image: ghcr.io/vibex-ai/vibex-relay:v0.1.10
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
     labels:
