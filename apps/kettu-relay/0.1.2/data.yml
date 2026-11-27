@@ -1,0 +1,69 @@
+additionalProperties:
+  formFields:
+    # 宿主机端口；容器内固定监听 8798，默认只绑定 127.0.0.1
+    - default: 8798
+      description:
+        en: Published on 127.0.0.1 only. Point a 1Panel reverse proxy at this port and serve it over HTTPS; do not expose it directly to the internet.
+        zh: 只监听 127.0.0.1，请用 1Panel 反向代理指向此端口并对外提供 HTTPS，不要直接暴露到公网。
+        zh-Hant: 只監聽 127.0.0.1，請用 1Panel 反向代理指向此連接埠並對外提供 HTTPS，不要直接暴露到公網。
+      edit: true
+      envKey: PANEL_APP_PORT_HTTP
+      labelEn: Relay HTTP Port
+      labelZh: 中继 HTTP 端口
+      label:
+        en: Relay HTTP Port
+        ja: リレー HTTP ポート
+        ms: Port HTTP Relai
+        pt-br: Porta HTTP do Relay
+        ru: HTTP-порт релея
+        ko: 릴레이 HTTP 포트
+        zh: 中继 HTTP 端口
+        zh-Hant: 中繼 HTTP 連接埠
+      required: true
+      rule: paramPort
+      type: number
+
+    # 对外访问地址：中继用它生成给 Kettu 使用的链接，必须与反向代理域名一致
+    - default: ""
+      description:
+        en: The HTTPS address people use to reach this relay, for example https://relay.example.com. It must match the reverse-proxy domain; the relay builds its access link from it.
+        zh: 对外访问本中继的 HTTPS 地址，例如 https://relay.example.com。必须与反向代理域名一致，中继用它生成给 Kettu 使用的接入链接。
+        zh-Hant: 對外存取本中繼的 HTTPS 位址，例如 https://relay.example.com。必須與反向代理網域一致，中繼用它產生給 Kettu 使用的接入連結。
+      edit: true
+      envKey: KETTU_RELAY_URL
+      labelEn: Public URL
+      labelZh: 对外访问地址
+      label:
+        en: Public URL
+        ja: 公開 URL
+        ms: URL Awam
+        pt-br: URL pública
+        ru: Публичный URL
+        ko: 공개 URL
+        zh: 对外访问地址
+        zh-Hant: 對外存取位址
+      required: true
+      rule: paramExtUrl
+      type: text
+
+    # 受信反向代理：中继在反代模式下只接受这些地址的连接，并采信它们的 X-Forwarded-For
+    - default: "127.0.0.0/8,::1/128,172.16.0.0/12"
+      description:
+        en: Addresses or CIDR ranges allowed to connect and whose X-Forwarded-For is believed. The default covers loopback and Docker bridge networks; change it if 1panel-network uses a 10.x or 192.168.x subnet.
+        zh: 允许连接中继、并且其 X-Forwarded-For 会被采信的地址或 CIDR 网段。默认覆盖回环与 Docker 网桥网段；如果 1panel-network 使用 10.x 或 192.168.x 网段，请改成实际网段。
+        zh-Hant: 允許連接中繼、並且其 X-Forwarded-For 會被採信的位址或 CIDR 網段。預設涵蓋回環與 Docker 橋接網段；如果 1panel-network 使用 10.x 或 192.168.x 網段，請改成實際網段。
+      edit: true
+      envKey: KETTU_RELAY_TRUSTED_PROXIES
+      labelEn: Trusted Proxies
+      labelZh: 受信反向代理
+      label:
+        en: Trusted Proxies
+        ja: 信頼するプロキシ
+        ms: Proksi Dipercayai
+        pt-br: Proxies confiáveis
+        ru: Доверенные прокси
+        ko: 신뢰할 프록시
+        zh: 受信反向代理
+        zh-Hant: 受信任反向代理
+      required: true
+      type: text

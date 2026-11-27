@@ -1,0 +1,37 @@
+name: Kettu Relay
+tags:
+  - 网络
+  - 中继
+  - 自托管
+  - AI
+title: Kettu 的自托管中继
+description: 把手机、浏览器和其他电脑连接到运行 Kettu 的电脑，只转发端到端加密内容，中继本身无法解密
+additionalProperties:
+  key: kettu-relay
+  name: Kettu Relay
+  tags:
+    - Network
+    - Relay
+    - Tool
+    - AI
+  shortDescZh: Kettu 的自托管中继，只转发端到端加密内容
+  shortDescEn: Self-hosted relay for Kettu that passes only end-to-end encrypted traffic
+  type: website
+  crossVersionUpdate: true
+  limit: 0
+  recommend: 0
+  website: https://www.kettu.sh
+  github: https://github.com/KettuAI/relay
+  document: https://github.com/KettuAI/relay/blob/main/docs/deploy.md
+  description:
+    en: A self-hosted relay for Kettu. Computers running Kettu sign in to it with its access key, and phones, browsers and other computers reach them through it from any network. It only passes Kettu's end-to-end encrypted channel, so it never sees sessions, files or keys.
+    zh: Kettu 的自托管中继。运行 Kettu 的电脑用它签入，手机、浏览器和其他电脑再通过它从任意网络访问这些电脑。中继只转发端到端加密通道，看不到会话、文件或密钥。
+    zh-Hant: Kettu 的自託管中繼。執行 Kettu 的電腦用它簽入，手機、瀏覽器和其他電腦再透過它從任意網路存取這些電腦。中繼只轉發端對端加密通道，看不到工作階段、檔案或金鑰。
+    ja: Kettu のセルフホストリレーです。Kettu を実行するコンピューターがアクセスキーでサインインし、スマートフォン、ブラウザー、他のコンピューターがどのネットワークからでもそれらに接続できます。リレーはエンドツーエンド暗号化された経路を転送するだけで、セッション、ファイル、鍵を見ることはありません。
+    ms: Relai kendiri untuk Kettu. Komputer yang menjalankan Kettu mendaftar masuk dengannya menggunakan kunci akses, dan telefon, pelayar serta komputer lain boleh mencapainya dari mana-mana rangkaian. Relai hanya memajukan saluran penyulitan hujung ke hujung, jadi ia tidak pernah melihat sesi, fail atau kunci.
+    pt-br: Relay auto-hospedado para o Kettu. Os computadores que executam o Kettu entram nele com sua chave de acesso, e telefones, navegadores e outros computadores os alcançam por ele de qualquer rede. O relay apenas encaminha o canal criptografado de ponta a ponta, sem nunca ver sessões, arquivos ou chaves.
+    ru: Самостоятельно размещаемый релей для Kettu. Компьютеры с Kettu входят на него по ключу доступа, а телефоны, браузеры и другие компьютеры обращаются к ним через релей из любой сети. Релей лишь передаёт сквозной зашифрованный канал и не видит сеансы, файлы или ключи.
+    ko: Kettu용 셀프 호스팅 릴레이입니다. Kettu가 실행되는 컴퓨터가 액세스 키로 로그인하면 휴대폰, 브라우저 및 다른 컴퓨터가 어느 네트워크에서든 이를 통해 접속합니다. 릴레이는 종단 간 암호화된 채널만 전달하므로 세션, 파일, 키를 볼 수 없습니다.
+  architectures:
+    - amd64
+    - arm64

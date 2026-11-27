@@ -1,0 +1,31 @@
+services:
+  kettu-relay:
+    # 上游 tag 形如 0.1.2 / 0.1，另带 latest；这里固定具体版本，便于 Renovate 跟踪升级
+    image: ghcr.io/kettuai/relay:0.1.2
+    container_name: ${CONTAINER_NAME}
+    restart: always
+    labels:
+      createdBy: "Apps"
+    ports:
+      # 反向代理模式：只绑定宿主机回环地址，HTTPS 由 1Panel 反向代理提供
+      - "127.0.0.1:${PANEL_APP_PORT_HTTP}:8798"
+    volumes:
+      # 中继的访问密钥和下载的 Web 客户端都放在 /data；镜像以 uid/gid 65532 运行，
+      # scripts/init.sh 会在容器启动前创建该目录并把属主交给 65532
+      - ./data:/data
+    environment:
+      # 反向代理模式：填对外使用的 HTTPS 地址，必须与反向代理域名一致
+      KETTU_RELAY_URL: ${KETTU_RELAY_URL}
+      # 容器内必须监听所有地址，否则端口映射进不来；固定写死，不开放配置
+      KETTU_RELAY_LISTEN: 0.0.0.0:8798
+      # 与镜像内 VOLUME /data 对应，固定路径
+      KETTU_RELAY_DATA: /data
+      # 只有这些地址能连接中继，也只有它们发来的 X-Forwarded-For 会被采信；
+      # 宿主机回环端口转发进来的连接来自 Docker 网桥地址，所以默认包含 172.16.0.0/12
+      KETTU_RELAY_TRUSTED_PROXIES: ${KETTU_RELAY_TRUSTED_PROXIES}
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true
