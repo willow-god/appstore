@@ -50,8 +50,11 @@ curl -fsS http://127.0.0.1:9700/api/info
 | `VIBEX_RELAY_MAX_ROOMS` | `1024` | 最大房间数 |
 | `VIBEX_RELAY_MAX_TOTAL_CONNECTIONS` | `4096` | 最大总连接数 |
 | `VIBEX_RELAY_MAX_DEVICES_PER_ROOM` | `8` | 每个房间最大设备数 |
+| `VIBEX_RELAY_MAX_WEBSOCKET_FRAME_BYTES` | `33554432`（32 MB） | 单个 WebSocket 帧上限，上游默认 2 MB |
+| `VIBEX_RELAY_MAX_QUEUE_BYTES_PER_CONNECTION` | `67108864`（64 MB） | 每连接待发送队列上限，上游默认 4 MB |
+| `VIBEX_RELAY_MAX_BODY_BYTES` | `8388608`（8 MB） | HTTP 请求体上限，上游默认 1 MB |
 
-其余限流、队列、带宽、推送适配器等 `VIBEX_RELAY_*` 变量都有上游默认值；需要调整时在 1Panel 应用的 `docker-compose.yml` 里追加后重建容器。
+上游文档里的这三个默认值偏小，稍大的消息会触发断连；本应用已在 `docker-compose.yml` 中放大（已向上游反馈）。其余限流、队列、带宽、推送适配器等 `VIBEX_RELAY_*` 变量仍使用上游默认值；需要调整时在 1Panel 应用的 `docker-compose.yml` 里追加后重建容器。
 
 ## 项目地址
 

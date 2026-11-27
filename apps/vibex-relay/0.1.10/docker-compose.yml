@@ -18,6 +18,11 @@ services:
       VIBEX_RELAY_MAX_ROOMS: "1024"
       VIBEX_RELAY_MAX_TOTAL_CONNECTIONS: "4096"
       VIBEX_RELAY_MAX_DEVICES_PER_ROOM: "8"
+      # 上游文档的默认值（2 MB / 4 MB / 1 MB）偏小，大消息会被直接断开，
+      # 实测按下面数值放大后可用；已向上游反馈该问题
+      VIBEX_RELAY_MAX_WEBSOCKET_FRAME_BYTES: "33554432"
+      VIBEX_RELAY_MAX_QUEUE_BYTES_PER_CONNECTION: "67108864"
+      VIBEX_RELAY_MAX_BODY_BYTES: "8388608"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9700/health"]
       interval: 30s
