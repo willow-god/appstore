@@ -1,7 +1,7 @@
 services:
   kettu-relay:
     # 上游 tag 形如 0.1.2 / 0.1，另带 latest；这里固定具体版本，便于 Renovate 跟踪升级
-    image: ghcr.io/kettuai/relay:0.1.2
+    image: ghcr.io/kettuai/relay:0.1.3
     container_name: ${CONTAINER_NAME}
     restart: always
     labels:
